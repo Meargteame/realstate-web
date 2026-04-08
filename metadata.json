@@ -1,0 +1,5 @@
+{
+  "name": "KW Clone - Real Estate Platform",
+  "description": "A high-fidelity clone of the Keller Williams real estate platform UI, featuring property search, agent discovery, and modern design patterns.",
+  "requestFramePermissions": ["geolocation"]
+}
