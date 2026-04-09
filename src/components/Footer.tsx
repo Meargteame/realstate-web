@@ -1,88 +1,71 @@
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Linkedin, Youtube, Twitter } from "lucide-react";
-
-const footerLinks = [
-  {
-    title: "kw.com",
-    links: ["Property Search", "KW® Agent Search", "Find a local KW® market center", "Blog"],
-  },
-  {
-    title: "Company",
-    links: ["Press", "Work at KW®", "Leadership", "Innovation Partners", "Worldwide", "Contact", "Open a Franchise"],
-  },
-  {
-    title: "Search",
-    links: ["Download App", "Luxury", "Commercial", "Land"],
-  },
-  {
-    title: "KW® Agents",
-    links: ["Join KW®", "Events", "KW Cares®", "KW Next Gen™", "Stories", "Shop", "Keller Home Loans"],
-  },
-];
+import { ArrowRight, Twitter, Instagram, Linkedin } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-kw-footer text-white pt-16 pb-8 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
-          {footerLinks.map((section) => (
-            <div key={section.title}>
-              <h3 className="text-[13px] font-bold mb-6 text-gray-400 uppercase tracking-wider">{section.title}</h3>
-              <ul className="flex flex-col gap-4">
-                {section.links.map((link) => (
-                  <li key={link}>
-                    <Link to="#" className="text-[13px] font-semibold hover:text-kw-red transition-colors">
-                      {link}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+    <footer className="bg-brand-dark text-white pt-16 pb-8 px-8 flex-shrink-0">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16 border-b border-white/10 pb-16">
+          {/* Logo & Address */}
+          <div>
+            <h2 className="text-2xl font-black tracking-tight mb-6">ESTATE</h2>
+            <div className="text-[11px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest">
+              <p>Global Headquarters</p>
+              <p>One Financial Center, Suite 4500</p>
+              <p>Singapore 018961</p>
             </div>
-          ))}
+            <div className="flex gap-3 mt-8">
+              <Link to="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Twitter className="w-3.5 h-3.5 text-gray-300" />
+              </Link>
+              <Link to="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Instagram className="w-3.5 h-3.5 text-gray-300" />
+              </Link>
+              <Link to="#" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Linkedin className="w-3.5 h-3.5 text-gray-300" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h3 className="text-[12px] font-bold mb-6 text-white uppercase tracking-[0.15em]">Company</h3>
+            <ul className="flex flex-col gap-4">
+              <li><Link to="#" className="text-[12px] text-gray-400 hover:text-white uppercase tracking-widest font-semibold transition-colors">Privacy Policy</Link></li>
+              <li><Link to="#" className="text-[12px] text-gray-400 hover:text-white uppercase tracking-widest font-semibold transition-colors">Terms of Service</Link></li>
+              <li><Link to="#" className="text-[12px] text-gray-400 hover:text-white uppercase tracking-widest font-semibold transition-colors">Cookie Settings</Link></li>
+            </ul>
+          </div>
+
+          {/* Exclusives */}
+          <div>
+            <h3 className="text-[12px] font-bold mb-6 text-white uppercase tracking-[0.15em]">Exclusives</h3>
+            <ul className="flex flex-col gap-4">
+              <li><Link to="#" className="text-[12px] text-gray-400 hover:text-white uppercase tracking-widest font-semibold transition-colors">Architectural Standards</Link></li>
+              <li><Link to="#" className="text-[12px] text-gray-400 hover:text-white uppercase tracking-widest font-semibold transition-colors">Partner Program</Link></li>
+              <li><Link to="#" className="text-[12px] text-gray-400 hover:text-white uppercase tracking-widest font-semibold transition-colors">Concierge</Link></li>
+            </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h3 className="text-[12px] font-bold mb-6 text-white uppercase tracking-[0.15em]">Newsletter</h3>
+            <p className="text-[11px] text-gray-400 font-medium uppercase tracking-widest mb-6">Subscribe to curated insights</p>
+            <div className="relative border-b border-gray-600 pb-2 flex items-center">
+              <input 
+                type="email" 
+                placeholder="YOUR EMAIL.COM" 
+                className="bg-transparent border-none outline-none text-[12px] text-white w-full uppercase placeholder:text-gray-600 tracking-widest"
+              />
+              <button className="text-white hover:text-gray-300 transition-colors">
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-center items-center gap-6 mb-12">
-          <Link to="#" className="hover:opacity-80 transition-opacity">
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
-              alt="App Store" 
-              className="h-10"
-              referrerPolicy="no-referrer"
-            />
-          </Link>
-          <Link to="#" className="hover:opacity-80 transition-opacity">
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-              alt="Google Play" 
-              className="h-10"
-              referrerPolicy="no-referrer"
-            />
-          </Link>
-        </div>
-
-        <div className="border-t border-gray-700 pt-8 flex flex-col items-center gap-8">
-          <div className="flex items-center gap-6">
-            <Link to="#" className="text-gray-400 hover:text-white transition-colors"><Twitter className="w-5 h-5" /></Link>
-            <Link to="#" className="text-gray-400 hover:text-white transition-colors"><Instagram className="w-5 h-5" /></Link>
-            <Link to="#" className="text-gray-400 hover:text-white transition-colors"><Facebook className="w-5 h-5" /></Link>
-            <Link to="#" className="text-gray-400 hover:text-white transition-colors"><Youtube className="w-5 h-5" /></Link>
-            <Link to="#" className="text-gray-400 hover:text-white transition-colors"><Linkedin className="w-5 h-5" /></Link>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[11px] font-medium text-gray-400">
-            <Link to="#" className="hover:text-white">Terms of Use</Link>
-            <Link to="#" className="hover:text-white">Privacy Policy</Link>
-            <Link to="#" className="hover:text-white">Cookie Policy</Link>
-            <Link to="#" className="hover:text-white">DMCA</Link>
-            <Link to="#" className="hover:text-white">Fair Housing</Link>
-            <Link to="#" className="hover:text-white">Accessibility</Link>
-          </div>
-
-          <div className="text-center text-[10px] text-gray-500 leading-relaxed max-w-2xl">
-            <p>Keller Williams Realty, LLC, a franchise company, is an Equal Opportunity Employer and supports the Fair Housing Act.</p>
-            <p>Each Keller Williams® office is independently owned and operated.</p>
-            <p>Copyright © 1996-2026 Keller Williams Realty, LLC. All rights reserved.</p>
-          </div>
+        <div className="flex justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+          <p>© 2026 ESTATE RESERVE. ALL RIGHTS RESERVED.</p>
         </div>
       </div>
     </footer>
