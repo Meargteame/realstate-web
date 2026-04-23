@@ -31,9 +31,9 @@ export default function Header() {
       {/* Utility Bar */}
       <div style={{ background: '#373a4b', color: 'white', padding: '8px 64px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '24px', fontSize: '11px', fontWeight: 'bold' }}>
         <Space size="large">
-          <Text style={{ color: 'white', cursor: 'pointer', fontSize: '11px' }}>LUXURY</Text>
-          <Text style={{ color: 'white', cursor: 'pointer', fontSize: '11px' }}>LAND</Text>
-          <Text style={{ color: 'white', cursor: 'pointer', fontSize: '11px' }}>COMMERCIAL</Text>
+          <Link to="/properties?type=luxury" style={{ color: 'white', fontSize: '11px' }}>LUXURY</Link>
+          <Link to="/properties?type=land" style={{ color: 'white', fontSize: '11px' }}>LAND</Link>
+          <Link to="/properties?type=commercial" style={{ color: 'white', fontSize: '11px' }}>COMMERCIAL</Link>
           <Space size="small" style={{ cursor: 'pointer' }}>
             <GlobalOutlined />
             <span>EN</span>

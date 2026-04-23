@@ -3,10 +3,10 @@ const prisma = require('../config/prisma');
 // PATCH /api/leads/:id — update lead status (New → Contacted → Closed)
 exports.createLead = async (req, res) => {
   try {
-    const { name, email, phone, message, agentId, propertyId } = req.body;
+    const { name, email, phone, message, agentId, propertyId, type } = req.body;
     
-    if (!name || !email || !phone || !message) {
-      return res.status(400).json({ error: 'Missing required fields: name, email, phone, message' });
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Missing required fields: name, email' });
     }
 
     // If no agentId provided, find the first available agent to route the lead to
@@ -21,8 +21,9 @@ exports.createLead = async (req, res) => {
       data: {
         name,
         email,
-        phone,
-        message,
+        phone: phone || '',
+        message: message || '',
+        type: type || 'property_inquiry',
         agentId: resolvedAgentId,
         propertyId: propertyId || null
       }

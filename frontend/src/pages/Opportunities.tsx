@@ -1,55 +1,115 @@
-import React, { useState } from "react";
-import { Row, Col, Card, Tag, Typography, Button, Space, Steps, Progress, Badge, Avatar } from "antd";
-import { PlusOutlined, MoreOutlined, DollarOutlined, CalendarOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Row, Col, Card, Tag, Typography, Button, Space, Progress, Badge, Modal, Form, Input, InputNumber, Select, message } from "antd";
+import { PlusOutlined, MoreOutlined, DollarOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useOutletContext } from "react-router-dom";
 
 const { Title, Text } = Typography;
+const AntCard = Card as any;
+const AntSelect = Select as any;
+const AntOption = (Select as any).Option;
 
 export default function Opportunities() {
-  const [activeSegment, setActiveSegment] = useState<'listings' | 'buyers'>('listings');
+  const { agent: parentAgent } = useOutletContext<{ agent: any }>();
+  const [activeSegment, setActiveSegment] = useState<'listing' | 'buyer'>('listing');
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingOpp, setEditingOpp] = useState<any>(null);
+  const [form] = Form.useForm();
 
-  const pipeline = [
-    { 
-      status: 'Cultivate', 
-      count: 12, 
-      volume: '15.4M',
-      deals: [
-        { name: 'Sarah Miller', type: 'Luxury Listing', price: '2,450,000', probability: 20 },
-        { name: 'James Wilson', type: 'Investment', price: '850,000', probability: 10 }
-      ]
-    },
-    { 
-      status: 'Appointment', 
-      count: 4, 
-      volume: '3.2M',
-      deals: [
-        { name: 'Michael Chen', type: 'Residence', price: '1,200,000', probability: 50 }
-      ]
-    },
-    { 
-      status: 'Active', 
-      count: 2, 
-      volume: '1.1M',
-      deals: [
-        { name: 'Emma Davis', type: 'Condo', price: '550,000', probability: 80 }
-      ]
-    },
-    { 
-      status: 'Under Contract', 
-      count: 1, 
-      volume: '650k',
-      deals: [
-        { name: 'Robert King', type: 'Townhouse', price: '650,000', probability: 95 }
-      ]
-    },
-    { 
-      status: 'Closed', 
-      count: 45, 
-      volume: '32M',
-      deals: []
+  useEffect(() => {
+    if (!parentAgent) return;
+    fetchOpportunities();
+  }, [parentAgent, activeSegment]);
+
+  const fetchOpportunities = async () => {
+    try {
+      const res = await fetch(`/api/opportunities?agentId=${parentAgent.id}&type=${activeSegment}`);
+      const data = await res.json();
+      setOpportunities(data);
+      setLoading(false);
+    } catch {
+      setLoading(false);
     }
-  ];
+  };
 
-  const AntCard = Card as any;
+  const handleCreate = () => {
+    setEditingOpp(null);
+    form.resetFields();
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (opp: any) => {
+    setEditingOpp(opp);
+    form.setFieldsValue(opp);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (values: any) => {
+    try {
+      if (editingOpp) {
+        const res = await fetch(`/api/opportunities/${editingOpp.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values)
+        });
+        if (!res.ok) throw new Error('Failed to update');
+        message.success('Opportunity updated!');
+      } else {
+        const res = await fetch('/api/opportunities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...values, agentId: parentAgent.id, type: activeSegment })
+        });
+        if (!res.ok) throw new Error('Failed to create');
+        message.success('Opportunity created!');
+      }
+      setIsModalOpen(false);
+      setEditingOpp(null);
+      form.resetFields();
+      fetchOpportunities();
+    } catch {
+      message.error('Failed to save opportunity');
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    Modal.confirm({
+      title: 'Delete this opportunity?',
+      content: 'This action cannot be undone.',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          await fetch(`/api/opportunities/${id}`, { method: 'DELETE' });
+          message.success('Opportunity deleted');
+          fetchOpportunities();
+        } catch {
+          message.error('Failed to delete opportunity');
+        }
+      }
+    });
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      await fetch(`/api/opportunities/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      fetchOpportunities();
+    } catch {
+      message.error('Failed to update status');
+    }
+  };
+
+  const statuses = ['Cultivate', 'Appointment', 'Active', 'Under Contract', 'Closed'];
+  
+  const pipeline = statuses.map(status => {
+    const deals = opportunities.filter(o => o.status === status);
+    const volume = deals.reduce((sum, o) => sum + o.price, 0);
+    return { status, deals, count: deals.length, volume };
+  });
 
   return (
     <div style={{ padding: '32px', background: '#fcfcfc', minHeight: '100%' }}>
@@ -61,21 +121,23 @@ export default function Opportunities() {
         <Space>
           <div style={{ background: '#f0f0f0', padding: '4px', borderRadius: '8px' }}>
             <Button 
-               type={activeSegment === 'listings' ? 'primary' : 'text'} 
-               onClick={() => setActiveSegment('listings')}
-               style={activeSegment === 'listings' ? { background: '#111827', borderColor: '#111827' } : {}}
+               type={activeSegment === 'listing' ? 'primary' : 'text'} 
+               onClick={() => setActiveSegment('listing')}
+               style={activeSegment === 'listing' ? { background: '#111827', borderColor: '#111827' } : {}}
             >
               Listings
             </Button>
             <Button 
-               type={activeSegment === 'buyers' ? 'primary' : 'text'} 
-               onClick={() => setActiveSegment('buyers')}
-               style={activeSegment === 'buyers' ? { background: '#111827', borderColor: '#111827' } : {}}
+               type={activeSegment === 'buyer' ? 'primary' : 'text'} 
+               onClick={() => setActiveSegment('buyer')}
+               style={activeSegment === 'buyer' ? { background: '#111827', borderColor: '#111827' } : {}}
             >
               Buyers
             </Button>
           </div>
-          <Button type="primary" icon={<PlusOutlined />} style={{ background: '#b40101', borderColor: '#b40101', height: '40px' }}>Create Opportunity</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} style={{ background: '#b40101', borderColor: '#b40101', height: '40px' }}>
+            Create Opportunity
+          </Button>
         </Space>
       </div>
 
@@ -88,7 +150,9 @@ export default function Opportunities() {
                 <Badge count={phase.count} style={{ backgroundColor: '#f0f0f0', color: '#111', boxShadow: 'none' }} />
               </div>
               <div style={{ marginTop: '8px' }}>
-                <Text style={{ fontSize: '18px', fontWeight: 900 }}>${phase.volume}</Text>
+                <Text style={{ fontSize: '18px', fontWeight: 900 }}>
+                  ${phase.volume >= 1000000 ? (phase.volume / 1000000).toFixed(1) + 'M' : (phase.volume / 1000).toFixed(0) + 'K'}
+                </Text>
                 <Text type="secondary" style={{ fontSize: '11px', marginLeft: '8px' }}>VOL</Text>
               </div>
             </div>
@@ -103,13 +167,18 @@ export default function Opportunities() {
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
                         <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{deal.name}</div>
-                        <Text type="secondary" style={{ fontSize: '11px' }}>{deal.type}</Text>
+                        <Text type="secondary" style={{ fontSize: '11px' }}>{deal.dealType}</Text>
                       </div>
-                      <Button type="text" size="small" icon={<MoreOutlined />} />
+                      <Space>
+                        <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(deal)} />
+                        <Button type="text" size="small" icon={<DeleteOutlined />} danger onClick={() => handleDelete(deal.id)} />
+                      </Space>
                    </div>
                    
                    <div style={{ marginBottom: '16px' }}>
-                      <Text strong style={{ color: '#b40101', fontSize: '15px' }}>${deal.price}</Text>
+                      <Text strong style={{ color: '#b40101', fontSize: '15px' }}>
+                        ${deal.price.toLocaleString()}
+                      </Text>
                    </div>
 
                    <div style={{ background: '#fafafa', padding: '8px', borderRadius: '4px' }}>
@@ -119,9 +188,18 @@ export default function Opportunities() {
                       </div>
                       <Progress percent={deal.probability} size="small" showInfo={false} strokeColor="#b40101" />
                    </div>
+
+                   <AntSelect
+                     value={deal.status}
+                     size="small"
+                     style={{ width: '100%', marginTop: 8 }}
+                     onChange={(val: string) => handleStatusChange(deal.id, val)}
+                   >
+                     {statuses.map(s => <AntOption key={s} value={s}>{s}</AntOption>)}
+                   </AntSelect>
                  </AntCard>
                ))}
-               {phase.deals.length === 0 && phase.status !== 'Closed' && (
+               {phase.deals.length === 0 && (
                  <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed #d9d9d9', borderRadius: '8px' }}>
                     <Text type="secondary" style={{ fontSize: '12px' }}>No active deals in this phase.</Text>
                  </div>
@@ -130,6 +208,47 @@ export default function Opportunities() {
           </div>
         ))}
       </div>
+
+      <Modal 
+        title={editingOpp ? "Edit Opportunity" : "Create Opportunity"} 
+        open={isModalOpen} 
+        onCancel={() => { setIsModalOpen(false); setEditingOpp(null); form.resetFields(); }} 
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 20 }}>
+          <Form.Item label="Client Name" name="name" rules={[{ required: true }]}>
+            <Input placeholder="e.g. Sarah Miller" />
+          </Form.Item>
+          <Form.Item label="Deal Type" name="dealType" rules={[{ required: true }]}>
+            <Input placeholder="e.g. Luxury Listing, Investment Property" />
+          </Form.Item>
+          <Form.Item label="Price ($)" name="price" rules={[{ required: true }]}>
+            <InputNumber 
+              style={{ width: '100%' }} 
+              min={1000} 
+              placeholder="950000" 
+              formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} 
+            />
+          </Form.Item>
+          <Form.Item label="Status" name="status" initialValue="Cultivate">
+            <AntSelect>
+              {statuses.map(s => <AntOption key={s} value={s}>{s}</AntOption>)}
+            </AntSelect>
+          </Form.Item>
+          <Form.Item label="Probability (%)" name="probability" initialValue={20}>
+            <InputNumber style={{ width: '100%' }} min={0} max={100} />
+          </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <Button onClick={() => { setIsModalOpen(false); setEditingOpp(null); form.resetFields(); }}>
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit" style={{ background: '#b40101', borderColor: '#b40101' }}>
+              {editingOpp ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }

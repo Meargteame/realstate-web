@@ -7,13 +7,14 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String
-  role      String   @default("user")
+  role      String     @default("user")
   agentId   String?
-  createdAt DateTime @default(now())
+  favorites Favorite[]
+  createdAt DateTime   @default(now())
 }
 
 model Agent {
@@ -37,7 +38,7 @@ model Agent {
 }
 
 model Property {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   price        Int
   beds         Float
   baths        Float
@@ -46,13 +47,14 @@ model Property {
   city         String
   state        String
   zip          String
-  imageUrl     String   @default("https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800")
-  status       String   @default("Active")
-  propertyType String   @default("Single Family")
+  imageUrl     String     @default("https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800")
+  status       String     @default("Active")
+  propertyType String     @default("Single Family")
   
-  agent      Agent    @relation(fields: [agentId], references: [id])
+  agent        Agent      @relation(fields: [agentId], references: [id])
   agentId      String
   leads        Lead[]
+  favorites    Favorite[]
 }
 
 model Lead {
@@ -62,6 +64,7 @@ model Lead {
   phone         String
   message       String
   status        String    @default("New")
+  type          String?
   date          DateTime  @default(now())
   isFavorite    Boolean   @default(false)
   notes         String?
@@ -88,4 +91,16 @@ model Opportunity {
   
   agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
   agentId     String
+}
+
+model Favorite {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, propertyId])
 }

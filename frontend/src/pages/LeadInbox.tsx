@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Layout, List, Avatar, Typography, Badge, Button, Input, Space, Divider, Tag } from "antd";
+import { Layout, List, Avatar, Typography, Badge, Button, Input, Space, Divider, Tag, Modal, message } from "antd";
 import { useOutletContext, Link } from "react-router-dom";
-import { SearchOutlined, MailOutlined, PhoneOutlined, StarOutlined, DeleteOutlined } from "@ant-design/icons";
+import { SearchOutlined, MailOutlined, PhoneOutlined, StarOutlined, DeleteOutlined, StarFilled } from "@ant-design/icons";
 
 const { Sider, Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -11,6 +11,7 @@ export default function LeadInbox() {
   const [leads, setLeads] = useState<any[]>([]);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!parentAgent) return;
@@ -27,6 +28,50 @@ export default function LeadInbox() {
       .catch(() => setLoading(false));
   }, [parentAgent]);
 
+  const handleToggleFavorite = async () => {
+    if (!selectedLead) return;
+    try {
+      const res = await fetch(`/api/leads/${selectedLead.id}/favorite`, {
+        method: 'PATCH'
+      });
+      if (!res.ok) throw new Error('Failed to toggle favorite');
+      const updated = await res.json();
+      setLeads(prev => prev.map(l => l.id === updated.id ? updated : l));
+      setSelectedLead(updated);
+    } catch {
+      message.error('Failed to update favorite');
+    }
+  };
+
+  const handleDelete = () => {
+    if (!selectedLead) return;
+    Modal.confirm({
+      title: 'Delete this lead?',
+      content: 'This action cannot be undone.',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const res = await fetch(`/api/leads/${selectedLead.id}`, { 
+            method: 'DELETE' 
+          });
+          if (!res.ok) throw new Error('Failed to delete');
+          const remainingLeads = leads.filter(l => l.id !== selectedLead.id);
+          setLeads(remainingLeads);
+          setSelectedLead(remainingLeads[0] || null);
+          message.success('Lead deleted');
+        } catch {
+          message.error('Failed to delete lead');
+        }
+      }
+    });
+  };
+
+  const filteredLeads = leads.filter(l => 
+    l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.message.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <Layout style={{ height: 'calc(100vh - 80px)', background: 'white' }}>
       <Sider width={350} theme="light" style={{ borderRight: '1px solid #f0f0f0', overflowY: 'auto' }}>
@@ -35,12 +80,14 @@ export default function LeadInbox() {
           <Input 
             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />} 
             placeholder="Search leads..." 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
             style={{ marginTop: 16, borderRadius: 8 }}
           />
         </div>
         <List
           loading={loading}
-          dataSource={leads}
+          dataSource={filteredLeads}
           renderItem={(item: any) => (
             <div 
               onClick={() => setSelectedLead(item)}
@@ -83,8 +130,13 @@ export default function LeadInbox() {
                 </div>
               </div>
               <Space>
-                <Button icon={<StarOutlined />} />
-                <Button icon={<DeleteOutlined />} danger />
+                <Button 
+                  icon={selectedLead.isFavorite ? <StarFilled /> : <StarOutlined />} 
+                  type={selectedLead.isFavorite ? 'primary' : 'default'}
+                  style={selectedLead.isFavorite ? { background: '#faad14', borderColor: '#faad14' } : {}}
+                  onClick={handleToggleFavorite}
+                />
+                <Button icon={<DeleteOutlined />} danger onClick={handleDelete} />
               </Space>
             </div>
 
@@ -113,7 +165,11 @@ export default function LeadInbox() {
             </div>
 
             <div style={{ padding: '24px 40px', borderTop: '1px solid #f0f0f0' }}>
-               <Button type="primary" size="large" style={{ background: '#b40101', borderColor: '#b40101', width: 200 }}>Reply to Lead</Button>
+               <a href={`mailto:${selectedLead.email}?subject=Re: Your inquiry&body=Hi ${selectedLead.name},%0D%0A%0D%0AThank you for reaching out!%0D%0A%0D%0A`}>
+                 <Button type="primary" size="large" style={{ background: '#b40101', borderColor: '#b40101', width: 200 }}>
+                   Reply to Lead
+                 </Button>
+               </a>
             </div>
           </div>
         ) : (

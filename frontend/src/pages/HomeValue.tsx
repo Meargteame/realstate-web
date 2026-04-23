@@ -27,18 +27,26 @@ export default function HomeValue() {
 
   const handleContactSubmit = async (values: any) => {
     try {
-      await fetch('/api/leads', {
+      const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...values,
-          message: `Home Valuation Request for: ${address}`,
-          agentId: null,
-          propertyId: null,
+          phone: values.phone || '',
+          message: `Home Valuation Request for: ${address}${values.timeline ? ` - Timeline: ${values.timeline}` : ''}`,
+          type: 'valuation_request'
         })
       });
-    } catch { /* fail silently, still show success */ }
-    setSubmitted(true);
+
+      if (!response.ok) throw new Error('Submission failed');
+      
+      setSubmitted(true);
+    } catch (error) {
+      notification.error({
+        message: 'Submission Error',
+        description: 'Something went wrong. Please try again.',
+      });
+    }
   };
 
   const AntCard = Card as any;

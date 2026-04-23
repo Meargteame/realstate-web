@@ -56,11 +56,15 @@ export default function AgentCard({ agent }: { agent: any }) {
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                  <PhoneOutlined style={{ color: '#b40101', marginTop: '4px' }} />
-                 <Text style={{ fontSize: '13px' }}>{agent.phone}</Text>
+                 <a href={`tel:${agent.phone}`} style={{ color: '#b40101', textDecoration: 'none' }}>
+                   <Text style={{ fontSize: '13px', color: '#b40101' }}>{agent.phone}</Text>
+                 </a>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                  <MailOutlined style={{ color: '#b40101', marginTop: '4px' }} />
-                 <Text style={{ fontSize: '13px' }} ellipsis>{agent.email}</Text>
+                 <a href={`mailto:${agent.email}`} style={{ color: '#b40101', textDecoration: 'none' }}>
+                   <Text style={{ fontSize: '13px', color: '#b40101' }} ellipsis>{agent.email}</Text>
+                 </a>
               </div>
            </Space>
         </div>

@@ -10,6 +10,7 @@ const { Title, Text } = Typography;
 export default function Properties() {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const typeParam = searchParams.get("type") || "";
   const [showMap, setShowMap] = useState(true);
   const [properties, setProperties] = useState<any[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
@@ -22,6 +23,18 @@ export default function Properties() {
   const [bathrooms, setBathrooms] = useState<number | null>(null);
   const [propertyType, setPropertyType] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("newest");
+
+  // Set property type from URL parameter
+  useEffect(() => {
+    if (typeParam) {
+      const typeMap: Record<string, string> = {
+        'luxury': 'Single Family',
+        'land': 'Land',
+        'commercial': 'Commercial'
+      };
+      setPropertyType(typeMap[typeParam.toLowerCase()] || null);
+    }
+  }, [typeParam]);
 
   useEffect(() => {
     setLoading(true);
@@ -197,6 +210,7 @@ export default function Properties() {
           <Select.Option value="Townhouse">Townhouse</Select.Option>
           <Select.Option value="Multi-Family">Multi-Family</Select.Option>
           <Select.Option value="Land">Land</Select.Option>
+          <Select.Option value="Commercial">Commercial</Select.Option>
         </Select>
       </div>
     </div>

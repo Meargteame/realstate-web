@@ -2,11 +2,12 @@ import React from "react";
 import Hero from "@/components/Hero";
 import ExpertSection from "@/components/ExpertSection";
 import { Button, Typography, Row, Col } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
 
 export default function Home() {
+  const navigate = useNavigate();
   return (
     <div style={{ background: 'white' }}>
       <Hero />
@@ -81,6 +82,7 @@ export default function Home() {
           
           <Button 
             size="large"
+            onClick={() => navigate('/mortgage-calculator')}
             style={{ 
               marginTop: '64px',
               borderColor: '#111',

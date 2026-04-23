@@ -12,6 +12,7 @@ export default function AgentListings() {
   const [searchText, setSearchText] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<any>(null);
   const [form] = Form.useForm();
 
   const AntSelect = Select as any;
@@ -34,29 +35,69 @@ export default function AgentListings() {
       content: 'This action cannot be undone.',
       okText: 'Yes, Delete',
       okType: 'danger',
-      onOk: () => {
-        setListings(prev => prev.filter(p => p.id !== id));
-        message.success("Listing removed.");
+      onOk: async () => {
+        try {
+          const res = await fetch(`/api/properties/${id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('Failed to delete');
+          setListings(prev => prev.filter(p => p.id !== id));
+          message.success("Listing deleted successfully.");
+        } catch {
+          message.error("Failed to delete listing. Please try again.");
+        }
       }
     });
   };
 
-  const handleCreateListing = async (values: any) => {
+  const handleEdit = (property: any) => {
+    setEditingProperty(property);
+    form.setFieldsValue({
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      zip: property.zip,
+      price: property.price,
+      propertyType: property.propertyType,
+      bedrooms: property.beds,
+      bathrooms: property.baths,
+      sqft: property.sqft,
+      status: property.status
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (values: any) => {
     setSubmitting(true);
     try {
-      const res = await fetch('/api/properties', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, agentId: parentAgent.id })
-      });
-      if (!res.ok) throw new Error('Failed to create listing');
-      const newProperty = await res.json();
-      setListings(prev => [newProperty, ...prev]);
-      message.success("Listing published successfully!");
+      if (editingProperty) {
+        // Update existing property
+        const res = await fetch(`/api/properties/${editingProperty.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values)
+        });
+        if (!res.ok) throw new Error('Failed to update listing');
+        const updated = await res.json();
+        setListings(prev => prev.map(p => p.id === updated.id ? updated : p));
+        message.success("Listing updated successfully!");
+      } else {
+        // Create new property
+        const res = await fetch('/api/properties', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...values, agentId: parentAgent.id })
+        });
+        if (!res.ok) throw new Error('Failed to create listing');
+        const newProperty = await res.json();
+        setListings(prev => [newProperty, ...prev]);
+        message.success("Listing published successfully!");
+      }
       setIsModalOpen(false);
+      setEditingProperty(null);
       form.resetFields();
     } catch {
-      message.error("Failed to publish listing. Please try again.");
+      message.error(`Failed to ${editingProperty ? 'update' : 'publish'} listing. Please try again.`);
     } finally {
       setSubmitting(false);
     }
@@ -100,7 +141,7 @@ export default function AgentListings() {
       render: (record: any) => (
         <Space size="small">
           <Link to={`/properties/${record.id}`}><Button size="small">View</Button></Link>
-          <Button icon={<EditOutlined />} size="small" />
+          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
           <Button icon={<DeleteOutlined />} size="small" danger onClick={() => handleDelete(record.id)} />
         </Space>
       ),
@@ -116,7 +157,7 @@ export default function AgentListings() {
         </div>
         <Space>
           <Input prefix={<SearchOutlined />} placeholder="Filter listings..." style={{ width: 250 }} onChange={e => setSearchText(e.target.value)} />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsModalOpen(true)} style={{ background: '#b40101', borderColor: '#b40101' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingProperty(null); form.resetFields(); setIsModalOpen(true); }} style={{ background: '#b40101', borderColor: '#b40101' }}>
             Create New
           </Button>
         </Space>
@@ -132,8 +173,8 @@ export default function AgentListings() {
         />
       </div>
 
-      <Modal title="Add New Listing" open={isModalOpen} onCancel={() => { setIsModalOpen(false); form.resetFields(); }} footer={null} width={680}>
-        <Form layout="vertical" form={form} onFinish={handleCreateListing} style={{ marginTop: 20 }}>
+      <Modal title={editingProperty ? "Edit Listing" : "Add New Listing"} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingProperty(null); form.resetFields(); }} footer={null} width={680}>
+        <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 20 }}>
           <Form.Item label="Property Address" name="address" rules={[{ required: true }]}>
             <Input placeholder="e.g. 123 Luxury Ave" />
           </Form.Item>
@@ -173,9 +214,9 @@ export default function AgentListings() {
             </AntSelect>
           </Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-            <Button onClick={() => { setIsModalOpen(false); form.resetFields(); }}>Cancel</Button>
+            <Button onClick={() => { setIsModalOpen(false); setEditingProperty(null); form.resetFields(); }}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={submitting} style={{ background: '#b40101', borderColor: '#b40101' }}>
-              Publish Listing
+              {editingProperty ? 'Update Listing' : 'Publish Listing'}
             </Button>
           </div>
         </Form>

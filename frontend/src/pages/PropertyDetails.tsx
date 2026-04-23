@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   Layout, Button, Typography, Row, Col, Space, Card, Tag, 
-  Tabs, Form, Input, Avatar, Divider, Breadcrumb, notification, Result
+  Tabs, Form, Input, Avatar, Divider, Breadcrumb, notification, Result, Modal, Image
 } from "antd";
 import { 
-  ArrowLeftOutlined, ShareAltOutlined, HeartOutlined, 
+  ArrowLeftOutlined, ShareAltOutlined, HeartOutlined, HeartFilled,
   EnvironmentOutlined, CheckCircleOutlined, UserOutlined,
   DollarOutlined, HomeOutlined, AreaChartOutlined
 } from "@ant-design/icons";
@@ -15,11 +15,24 @@ const { Title, Text, Paragraph } = Typography;
 
 export default function PropertyDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [property, setProperty] = useState<any>(null);
   const [agent, setAgent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   const [form] = Form.useForm();
+
+  // Mock gallery images
+  const galleryImages = [
+    property?.imageUrl,
+    "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1544984243-ec57ea16facd?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
+    "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=80"
+  ].filter(Boolean);
 
   useEffect(() => {
     fetch(`/api/properties/${id}`)
@@ -34,6 +47,40 @@ export default function PropertyDetails() {
         setLoading(false);
       });
   }, [id]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: property.address,
+      text: `Check out this property: ${property.address}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // User cancelled or error
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      notification.success({
+        message: 'Link Copied',
+        description: 'Property link copied to clipboard!',
+        duration: 3
+      });
+    }
+  };
+
+  const handleSave = () => {
+    // TODO: Implement actual save to favorites with authentication
+    setIsSaved(!isSaved);
+    notification.success({
+      message: isSaved ? 'Removed from Favorites' : 'Saved to Favorites',
+      description: isSaved ? 'Property removed from your saved list.' : 'Property saved! Sign in to sync across devices.',
+      duration: 3
+    });
+  };
 
   const handleLeadSubmit = async (values: any) => {
     try {
@@ -68,8 +115,15 @@ export default function PropertyDetails() {
           <ArrowLeftOutlined /> BACK TO ALL LISTINGS
         </Link>
         <Space>
-           <Button icon={<ShareAltOutlined />}>SHARE</Button>
-           <Button type="primary" icon={<HeartOutlined />} style={{ background: '#111827', borderColor: '#111827' }}>SAVE</Button>
+           <Button icon={<ShareAltOutlined />} onClick={handleShare}>SHARE</Button>
+           <Button 
+             type="primary" 
+             icon={isSaved ? <HeartFilled /> : <HeartOutlined />} 
+             onClick={handleSave}
+             style={{ background: isSaved ? '#b40101' : '#111827', borderColor: isSaved ? '#b40101' : '#111827' }}
+           >
+             {isSaved ? 'SAVED' : 'SAVE'}
+           </Button>
         </Space>
       </div>
 
@@ -90,7 +144,10 @@ export default function PropertyDetails() {
              </div>
              <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '2px solid white', boxShadow: '0 12px 32px rgba(0,0,0,0.1)', position: 'relative' }}>
                 <img src="https://images.unsplash.com/photo-1544984243-ec57ea16facd?auto=format&fit=crop&w=600&q=80" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <div 
+                  onClick={() => setShowGallery(true)}
+                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                >
                    <Title level={4} style={{ color: 'white', margin: 0 }}>VIEW ALL PHOTOS</Title>
                 </div>
              </div>
@@ -200,6 +257,31 @@ export default function PropertyDetails() {
           </Col>
         </Row>
       </div>
+
+      {/* Photo Gallery Modal */}
+      <Modal
+        open={showGallery}
+        onCancel={() => setShowGallery(false)}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+        bodyStyle={{ padding: '24px' }}
+      >
+        <Title level={3} style={{ marginBottom: '24px' }}>Property Photos</Title>
+        <Image.PreviewGroup>
+          <Row gutter={[16, 16]}>
+            {galleryImages.map((img, idx) => (
+              <Col xs={24} sm={12} md={8} key={idx}>
+                <Image
+                  src={img}
+                  alt={`Property photo ${idx + 1}`}
+                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                />
+              </Col>
+            ))}
+          </Row>
+        </Image.PreviewGroup>
+      </Modal>
     </div>
   );
 }

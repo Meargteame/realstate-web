@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message } from "antd";
+import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer } from "antd";
 import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined } from "@ant-design/icons";
 import { Link, useOutletContext } from "react-router-dom";
 
@@ -12,6 +12,8 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
   useEffect(() => {
     if (!parentAgent) return;
@@ -37,6 +39,31 @@ export default function LeadsPage() {
       message.error('Failed to update lead status');
     }
   };
+
+  const handleExport = async () => {
+    try {
+      const res = await fetch(`/api/leads/export?agentId=${parentAgent.id}`);
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      message.success('Leads exported successfully!');
+    } catch {
+      message.error('Failed to export leads');
+    }
+  };
+
+  const filteredLeads = leads.filter(l => {
+    if (filterStatus && l.status !== filterStatus) return false;
+    if (searchText && !l.name.toLowerCase().includes(searchText.toLowerCase())) return false;
+    return true;
+  });
 
   const STATUS_COLORS: Record<string, string> = {
     New: 'error', Contacted: 'processing', Qualified: 'warning', Closed: 'success', Lost: 'default'
@@ -130,8 +157,8 @@ export default function LeadsPage() {
               style={{ width: 300, borderRadius: '8px' }}
               onChange={e => setSearchText(e.target.value)}
             />
-            <Button icon={<FilterOutlined />}>Filters</Button>
-            <Button type="primary" style={{ background: '#b40101', borderColor: '#b40101' }}>Export CSV</Button>
+            <Button icon={<FilterOutlined />} onClick={() => setShowFilterDrawer(true)}>Filters</Button>
+            <Button type="primary" onClick={handleExport} style={{ background: '#b40101', borderColor: '#b40101' }}>Export CSV</Button>
           </Space>
         </div>
       </div>
@@ -139,12 +166,45 @@ export default function LeadsPage() {
       <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         <Table
           columns={columns}
-          dataSource={leads.filter(l => l.name.toLowerCase().includes(searchText.toLowerCase()))}
+          dataSource={filteredLeads}
           loading={loading}
           rowKey="id"
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} leads` }}
         />
       </div>
+
+      <Drawer
+        title="Filter Leads"
+        placement="right"
+        onClose={() => setShowFilterDrawer(false)}
+        open={showFilterDrawer}
+        width={320}
+      >
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <div>
+            <Text strong style={{ display: 'block', marginBottom: 8 }}>Status</Text>
+            <AntSelect
+              placeholder="Filter by status"
+              value={filterStatus}
+              onChange={setFilterStatus}
+              style={{ width: '100%' }}
+              allowClear
+            >
+              <AntOption value="New">New</AntOption>
+              <AntOption value="Contacted">Contacted</AntOption>
+              <AntOption value="Qualified">Qualified</AntOption>
+              <AntOption value="Closed">Closed</AntOption>
+              <AntOption value="Lost">Lost</AntOption>
+            </AntSelect>
+          </div>
+          <Button 
+            block 
+            onClick={() => { setFilterStatus(null); setShowFilterDrawer(false); }}
+          >
+            Clear Filters
+          </Button>
+        </Space>
+      </Drawer>
     </div>
   );
 }

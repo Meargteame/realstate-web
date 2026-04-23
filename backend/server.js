@@ -18,12 +18,14 @@ const agentRoutes = require('./routes/agentRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const authRoutes = require('./routes/authRoutes');
 const opportunityRoutes = require('./routes/opportunityRoutes');
+const favoriteRoutes = require('./routes/favoriteRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/opportunities', opportunityRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 // General health route
 app.get('/api/health', (req, res) => {

@@ -193,7 +193,10 @@ const agents = [
     reviews: 73,
     license: 'DRE# 11223355',
     languages: ['English'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Pflugerville expert helping clients find affordable family homes.',
+    location: 'Pflugerville',
+    specialties: 'Affordable Housing, First-Time Buyers, Veterans'
   }
 ];
 

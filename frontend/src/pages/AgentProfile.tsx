@@ -31,11 +31,32 @@ export default function AgentProfile() {
       });
   }, [id]);
 
-  const onFinish = (values: any) => {
-    notification.success({
-      message: 'Message Sent',
-      description: `Your message to ${agent.name} has been successfully sent.`,
-    });
+  const onFinish = async (values: any) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...values,
+          phone: values.phone || '',
+          message: values.message || `Inquiry about agent ${agent.name}`,
+          agentId: agent.id,
+          type: 'agent_contact'
+        })
+      });
+
+      if (!response.ok) throw new Error('Submission failed');
+
+      notification.success({
+        message: 'Message Sent',
+        description: `Your message to ${agent.name} has been successfully sent.`,
+      });
+    } catch (error) {
+      notification.error({
+        message: 'Submission Error',
+        description: 'Something went wrong. Please try again.',
+      });
+    }
   };
 
   if (loading) return <div style={{ padding: '200px', textAlign: 'center' }}><Title level={3}>Loading Agent Summary...</Title></div>;
@@ -163,8 +184,12 @@ export default function AgentProfile() {
                 <Divider style={{ margin: '24px 0' }} />
                 <div style={{ textAlign: 'center' }}>
                    <Space direction="vertical" size="small">
-                      <Space><PhoneOutlined style={{ color: '#b40101' }} /> <Text strong>{agent.phone}</Text></Space>
-                      <Space><MailOutlined style={{ color: '#b40101' }} /> <Text strong>{agent.email}</Text></Space>
+                      <a href={`tel:${agent.phone}`} style={{ color: 'inherit' }}>
+                        <Space><PhoneOutlined style={{ color: '#b40101' }} /> <Text strong>{agent.phone}</Text></Space>
+                      </a>
+                      <a href={`mailto:${agent.email}`} style={{ color: 'inherit' }}>
+                        <Space><MailOutlined style={{ color: '#b40101' }} /> <Text strong>{agent.email}</Text></Space>
+                      </a>
                    </Space>
                 </div>
              </Card>

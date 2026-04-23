@@ -24,13 +24,27 @@ export default function AgentSettings() {
     }
   }, [parentAgent, form]);
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
-    // Mock save
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const res = await fetch(`/api/agents/${parentAgent.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values)
+      });
+      
+      if (!res.ok) throw new Error('Failed to update profile');
+      
+      const updated = await res.json();
       message.success("Profile updated successfully.");
-    }, 1000);
+      
+      // Update parent context if needed
+      window.location.reload(); // Reload to refresh agent data
+    } catch (error) {
+      message.error("Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

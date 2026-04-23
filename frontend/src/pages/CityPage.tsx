@@ -41,12 +41,32 @@ export default function CityPage() {
       .catch(() => setLoading(false));
   }, [city]);
 
-  const onValuationSubmit = (values: any) => {
-    notification.success({
-      message: 'Valuation Request Received',
-      description: `We've received your request for ${values.address}. An agent will contact you shortly with your home's estimated market value.`,
-      duration: 6
-    });
+  const onValuationSubmit = async (values: any) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...values,
+          phone: values.phone || '',
+          message: `Home Valuation Request from ${displayName} city page - Address: ${values.address}`,
+          type: 'valuation_request'
+        })
+      });
+
+      if (!response.ok) throw new Error('Submission failed');
+
+      notification.success({
+        message: 'Valuation Request Received',
+        description: `We've received your request for ${values.address}. An agent will contact you shortly with your home's estimated market value.`,
+        duration: 6
+      });
+    } catch (error) {
+      notification.error({
+        message: 'Submission Error',
+        description: 'Something went wrong. Please try again.',
+      });
+    }
   };
 
   const AntCard = Card as any;

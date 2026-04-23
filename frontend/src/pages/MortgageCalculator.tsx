@@ -29,12 +29,33 @@ export default function MortgageCalculator() {
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
   const fmtMo = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
-  const onLeadSubmit = (values: any) => {
-    notification.success({
-      message: 'Agent Match Requested',
-      description: "A KW® certified mortgage specialist will contact you within 24 hours.",
-      duration: 6
-    });
+  const onLeadSubmit = async (values: any) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...values,
+          phone: values.phone || '',
+          message: `Mortgage Calculator Inquiry - Home Price: ${fmt(homePrice)}, Down Payment: ${fmt(downPayment)}, Monthly Payment: ${fmtMo(monthlyPayment)}`,
+          type: 'mortgage_inquiry'
+        })
+      });
+
+      if (!response.ok) throw new Error('Submission failed');
+
+      notification.success({
+        message: 'Agent Match Requested',
+        description: "A KW® certified mortgage specialist will contact you within 24 hours.",
+        duration: 6
+      });
+    } catch (error) {
+      notification.error({
+        message: 'Submission Error',
+        description: 'Something went wrong. Please try again.',
+        duration: 4
+      });
+    }
   };
 
   const AntCard = Card as any;

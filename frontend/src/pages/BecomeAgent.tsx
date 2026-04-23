@@ -1,12 +1,43 @@
-import React from "react";
-import { Button, Row, Col, Typography, Input, Form, Card, Space, Divider } from "antd";
+import React, { useRef } from "react";
+import { Button, Row, Col, Typography, Input, Form, Card, Space, Divider, notification } from "antd";
 import { CheckCircleOutlined, RiseOutlined, HomeOutlined, BookOutlined } from "@ant-design/icons";
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function BecomeAgent() {
-  const onFinish = (values: any) => {
-    console.log('Success:', values);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const onFinish = async (values: any) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...values,
+          phone: values.phone || '',
+          message: 'Agent Inquiry: Interested in becoming a Keller Williams agent',
+          type: 'agent_inquiry'
+        })
+      });
+
+      if (!response.ok) throw new Error('Submission failed');
+
+      notification.success({
+        message: 'Application Received!',
+        description: 'Thank you for your interest in joining Keller Williams. A recruiter will contact you within 24 hours.',
+        duration: 6
+      });
+    } catch (error) {
+      notification.error({
+        message: 'Submission Error',
+        description: 'Something went wrong. Please try again or call us directly.',
+        duration: 4
+      });
+    }
   };
 
   return (
@@ -40,32 +71,37 @@ export default function BecomeAgent() {
                 Join the world's largest real estate technology franchise by agent count.
               </Paragraph>
               <Space size="large">
-                <Button type="primary" size="large" style={{ background: '#b40101', borderColor: '#b40101', height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px' }}>
+                <Button type="primary" size="large" onClick={scrollToForm} style={{ background: '#b40101', borderColor: '#b40101', height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px' }}>
                   APPLY TODAY
                 </Button>
-                <Button size="large" ghost style={{ height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px', color: 'white', borderColor: 'white' }}>
+                <Button size="large" ghost onClick={scrollToForm} style={{ height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px', color: 'white', borderColor: 'white' }}>
                   LEARN MORE
                 </Button>
               </Space>
             </Col>
             
             <Col xs={24} md={10}>
-              <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', boxShadow: '0 32px 64px rgba(0,0,0,0.3)' }}>
-                <Title level={3} style={{ textAlign: 'center', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>Join Our Network</Title>
-                <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', marginBottom: '32px' }}>Take the first step toward a thriving career.</Text>
-                
-                <Form layout="vertical" onFinish={onFinish}>
-                  <Row gutter={12}>
-                    <Col span={12}><Form.Item name="firstName" rules={[{ required: true }]}><Input size="large" placeholder="FIRST NAME" style={{ borderRadius: '24px' }} /></Form.Item></Col>
-                    <Col span={12}><Form.Item name="lastName" rules={[{ required: true }]}><Input size="large" placeholder="LAST NAME" style={{ borderRadius: '24px' }} /></Form.Item></Col>
-                  </Row>
-                  <Form.Item name="email" rules={[{ required: true, type: 'email' }]}><Input size="large" placeholder="EMAIL ADDRESS" style={{ borderRadius: '24px' }} /></Form.Item>
-                  <Form.Item name="phone" rules={[{ required: true }]}><Input size="large" placeholder="PHONE NUMBER" style={{ borderRadius: '24px' }} /></Form.Item>
-                  <Button type="primary" block size="large" style={{ background: '#111827', borderColor: '#111827', height: '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}>
-                    SUBMIT INQUIRY
-                  </Button>
-                </Form>
-              </Card>
+              <div ref={formRef}>
+                <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', boxShadow: '0 32px 64px rgba(0,0,0,0.3)' }}>
+                  <Title level={3} style={{ textAlign: 'center', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>Join Our Network</Title>
+                  <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', marginBottom: '32px' }}>Take the first step toward a thriving career.</Text>
+                  
+                  <Form layout="vertical" onFinish={onFinish}>
+                    <Row gutter={12}>
+                      <Col span={12}><Form.Item name="firstName" rules={[{ required: true, message: 'Required' }]}><Input size="large" placeholder="FIRST NAME" style={{ borderRadius: '24px' }} /></Form.Item></Col>
+                      <Col span={12}><Form.Item name="lastName" rules={[{ required: true, message: 'Required' }]}><Input size="large" placeholder="LAST NAME" style={{ borderRadius: '24px' }} /></Form.Item></Col>
+                    </Row>
+                    <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Valid email required' }]}><Input size="large" placeholder="EMAIL ADDRESS" style={{ borderRadius: '24px' }} /></Form.Item>
+                    <Form.Item name="phone" rules={[{ required: true, message: 'Phone required' }]}><Input size="large" placeholder="PHONE NUMBER" style={{ borderRadius: '24px' }} /></Form.Item>
+                    <Form.Item name="name" hidden initialValue="">
+                      <Input />
+                    </Form.Item>
+                    <Button type="primary" block size="large" htmlType="submit" style={{ background: '#111827', borderColor: '#111827', height: '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}>
+                      SUBMIT INQUIRY
+                    </Button>
+                  </Form>
+                </Card>
+              </div>
             </Col>
           </Row>
         </div>
@@ -116,7 +152,7 @@ export default function BecomeAgent() {
       {/* Footer CTA */}
       <section style={{ background: '#b40101', padding: '96px 64px', textAlign: 'center' }}>
         <Title level={2} style={{ color: 'white', fontSize: '56px', fontWeight: 900, marginBottom: '48px', textTransform: 'uppercase' }}>Ready to Accelerate Your Career?</Title>
-        <Button size="large" style={{ height: '64px', padding: '0 64px', fontWeight: 900, borderRadius: '32px', fontSize: '16px' }}>
+        <Button size="large" onClick={scrollToForm} style={{ height: '64px', padding: '0 64px', fontWeight: 900, borderRadius: '32px', fontSize: '16px' }}>
           SCHEDULE A CONFIDENTIAL MEETING
         </Button>
       </section>

@@ -9,6 +9,8 @@ export default function AgentSearch() {
   const [agents, setAgents] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [showLuxuryOnly, setShowLuxuryOnly] = useState(false);
 
   const fetchAgents = (q?: string) => {
     setLoading(true);
@@ -33,6 +35,19 @@ export default function AgentSearch() {
   const handleSearch = () => {
     fetchAgents(searchQuery);
   };
+
+  // Filter agents based on language and luxury
+  const filteredAgents = agents.filter(agent => {
+    // Language filter
+    if (selectedLanguage && !agent.languages?.includes(selectedLanguage)) {
+      return false;
+    }
+    // Luxury filter
+    if (showLuxuryOnly && !agent.isLuxury) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div style={{ background: '#f0f2f5', minHeight: 'calc(100vh - 80px)' }}>
@@ -64,10 +79,26 @@ export default function AgentSearch() {
             <Select 
                placeholder="Languages" 
                style={{ width: 150 }} 
-               suffixIcon={<GlobalOutlined />} 
-               options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Spanish' }]} 
+               suffixIcon={<GlobalOutlined />}
+               value={selectedLanguage}
+               onChange={setSelectedLanguage}
+               allowClear
+               options={[
+                 { value: 'English', label: 'English' }, 
+                 { value: 'Spanish', label: 'Spanish' },
+                 { value: 'Mandarin', label: 'Mandarin' },
+                 { value: 'French', label: 'French' }
+               ]} 
             />
-            <Button icon={<StarOutlined />} shape="round">Luxury Expert</Button>
+            <Button 
+              icon={<StarOutlined />} 
+              shape="round"
+              type={showLuxuryOnly ? 'primary' : 'default'}
+              style={showLuxuryOnly ? { background: '#faad14', borderColor: '#faad14' } : {}}
+              onClick={() => setShowLuxuryOnly(!showLuxuryOnly)}
+            >
+              Luxury Expert
+            </Button>
           </Space>
         </div>
       </div>
@@ -77,7 +108,10 @@ export default function AgentSearch() {
         <div style={{ marginBottom: '40px' }}>
           <Breadcrumb items={[{ title: <a href="/">Home</a> }, { title: 'Agents' }]} />
           <Title level={1} style={{ margin: '16px 0 8px', fontWeight: 900 }}>All Agents</Title>
-          <Text type="secondary" strong>{agents.length} Results</Text>
+          <Text type="secondary" strong>
+            {filteredAgents.length} Result{filteredAgents.length !== 1 ? 's' : ''}
+            {(selectedLanguage || showLuxuryOnly) && ` (filtered from ${agents.length} total)`}
+          </Text>
         </div>
 
         <div style={{ 
@@ -85,11 +119,17 @@ export default function AgentSearch() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', 
           gap: '32px' 
         }}>
-          {agents.map((agent) => (
+          {filteredAgents.map((agent) => (
             <div key={agent.id}>
               <AgentCard agent={agent} />
             </div>
           ))}
+
+          {!loading && filteredAgents.length === 0 && agents.length > 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px' }}>
+              <Empty description="No agents found matching your filters. Try adjusting your search criteria." />
+            </div>
+          )}
 
           {!loading && agents.length === 0 && (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px' }}>
