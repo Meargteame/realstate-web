@@ -6,5 +6,7 @@ router.get('/', propertyController.getProperties);
 router.get('/city/:city', propertyController.getPropertiesByCity);
 router.get('/:id', propertyController.getPropertyById);
 router.post('/', propertyController.createProperty);
+router.patch('/:id', propertyController.updateProperty);
+router.delete('/:id', propertyController.deleteProperty);
 
 module.exports = router;

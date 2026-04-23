@@ -81,3 +81,46 @@ exports.createProperty = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+// PATCH /api/properties/:id - Update property
+exports.updateProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price, bedrooms, bathrooms, sqft, address, city, state, zip, imageUrl, status, propertyType } = req.body;
+    
+    const data = {};
+    if (price !== undefined) data.price = parseInt(price);
+    if (bedrooms !== undefined) data.beds = parseFloat(bedrooms);
+    if (bathrooms !== undefined) data.baths = parseFloat(bathrooms);
+    if (sqft !== undefined) data.sqft = parseInt(sqft);
+    if (address !== undefined) data.address = address;
+    if (city !== undefined) data.city = city;
+    if (state !== undefined) data.state = state;
+    if (zip !== undefined) data.zip = zip;
+    if (imageUrl !== undefined) data.imageUrl = imageUrl;
+    if (status !== undefined) data.status = status;
+    if (propertyType !== undefined) data.propertyType = propertyType;
+    
+    const property = await prisma.property.update({
+      where: { id },
+      data,
+      include: { agent: true }
+    });
+    
+    res.json(property);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// DELETE /api/properties/:id - Delete property
+exports.deleteProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.property.delete({ where: { id } });
+    res.json({ message: 'Property deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

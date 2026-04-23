@@ -2,6 +2,9 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
 
+// Generate proper bcrypt hash for password123
+const passwordHash = bcrypt.hashSync('password123', 10);
+
 const agents = [
   {
     id: 'a1',
@@ -14,7 +17,10 @@ const agents = [
     reviews: 124,
     license: 'DRE# 01234567',
     languages: ['English'],
-    isLuxury: true
+    isLuxury: true,
+    bio: 'Luxury home specialist with 15+ years experience in Austin real estate.',
+    location: 'Austin Southwest',
+    specialties: 'Luxury Homes, New Construction, Investment Properties'
   },
   {
     id: 'a2',
@@ -27,7 +33,10 @@ const agents = [
     reviews: 89,
     license: 'DRE# 98765432',
     languages: ['English', 'Mandarin'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Downtown condo expert helping clients find their perfect urban home.',
+    location: 'Downtown Austin',
+    specialties: 'Condos, First-Time Buyers, Urban Living'
   },
   {
     id: 'a3',
@@ -40,7 +49,10 @@ const agents = [
     reviews: 156,
     license: 'DRE# 11223344',
     languages: ['English', 'Spanish'],
-    isLuxury: true
+    isLuxury: true,
+    bio: 'Award-winning luxury agent specializing in high-end properties.',
+    location: 'Westlake & Tarrytown',
+    specialties: 'Luxury Estates, Waterfront, Golf Course Properties'
   },
   {
     id: 'a4',
@@ -53,7 +65,10 @@ const agents = [
     reviews: 78,
     license: 'DRE# 55667788',
     languages: ['English'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Family-focused agent helping families find their dream homes.',
+    location: 'North Austin',
+    specialties: 'Family Homes, Schools, Suburban Living'
   },
   {
     id: 'a5',
@@ -66,7 +81,10 @@ const agents = [
     reviews: 203,
     license: 'DRE# 99887766',
     languages: ['English', 'Spanish'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Bilingual agent serving South Austin with dedication and expertise.',
+    location: 'South Austin',
+    specialties: 'First-Time Buyers, Relocation, Bilingual Services'
   },
   {
     id: 'a6',
@@ -79,7 +97,10 @@ const agents = [
     reviews: 145,
     license: 'DRE# 22334455',
     languages: ['English'],
-    isLuxury: true
+    isLuxury: true,
+    bio: 'Luxury market expert with deep knowledge of Westlake properties.',
+    location: 'Westlake',
+    specialties: 'Luxury Homes, Lake Properties, Custom Builds'
   },
   {
     id: 'a7',
@@ -92,7 +113,10 @@ const agents = [
     reviews: 67,
     license: 'DRE# 66778899',
     languages: ['English'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'East Austin specialist helping clients discover this vibrant neighborhood.',
+    location: 'East Austin',
+    specialties: 'Urban Living, Investment Properties, Renovations'
   },
   {
     id: 'a8',
@@ -105,7 +129,10 @@ const agents = [
     reviews: 112,
     license: 'DRE# 33445566',
     languages: ['English', 'Korean'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Tech-savvy agent specializing in downtown condos and lofts.',
+    location: 'Downtown Austin',
+    specialties: 'Condos, Tech Professionals, Urban Lifestyle'
   },
   {
     id: 'a9',
@@ -118,7 +145,10 @@ const agents = [
     reviews: 189,
     license: 'DRE# 77889900',
     languages: ['English', 'French'],
-    isLuxury: true
+    isLuxury: true,
+    bio: 'International luxury agent with expertise in high-end estates.',
+    location: 'West Austin',
+    specialties: 'Luxury Estates, International Clients, French Speakers'
   },
   {
     id: 'a10',
@@ -131,7 +161,10 @@ const agents = [
     reviews: 94,
     license: 'DRE# 44556677',
     languages: ['English'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Round Rock expert helping families find homes in great school districts.',
+    location: 'Round Rock',
+    specialties: 'Family Homes, Schools, Suburban Communities'
   },
   {
     id: 'a11',
@@ -144,7 +177,10 @@ const agents = [
     reviews: 128,
     license: 'DRE# 88990011',
     languages: ['English', 'Spanish'],
-    isLuxury: false
+    isLuxury: false,
+    bio: 'Cedar Park specialist with a passion for helping families settle in.',
+    location: 'Cedar Park',
+    specialties: 'Family Homes, New Construction, Bilingual Services'
   },
   {
     id: 'a12',
@@ -877,7 +913,7 @@ const users = [
     id: 'u1',
     name: 'Sarah Jenkins',
     email: 'sarah.j@kw.com',
-    password: '$2a$10$rZ5qH8qH8qH8qH8qH8qH8uO8qH8qH8qH8qH8qH8qH8qH8qH8qH8qH', // password: "password123"
+    password: passwordHash,
     role: 'agent',
     agentId: 'a1'
   },
@@ -885,7 +921,7 @@ const users = [
     id: 'u2',
     name: 'Michael Chen',
     email: 'm.chen@kw.com',
-    password: '$2a$10$rZ5qH8qH8qH8qH8qH8qH8uO8qH8qH8qH8qH8qH8qH8qH8qH8qH8qH',
+    password: passwordHash,
     role: 'agent',
     agentId: 'a2'
   },
@@ -893,7 +929,7 @@ const users = [
     id: 'u3',
     name: 'Jennifer Martinez',
     email: 'j.martinez@kw.com',
-    password: '$2a$10$rZ5qH8qH8qH8qH8qH8qH8uO8qH8qH8qH8qH8qH8qH8qH8qH8qH8qH',
+    password: passwordHash,
     role: 'agent',
     agentId: 'a3'
   },
@@ -901,7 +937,7 @@ const users = [
     id: 'u4',
     name: 'Test User',
     email: 'test@example.com',
-    password: '$2a$10$rZ5qH8qH8qH8qH8qH8qH8uO8qH8qH8qH8qH8qH8qH8qH8qH8qH8qH',
+    password: passwordHash,
     role: 'user',
     agentId: null
   },
@@ -909,7 +945,7 @@ const users = [
     id: 'u5',
     name: 'Admin User',
     email: 'admin@kw.com',
-    password: '$2a$10$rZ5qH8qH8qH8qH8qH8qH8uO8qH8qH8qH8qH8qH8qH8qH8qH8qH8qH',
+    password: passwordHash,
     role: 'admin',
     agentId: null
   }

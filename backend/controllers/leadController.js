@@ -101,3 +101,92 @@ exports.getAllLeads = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+// DELETE /api/leads/:id - Delete lead
+exports.deleteLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.lead.delete({ where: { id } });
+    res.json({ message: 'Lead deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// PATCH /api/leads/:id/favorite - Toggle favorite status
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lead = await prisma.lead.findUnique({ where: { id } });
+    
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+    
+    const updated = await prisma.lead.update({
+      where: { id },
+      data: { isFavorite: !lead.isFavorite }
+    });
+    
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// PATCH /api/leads/:id - Update lead (notes, etc.)
+exports.updateLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes, lastContacted } = req.body;
+    
+    const data = {};
+    if (notes !== undefined) data.notes = notes;
+    if (lastContacted !== undefined) data.lastContacted = new Date(lastContacted);
+    
+    const lead = await prisma.lead.update({
+      where: { id },
+      data
+    });
+    
+    res.json(lead);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/leads/export - Export leads to CSV
+exports.exportLeads = async (req, res) => {
+  try {
+    const { agentId } = req.query;
+    const where = agentId ? { agentId } : {};
+    
+    const leads = await prisma.lead.findMany({
+      where,
+      include: { property: true, agent: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Create CSV
+    const headers = ['Name', 'Email', 'Phone', 'Status', 'Message', 'Property', 'Date', 'Favorite'];
+    const rows = leads.map(l => [
+      l.name,
+      l.email,
+      l.phone,
+      l.status,
+      `"${l.message.replace(/"/g, '""')}"`,
+      l.property ? l.property.address : 'General Inquiry',
+      new Date(l.createdAt).toLocaleDateString(),
+      l.isFavorite ? 'Yes' : 'No'
+    ]);
+    
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

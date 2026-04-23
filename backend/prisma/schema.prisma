@@ -17,19 +17,23 @@ model User {
 }
 
 model Agent {
-  id         String     @id @default(uuid())
-  name       String
-  phone      String
-  email      String     @unique
-  imageUrl   String
-  brokerage  String
-  rating     Float      @default(0.0)
-  reviews    Int        @default(0)
-  license    String
-  languages  String[]
-  isLuxury   Boolean    @default(false)
-  properties Property[]
-  leads      Lead[]
+  id            String        @id @default(uuid())
+  name          String
+  phone         String
+  email         String        @unique
+  imageUrl      String
+  brokerage     String
+  rating        Float         @default(0.0)
+  reviews       Int           @default(0)
+  license       String
+  languages     String[]
+  isLuxury      Boolean       @default(false)
+  bio           String?
+  location      String?
+  specialties   String?
+  properties    Property[]
+  leads         Lead[]
+  opportunities Opportunity[]
 }
 
 model Property {
@@ -52,17 +56,36 @@ model Property {
 }
 
 model Lead {
-  id         String    @id @default(uuid())
-  name       String
-  email      String
-  phone      String
-  message    String
-  status     String    @default("New")
-  date       DateTime  @default(now())
+  id            String    @id @default(uuid())
+  name          String
+  email         String
+  phone         String
+  message       String
+  status        String    @default("New")
+  date          DateTime  @default(now())
+  isFavorite    Boolean   @default(false)
+  notes         String?
+  lastContacted DateTime?
+  createdAt     DateTime  @default(now())
   
-  agent      Agent     @relation(fields: [agentId], references: [id])
+  agent      Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
   agentId    String
   
-  property   Property? @relation(fields: [propertyId], references: [id])
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   propertyId String?
+}
+
+model Opportunity {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   @default("listing")
+  dealType    String
+  price       Int
+  status      String   @default("Cultivate")
+  probability Int      @default(20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId     String
 }
