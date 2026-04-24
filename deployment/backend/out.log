@@ -1,3 +1,0 @@
-◇ injected env (1) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-Server is running on port 5000

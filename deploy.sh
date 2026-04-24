@@ -54,10 +54,23 @@ echo ""
 # Step 4: Create deployment package
 echo -e "${YELLOW}📦 Step 4: Creating deployment package...${NC}"
 mkdir -p deployment
-cp -r backend deployment/
+
+# Copy backend (excluding unnecessary files)
+echo "Copying backend files..."
+rsync -av --exclude='node_modules' --exclude='pgdata' --exclude='*.log' --exclude='out.log' --exclude='err.log' backend/ deployment/backend/
+
+# Copy frontend build
+echo "Copying frontend build..."
 cp -r frontend/dist deployment/frontend
+
+# Copy documentation
 cp HOSTINGER_DEPLOYMENT_GUIDE.md deployment/
+cp HOSTINGER_QUICK_START.md deployment/
+cp DEPLOYMENT_CHECKLIST.md deployment/
 cp QUICK_REFERENCE.md deployment/
+cp nginx.conf deployment/
+cp server-setup.sh deployment/
+
 echo -e "${GREEN}✅ Deployment package created in ./deployment${NC}"
 echo ""
 
