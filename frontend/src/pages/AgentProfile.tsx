@@ -10,6 +10,7 @@ import {
   EnvironmentOutlined
 } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
+import AgentReviews from "../components/AgentReviews";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -159,6 +160,11 @@ export default function AgentProfile() {
                      </Col>
                    )}
                 </Row>
+             </section>
+
+             {/* Agent Reviews */}
+             <section style={{ marginTop: '64px' }}>
+                <AgentReviews agentId={agent.id} showSubmitForm={true} />
              </section>
           </Col>
 

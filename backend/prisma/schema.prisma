@@ -7,14 +7,15 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  name      String
-  email     String     @unique
-  password  String
-  role      String     @default("user")
-  agentId   String?
-  favorites Favorite[]
-  createdAt DateTime   @default(now())
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         String        @default("user")
+  agentId      String?
+  favorites    Favorite[]
+  savedSearches SavedSearch[]
+  createdAt    DateTime      @default(now())
 }
 
 model Agent {
@@ -32,13 +33,41 @@ model Agent {
   bio           String?
   location      String?
   specialties   String?
+  
+  // Performance Metrics
+  totalSales    Int           @default(0)
+  totalVolume   BigInt        @default(0)
+  avgResponseTime Int?        // in minutes
+  conversionRate Float?       // percentage
+  
+  // Status & Verification
+  isActive      Boolean       @default(true)
+  isVerified    Boolean       @default(false)
+  verifiedAt    DateTime?
+  lastActive    DateTime?
+  
+  // SEO
+  slug          String?       @unique
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
   properties    Property[]
   leads         Lead[]
   opportunities Opportunity[]
+  openHouses    OpenHouse[]
+  agentReviews  Review[]
+  
+  @@index([email])
+  @@index([location, isActive])
+  @@index([rating, reviews])
+  @@index([slug])
+  @@map("agents")
 }
 
 model Property {
-  id           String     @id @default(uuid())
+  id           String        @id @default(uuid())
   price        Int
   beds         Float
   baths        Float
@@ -47,14 +76,48 @@ model Property {
   city         String
   state        String
   zip          String
-  imageUrl     String     @default("https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800")
-  status       String     @default("Active")
-  propertyType String     @default("Single Family")
+  imageUrl     String        @default("https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800")
+  status       String        @default("Active")
+  propertyType String        @default("Single Family")
+  latitude     Float?
+  longitude    Float?
+  geocoded     Boolean       @default(false)
   
-  agent        Agent      @relation(fields: [agentId], references: [id])
+  // Performance & Analytics Fields
+  viewCount    Int           @default(0)
+  leadCount    Int           @default(0)
+  lastViewed   DateTime?
+  listedAt     DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime      @default(now())
+  
+  // SEO & Marketing
+  slug         String?       @unique
+  metaTitle    String?
+  metaDescription String?
+  
+  // Data Quality
+  dataQuality  Int           @default(0) // 0-100 score
+  isVerified   Boolean       @default(false)
+  verifiedAt   DateTime?
+  
+  agent        Agent         @relation(fields: [agentId], references: [id])
   agentId      String
   leads        Lead[]
   favorites    Favorite[]
+  searchAlerts SearchAlert[]
+  openHouses   OpenHouse[]
+  virtualTours VirtualTour[]
+  
+  // Critical Performance Indexes
+  @@index([city, state, status])
+  @@index([price, beds, baths])
+  @@index([latitude, longitude])
+  @@index([agentId, status])
+  @@index([status, listedAt])
+  @@index([zip, status])
+  @@index([slug])
+  @@map("properties")
 }
 
 model Lead {
@@ -103,4 +166,113 @@ model Favorite {
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   @@unique([userId, propertyId])
+}
+
+model SavedSearch {
+  id            String   @id @default(uuid())
+  userId        String
+  name          String
+  filters       Json     // Store all search criteria including map area
+  emailAlerts   Boolean  @default(true)
+  frequency     String   @default("daily") // daily, instant, weekly
+  lastRun       DateTime?
+  lastNotified  DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts        SearchAlert[]
+}
+
+model SearchAlert {
+  id             String      @id @default(uuid())
+  savedSearchId  String
+  propertyId     String
+  sentAt         DateTime    @default(now())
+  emailSent      Boolean     @default(false)
+  viewed         Boolean     @default(false)
+  
+  savedSearch    SavedSearch @relation(fields: [savedSearchId], references: [id], onDelete: Cascade)
+  property       Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  @@unique([savedSearchId, propertyId])
+}
+
+model OpenHouse {
+  id          String   @id @default(uuid())
+  propertyId  String
+  agentId     String
+  startTime   DateTime
+  endTime     DateTime
+  description String?
+  status      String   @default("scheduled") // scheduled, cancelled, completed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  rsvps       RSVP[]
+}
+
+model RSVP {
+  id           String    @id @default(uuid())
+  openHouseId  String
+  name         String
+  email        String
+  phone        String?
+  guests       Int       @default(1)
+  message      String?
+  status       String    @default("confirmed") // confirmed, cancelled
+  createdAt    DateTime  @default(now())
+  
+  openHouse    OpenHouse @relation(fields: [openHouseId], references: [id], onDelete: Cascade)
+  
+  @@unique([openHouseId, email])
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  agentId         String
+  reviewerName    String
+  reviewerEmail   String
+  rating          Int      // 1-5 stars
+  comment         String
+  transactionType String   // "buyer", "seller", "rental"
+  verified        Boolean  @default(false)
+  agentResponse   String?
+  status          String   @default("published") // published, flagged, removed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model VirtualTour {
+  id          String   @id @default(uuid())
+  propertyId  String
+  type        String   // "360photo", "matterport", "youtube", "video"
+  url         String
+  title       String?
+  description String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model MarketData {
+  id              String   @id @default(uuid())
+  zipCode         String   @unique
+  city            String
+  state           String
+  avgPrice        Int?
+  medianPrice     Int?
+  avgDaysOnMarket Int?
+  pricePerSqft    Int?
+  inventoryCount  Int?
+  salesVolume     Int?
+  priceChange     Float?   // Percentage change from last period
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
 }

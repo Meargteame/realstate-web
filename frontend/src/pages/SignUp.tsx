@@ -10,6 +10,7 @@ export default function SignUp() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("agent"); // Default to agent
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +25,7 @@ export default function SignUp() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password })
+        body: JSON.stringify({ firstName, lastName, email, password, role })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -97,6 +98,19 @@ export default function SignUp() {
                   required
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[13px] font-bold text-gray-700 uppercase tracking-wider">Account Type</label>
+              <select 
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="h-14 w-full border border-gray-300 focus:ring-2 focus:ring-[#b40101] rounded-full text-base px-4 bg-gray-50/50 outline-none"
+                required
+              >
+                <option value="agent">Agent Account</option>
+                <option value="user">Buyer/Seller Account</option>
+              </select>
             </div>
 
             <div className="space-y-2">

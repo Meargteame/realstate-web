@@ -12,6 +12,8 @@ import AgentProfile from "./pages/AgentProfile";
 import AgentDashboard from "./pages/AgentDashboard";
 import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
+import SavedSearches from "./pages/SavedSearches";
+import OpenHouses from "./pages/OpenHouses";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import BecomeAgent from "./pages/BecomeAgent";
@@ -33,6 +35,8 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="properties" element={<Properties />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
+          <Route path="saved-searches" element={<SavedSearches />} />
+          <Route path="open-houses" element={<OpenHouses />} />
           <Route path="agents" element={<AgentSearch />} />
           <Route path="agents/:id" element={<AgentProfile />} />
           <Route path="become-agent" element={<BecomeAgent />} />

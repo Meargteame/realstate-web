@@ -1,8 +1,21 @@
 const prisma = require('../config/prisma');
+const cacheService = require('../services/cacheService');
+const { businessMetrics } = require('../middleware/monitoring');
 
 exports.getProperties = async (req, res) => {
   const { q } = req.query;
+  
   try {
+    // Generate cache key
+    const cacheKey = cacheService.generatePropertyKey({ q });
+    
+    // Try cache first
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+    
+    // Cache miss - query database
     const where = q ? {
       OR: [
         { city: { contains: q, mode: 'insensitive' } },
@@ -17,6 +30,13 @@ exports.getProperties = async (req, res) => {
       where,
       include: { agent: true }
     });
+    
+    // Cache for 5 minutes (hot data)
+    await cacheService.set(cacheKey, properties, 300);
+    
+    // Track business metric
+    businessMetrics.track('property.search', { query: q, results: properties.length });
+    
     res.json(properties);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -25,13 +45,28 @@ exports.getProperties = async (req, res) => {
 
 exports.getPropertiesByCity = async (req, res) => {
   const { city } = req.params;
+  
   try {
+    // Generate cache key
+    const cacheKey = cacheService.generatePropertyKey({ city });
+    
+    // Try cache first
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+    
+    // Cache miss - query database
     const properties = await prisma.property.findMany({
       where: {
         city: { contains: city.replace(/-/g, ' '), mode: 'insensitive' }
       },
       include: { agent: true }
     });
+    
+    // Cache for 5 minutes
+    await cacheService.set(cacheKey, properties, 300);
+    
     res.json(properties);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -40,11 +75,44 @@ exports.getPropertiesByCity = async (req, res) => {
 
 exports.getPropertyById = async (req, res) => {
   try {
+    const { id } = req.params;
+    
+    // Generate cache key
+    const cacheKey = cacheService.generatePropertyIdKey(id);
+    
+    // Try cache first
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      // Track view
+      businessMetrics.track('property.view', { propertyId: id });
+      return res.json(cached);
+    }
+    
+    // Cache miss - query database
     const property = await prisma.property.findUnique({
-      where: { id: req.params.id },
+      where: { id },
       include: { agent: true }
     });
-    if (!property) return res.status(404).json({ error: 'Property not found' });
+    
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Update view count
+    await prisma.property.update({
+      where: { id },
+      data: { 
+        viewCount: { increment: 1 },
+        lastViewed: new Date()
+      }
+    });
+    
+    // Cache for 10 minutes
+    await cacheService.set(cacheKey, property, 600);
+    
+    // Track business metric
+    businessMetrics.track('property.view', { propertyId: id });
+    
     res.json(property);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -108,6 +176,10 @@ exports.updateProperty = async (req, res) => {
       include: { agent: true }
     });
     
+    // Invalidate caches
+    await cacheService.del(cacheService.generatePropertyIdKey(id));
+    await cacheService.delPattern('properties:*');
+    
     res.json(property);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -119,6 +191,11 @@ exports.deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.property.delete({ where: { id } });
+    
+    // Invalidate caches
+    await cacheService.del(cacheService.generatePropertyIdKey(id));
+    await cacheService.delPattern('properties:*');
+    
     res.json({ message: 'Property deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

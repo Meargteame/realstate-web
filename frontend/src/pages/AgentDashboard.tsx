@@ -45,8 +45,8 @@ export default function AgentDashboard() {
       key: 'name',
       render: (text: string, record: any) => (
         <div>
-          <div style={{ fontWeight: 'bold' }}>{text}</div>
-          <div style={{ fontSize: '12px', color: '#888' }}>{record.phone}</div>
+          <div style={{ fontSize: '14px', fontWeight: 500 }}>{text}</div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>{record.phone}</div>
         </div>
       ),
     },
@@ -86,37 +86,37 @@ export default function AgentDashboard() {
   ];
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: '24px 32px', minHeight: 'calc(100vh - 64px)' }}>
       {/* KPI Stat Cards */}
       <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase' }}>Active Listings</Text>
-            <Title level={2} style={{ margin: '12px 0 4px' }}>{activeListings.length}</Title>
+          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>Active Listings</Text>
+            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{activeListings.length}</Title>
             <div style={{ height: '24px' }}><Badge status="processing" text={`${activeListings.length} total units`} /></div>
           </AntCard>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase' }}>Total Active Volume</Text>
-            <Title level={2} style={{ margin: '12px 0 4px' }}>{formatCurrency(totalVolume)}</Title>
+          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>Total Active Volume</Text>
+            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{formatCurrency(totalVolume)}</Title>
             <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12 }}>Current Portfolio Value</Text></div>
           </AntCard>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase' }}>New Leads</Text>
+              <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>New Leads</Text>
               {newLeads > 0 && <Badge count={newLeads} offset={[4, -4]} />}
             </Space>
-            <Title level={2} style={{ margin: '12px 0 4px' }}>{newLeads}</Title>
+            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{newLeads}</Title>
             <div style={{ height: '24px' }}><Text type={newLeads > 0 ? "danger" : "secondary"} style={{ fontSize: 12 }}>{newLeads > 0 ? "Needs attention" : "Everything current"}</Text></div>
           </AntCard>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Text type="secondary" strong style={{ fontSize: 12, textTransform: 'uppercase' }}>Sales Pipeline</Text>
-            <Title level={2} style={{ margin: '12px 0 4px' }}>{pipeline}</Title>
+          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>Sales Pipeline</Text>
+            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{pipeline}</Title>
             <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12 }}>Pending Transactions</Text></div>
           </AntCard>
         </Col>
@@ -158,7 +158,7 @@ export default function AgentDashboard() {
                 >
                   <List.Item.Meta
                     avatar={<Avatar src={item.imageUrl} shape="square" size={60} />}
-                    title={<span style={{ fontWeight: 'bold' }}>{formatCurrency(item.price)}</span>}
+                    title={<span style={{ fontSize: '14px', fontWeight: 500 }}>{formatCurrency(item.price)}</span>}
                     description={
                       <div>
                         <div style={{ fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: 140 }}>

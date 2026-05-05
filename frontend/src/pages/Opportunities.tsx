@@ -112,10 +112,10 @@ export default function Opportunities() {
   });
 
   return (
-    <div style={{ padding: '32px', background: '#fcfcfc', minHeight: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+    <div style={{ padding: '24px 32px', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <Title level={2} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px' }}>Opportunities</Title>
+          <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>Opportunities</Title>
           <Text type="secondary" style={{ fontSize: '14px' }}>Track your transaction pipeline from lead to close.</Text>
         </div>
         <Space>
@@ -144,30 +144,30 @@ export default function Opportunities() {
       <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '24px' }}>
         {pipeline.map((phase, i) => (
           <div key={i} style={{ minWidth: '300px', flex: 1 }}>
-            <div style={{ padding: '12px 16px', background: 'white', border: '1px solid #f0f0f0', borderRadius: '12px 12px 0 0', borderBottom: '3px solid #b40101' }}>
+            <div style={{ padding: '12px 16px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px 8px 0 0', borderBottom: '2px solid #b40101' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text strong style={{ textTransform: 'uppercase', fontSize: '12px', color: '#555' }}>{phase.status}</Text>
-                <Badge count={phase.count} style={{ backgroundColor: '#f0f0f0', color: '#111', boxShadow: 'none' }} />
+                <Text style={{ fontSize: '12px', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{phase.status}</Text>
+                <Badge count={phase.count} style={{ backgroundColor: '#f3f4f6', color: '#374151', boxShadow: 'none' }} />
               </div>
               <div style={{ marginTop: '8px' }}>
-                <Text style={{ fontSize: '18px', fontWeight: 900 }}>
+                <Text style={{ fontSize: '18px', fontWeight: 600 }}>
                   ${phase.volume >= 1000000 ? (phase.volume / 1000000).toFixed(1) + 'M' : (phase.volume / 1000).toFixed(0) + 'K'}
                 </Text>
                 <Text type="secondary" style={{ fontSize: '11px', marginLeft: '8px' }}>VOL</Text>
               </div>
             </div>
 
-            <div style={{ background: '#f5f5f5', padding: '12px', borderRadius: '0 0 12px 12px', minHeight: '500px' }}>
+            <div style={{ background: '#f9fafb', padding: '12px', borderRadius: '0 0 8px 8px', minHeight: '500px' }}>
                {phase.deals.map((deal, di) => (
                  <AntCard 
                    key={di} 
-                   style={{ marginBottom: '12px', borderRadius: '8px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+                   style={{ marginBottom: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
                    styles={{ body: { padding: '16px' } }}
                  >
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
-                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{deal.name}</div>
-                        <Text type="secondary" style={{ fontSize: '11px' }}>{deal.dealType}</Text>
+                        <div style={{ fontSize: '14px', fontWeight: 500, color: '#111827' }}>{deal.name}</div>
+                        <Text type="secondary" style={{ fontSize: '12px' }}>{deal.dealType}</Text>
                       </div>
                       <Space>
                         <Button type="text" size="small" icon={<EditOutlined />} onClick={() => handleEdit(deal)} />
@@ -176,15 +176,15 @@ export default function Opportunities() {
                    </div>
                    
                    <div style={{ marginBottom: '16px' }}>
-                      <Text strong style={{ color: '#b40101', fontSize: '15px' }}>
+                      <Text style={{ color: '#b40101', fontSize: '15px', fontWeight: 500 }}>
                         ${deal.price.toLocaleString()}
                       </Text>
                    </div>
 
-                   <div style={{ background: '#fafafa', padding: '8px', borderRadius: '4px' }}>
+                   <div style={{ background: '#f9fafb', padding: '8px', borderRadius: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <Text style={{ fontSize: '10px', color: '#8c8c8c' }}>PROBABILITY</Text>
-                        <Text style={{ fontSize: '10px', fontWeight: 'bold' }}>{deal.probability}%</Text>
+                        <Text style={{ fontSize: '10px', color: '#6b7280' }}>PROBABILITY</Text>
+                        <Text style={{ fontSize: '10px', fontWeight: 500 }}>{deal.probability}%</Text>
                       </div>
                       <Progress percent={deal.probability} size="small" showInfo={false} strokeColor="#b40101" />
                    </div>
@@ -200,7 +200,7 @@ export default function Opportunities() {
                  </AntCard>
                ))}
                {phase.deals.length === 0 && (
-                 <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed #d9d9d9', borderRadius: '8px' }}>
+                 <div style={{ textAlign: 'center', padding: '40px 20px', border: '2px dashed #e5e7eb', borderRadius: '6px' }}>
                     <Text type="secondary" style={{ fontSize: '12px' }}>No active deals in this phase.</Text>
                  </div>
                )}

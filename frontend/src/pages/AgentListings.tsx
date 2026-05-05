@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Tag, Space, Button, Typography, Input, message, Modal, Form, Select, Row, Col, InputNumber } from "antd";
+import { Table, Tag, Space, Button, Typography, Input, message, Modal, Form, Select, Row, Col, InputNumber, Upload } from "antd";
 import { useOutletContext, Link } from "react-router-dom";
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 
@@ -13,6 +13,7 @@ export default function AgentListings() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
+  const [imageFileList, setImageFileList] = useState<any[]>([]);
   const [form] = Form.useForm();
 
   const AntSelect = Select as any;
@@ -52,6 +53,7 @@ export default function AgentListings() {
 
   const handleEdit = (property: any) => {
     setEditingProperty(property);
+    setImageFileList([]); // Reset image list for editing
     form.setFieldsValue({
       address: property.address,
       city: property.city,
@@ -67,9 +69,18 @@ export default function AgentListings() {
     setIsModalOpen(true);
   };
 
+  const handleImageChange = (info: any) => {
+    let fileList = [...info.fileList];
+    // Limit to 10 images
+    fileList = fileList.slice(-10);
+    setImageFileList(fileList);
+  };
+
   const handleSubmit = async (values: any) => {
     setSubmitting(true);
     try {
+      let propertyId = editingProperty?.id;
+      
       if (editingProperty) {
         // Update existing property
         const res = await fetch(`/api/properties/${editingProperty.id}`, {
@@ -79,6 +90,7 @@ export default function AgentListings() {
         });
         if (!res.ok) throw new Error('Failed to update listing');
         const updated = await res.json();
+        propertyId = updated.id;
         setListings(prev => prev.map(p => p.id === updated.id ? updated : p));
         message.success("Listing updated successfully!");
       } else {
@@ -90,11 +102,37 @@ export default function AgentListings() {
         });
         if (!res.ok) throw new Error('Failed to create listing');
         const newProperty = await res.json();
+        propertyId = newProperty.id;
         setListings(prev => [newProperty, ...prev]);
         message.success("Listing published successfully!");
       }
+
+      // Upload images if any
+      if (imageFileList.length > 0 && propertyId) {
+        const formData = new FormData();
+        imageFileList.forEach(file => {
+          if (file.originFileObj) {
+            formData.append('images', file.originFileObj);
+          }
+        });
+
+        const uploadRes = await fetch(`/api/upload/property/${propertyId}/images`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (uploadRes.ok) {
+          message.success('Images uploaded successfully!');
+          // Refresh listings to show new images
+          const refreshRes = await fetch(`/api/agents/${parentAgent.id}`);
+          const data = await refreshRes.json();
+          setListings(data.properties || []);
+        }
+      }
+
       setIsModalOpen(false);
       setEditingProperty(null);
+      setImageFileList([]);
       form.resetFields();
     } catch {
       message.error(`Failed to ${editingProperty ? 'update' : 'publish'} listing. Please try again.`);
@@ -149,15 +187,15 @@ export default function AgentListings() {
   ];
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: '24px 32px', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
         <div>
-          <Title level={2} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase' }}>My Listings</Title>
+          <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>My Listings</Title>
           <Text type="secondary">Manage your active and pending property inventory.</Text>
         </div>
         <Space>
           <Input prefix={<SearchOutlined />} placeholder="Filter listings..." style={{ width: 250 }} onChange={e => setSearchText(e.target.value)} />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingProperty(null); form.resetFields(); setIsModalOpen(true); }} style={{ background: '#b40101', borderColor: '#b40101' }}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingProperty(null); setImageFileList([]); form.resetFields(); setIsModalOpen(true); }} style={{ background: '#b40101', borderColor: '#b40101' }}>
             Create New
           </Button>
         </Space>
@@ -173,7 +211,7 @@ export default function AgentListings() {
         />
       </div>
 
-      <Modal title={editingProperty ? "Edit Listing" : "Add New Listing"} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingProperty(null); form.resetFields(); }} footer={null} width={680}>
+      <Modal title={editingProperty ? "Edit Listing" : "Add New Listing"} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingProperty(null); setImageFileList([]); form.resetFields(); }} footer={null} width={680}>
         <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 20 }}>
           <Form.Item label="Property Address" name="address" rules={[{ required: true }]}>
             <Input placeholder="e.g. 123 Luxury Ave" />
@@ -206,6 +244,23 @@ export default function AgentListings() {
             <Col span={8}><Form.Item label="Bathrooms" name="bathrooms"><InputNumber style={{ width: '100%' }} min={0} step={0.5} /></Form.Item></Col>
             <Col span={8}><Form.Item label="Sq. Footage" name="sqft"><InputNumber style={{ width: '100%' }} min={100} /></Form.Item></Col>
           </Row>
+          <Form.Item label="Property Images" help="Upload up to 10 images (max 5MB each)">
+            <Upload
+              listType="picture-card"
+              fileList={imageFileList}
+              onChange={handleImageChange}
+              beforeUpload={() => false}
+              accept="image/*"
+              multiple
+            >
+              {imageFileList.length >= 10 ? null : (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
           <Form.Item label="Status" name="status">
             <AntSelect defaultValue="Active">
               <AntOption value="Active">Active</AntOption>
@@ -214,7 +269,7 @@ export default function AgentListings() {
             </AntSelect>
           </Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-            <Button onClick={() => { setIsModalOpen(false); setEditingProperty(null); form.resetFields(); }}>Cancel</Button>
+            <Button onClick={() => { setIsModalOpen(false); setEditingProperty(null); setImageFileList([]); form.resetFields(); }}>Cancel</Button>
             <Button type="primary" htmlType="submit" loading={submitting} style={{ background: '#b40101', borderColor: '#b40101' }}>
               {editingProperty ? 'Update Listing' : 'Publish Listing'}
             </Button>

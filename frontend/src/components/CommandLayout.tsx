@@ -40,6 +40,7 @@ export default function CommandLayout() {
       id: parsed.agentId,
       name: parsed.name,
       email: parsed.email,
+      role: parsed.role || 'agent', // Add role from localStorage
       imageUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
       leads: [],
       properties: []
@@ -57,7 +58,13 @@ export default function CommandLayout() {
       })
       .then(fullAgent => {
         if (fullAgent) {
-          setCurrentAgent(fullAgent);
+          // Use imageUrl directly - proxy will handle routing to backend
+          const imageUrl = fullAgent.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullAgent.name)}&background=111827&color=fff&size=128`;
+          
+          setCurrentAgent({
+            ...fullAgent,
+            imageUrl
+          });
           setNewLeadsCount((fullAgent.leads || []).filter((l: any) => l.status === 'New').length);
           setListingsCount((fullAgent.properties || []).length);
         }
@@ -113,10 +120,18 @@ export default function CommandLayout() {
         style={{ position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 100, background: '#111827' }}
       >
         <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #1f2937' }}>
-          <Avatar src={currentAgent?.imageUrl} size="large" />
-          <div>
-            <div style={{ color: 'white', fontWeight: 'bold', lineHeight: 1.2 }}>{currentAgent?.name}</div>
-            <div style={{ color: '#8c8c8c', fontSize: '12px' }}>Agent Command Core</div>
+          <Avatar 
+            src={currentAgent?.imageUrl} 
+            size="large"
+            style={{ backgroundColor: '#374151' }}
+          >
+            {!currentAgent?.imageUrl && currentAgent?.name?.charAt(0)}
+          </Avatar>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: 'white', fontSize: '14px', lineHeight: 1.2 }}>{currentAgent?.name}</div>
+            <div style={{ color: '#9ca3af', fontSize: '12px', textTransform: 'capitalize', letterSpacing: '0.3px' }}>
+              {currentAgent?.role || 'Agent'}
+            </div>
           </div>
         </div>
         <Menu 
@@ -136,30 +151,49 @@ export default function CommandLayout() {
       </Sider>
 
       <Layout style={{ marginLeft: 260 }}>
-        <Header style={{ background: '#fff', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 10 }}>
-          <Title level={4} style={{ margin: 0 }}>Welcome back, {currentAgent?.name.split(' ')[0]}</Title>
-          <Space size="large">
+        <Header style={{ 
+          background: '#fff', 
+          padding: '16px 32px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          borderBottom: '1px solid #e5e7eb', 
+          position: 'sticky', 
+          top: 0, 
+          zIndex: 10, 
+          height: 'auto',
+          minHeight: '72px'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ fontSize: '20px', fontWeight: 400, color: '#111827', lineHeight: 1.2 }}>
+              Welcome back, {currentAgent?.name.split(' ')[0]}
+            </div>
+            <div style={{ fontSize: '13px', color: '#6b7280' }}>
+              {currentAgent?.role?.charAt(0).toUpperCase() + currentAgent?.role?.slice(1) || 'Agent'} Dashboard
+            </div>
+          </div>
+          <Space size="middle">
             <Input 
-              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />} 
+              prefix={<SearchOutlined style={{ color: '#9ca3af' }} />} 
               placeholder="Search contacts..." 
               onPressEnter={(e) => navigate(`/command/leads?q=${e.currentTarget.value}`)}
-              style={{ borderRadius: '20px', width: 250, background: '#f5f5f5', border: 'none' }}
+              style={{ borderRadius: '8px', width: 240, height: '40px' }}
             />
             <Badge dot={newLeadsCount > 0}>
-               <BellOutlined style={{ fontSize: '20px', cursor: 'pointer' }} />
+               <BellOutlined style={{ fontSize: '20px', cursor: 'pointer', color: '#6b7280' }} />
             </Badge>
             <Button 
               type="primary" 
               icon={<PlusOutlined />} 
               onClick={() => navigate('/command/listings')}
-              style={{ background: '#b40101', borderColor: '#b40101', fontWeight: 'bold', height: '40px', borderRadius: '4px' }}
+              style={{ background: '#b40101', borderColor: '#b40101', height: '40px', borderRadius: '6px', fontWeight: 400 }}
             >
               Create Listing
             </Button>
           </Space>
         </Header>
 
-        <Content style={{ background: '#f5f5f5', minHeight: 280 }}>
+        <Content style={{ background: '#f5f5f5', minHeight: 'calc(100vh - 72px)', padding: 0 }}>
             <Outlet context={{ agent: currentAgent }} />
         </Content>
       </Layout>

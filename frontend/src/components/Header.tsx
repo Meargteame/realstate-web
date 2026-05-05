@@ -22,6 +22,8 @@ export default function Header() {
 
   const navItems = [
     { key: '/properties', label: <Link to="/properties">Search</Link> },
+    { key: '/saved-searches', label: <Link to="/saved-searches">Saved Searches</Link> },
+    { key: '/open-houses', label: <Link to="/open-houses">Open Houses</Link> },
     { key: '/agents', label: <Link to="/agents">Find a KW® Agent</Link> },
     { key: '/become-agent', label: <Link to="/become-agent">Become a KW® Agent</Link> }
   ];

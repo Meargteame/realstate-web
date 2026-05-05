@@ -140,12 +140,12 @@ export default function LeadsPage() {
   ];
 
   return (
-    <div style={{ padding: '32px', background: '#f5f5f5', minHeight: 'calc(100vh - 80px)' }}>
+    <div style={{ padding: '24px 32px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ marginBottom: '24px' }}>
         <Breadcrumb items={[{ title: <Link to="/command">Dashboard</Link> }, { title: 'Contacts / Leads' }]} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '16px' }}>
           <div>
-            <Title level={2} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+            <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>
               Contact Pipeline
             </Title>
             <Text type="secondary">Manage and track your real estate inquiries. Click status to update pipeline stage.</Text>

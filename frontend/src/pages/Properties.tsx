@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification } from "antd";
-import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, DollarOutlined, HomeOutlined } from "@ant-design/icons";
+import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, DollarOutlined, HomeOutlined, SaveOutlined } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
+import PropertyMap from "@/components/PropertyMap";
+import SaveSearchModal from "@/components/SaveSearchModal";
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 export default function Properties() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const query = searchParams.get("q") || "";
   const typeParam = searchParams.get("type") || "";
   const [showMap, setShowMap] = useState(true);
@@ -16,6 +19,11 @@ export default function Properties() {
   const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [mapBounds, setMapBounds] = useState<any>(null);
+  const [drawnArea, setDrawnArea] = useState<any>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [savingSearch, setSavingSearch] = useState(false);
   
   // Filter states
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
@@ -38,22 +46,64 @@ export default function Properties() {
 
   useEffect(() => {
     setLoading(true);
-    const url = query ? `/api/properties?q=${encodeURIComponent(query)}` : "/api/properties";
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        setProperties(Array.isArray(data) ? data : []);
+    
+    // Use map API if we have drawn area, otherwise use regular search
+    const url = drawnArea 
+      ? "/api/map/search-area"
+      : query 
+        ? `/api/properties?q=${encodeURIComponent(query)}` 
+        : "/api/properties";
+
+    const fetchProperties = async () => {
+      try {
+        let response;
+        
+        if (drawnArea) {
+          // Search within drawn area
+          response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              geometry: drawnArea,
+              filters: {
+                minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+                maxPrice: priceRange[1] < 5000000 ? priceRange[1] : undefined,
+                beds: bedrooms,
+                baths: bathrooms,
+                propertyType: propertyType
+              }
+            })
+          });
+          const data = await response.json();
+          setProperties(data.properties || []);
+        } else {
+          // Regular search
+          response = await fetch(url);
+          const data = await response.json();
+          setProperties(Array.isArray(data) ? data : []);
+        }
+        
         setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error(err);
         setLoading(false);
         notification.error({ message: 'Search Error', description: 'Could not fetch properties.' });
-      });
-  }, [query]);
+      }
+    };
 
-  // Apply filters
+    fetchProperties();
+  }, [query, drawnArea]);
+
+  // Apply filters (only if not using drawn area, as area search handles filters on backend)
   useEffect(() => {
+    if (drawnArea) {
+      // For drawn area searches, properties are already filtered on backend
+      setFilteredProperties(properties);
+      return;
+    }
+
     let filtered = [...properties];
 
     // Price filter
@@ -95,7 +145,7 @@ export default function Properties() {
     }
 
     setFilteredProperties(filtered);
-  }, [properties, priceRange, bedrooms, bathrooms, propertyType, sortBy]);
+  }, [properties, priceRange, bedrooms, bathrooms, propertyType, sortBy, drawnArea]);
 
   const clearFilters = () => {
     setPriceRange([0, 5000000]);
@@ -103,13 +153,93 @@ export default function Properties() {
     setBathrooms(null);
     setPropertyType(null);
     setSortBy("newest");
+    setDrawnArea(null); // Clear drawn area
+  };
+
+  // Handle map interactions
+  const handlePropertySelect = (property: any) => {
+    setSelectedProperty(property);
+  };
+
+  const handleDrawComplete = (area: any) => {
+    setDrawnArea(area);
+  };
+
+  const handleMapBoundsChange = (bounds: any) => {
+    setMapBounds(bounds);
+  };
+
+  // Handle save search
+  const handleSaveSearch = async (searchData: any) => {
+    try {
+      setSavingSearch(true);
+      
+      const response = await fetch('/api/saved-searches', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: searchData.name,
+          filters: {
+            minPrice: priceRange[0] > 0 ? priceRange[0] : null,
+            maxPrice: priceRange[1] < 5000000 ? priceRange[1] : null,
+            beds: bedrooms,
+            baths: bathrooms,
+            propertyType: propertyType,
+            query: query,
+            mapArea: drawnArea,
+            bounds: mapBounds
+          },
+          emailAlerts: searchData.emailAlerts,
+          frequency: searchData.frequency
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        notification.success({
+          message: 'Search Saved!',
+          description: `"${searchData.name}" has been saved. You'll receive ${searchData.frequency} notifications for new matches.`
+        });
+        setShowSaveModal(false);
+      } else {
+        notification.error({
+          message: 'Save Failed',
+          description: data.error || 'Failed to save search'
+        });
+      }
+    } catch (error) {
+      console.error('Save search error:', error);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to save search'
+      });
+    } finally {
+      setSavingSearch(false);
+    }
+  };
+
+  // Check if there are active filters to show save button
+  const hasActiveFilters = () => {
+    return (
+      priceRange[0] > 0 || 
+      priceRange[1] < 5000000 || 
+      bedrooms !== null || 
+      bathrooms !== null || 
+      propertyType !== null || 
+      drawnArea !== null ||
+      query !== ""
+    );
   };
 
   const activeFilterCount = [
     priceRange[0] > 0 || priceRange[1] < 5000000,
     bedrooms !== null,
     bathrooms !== null,
-    propertyType !== null
+    propertyType !== null,
+    drawnArea !== null
   ].filter(Boolean).length;
 
   const FilterPanel = () => (
@@ -232,11 +362,12 @@ export default function Properties() {
         }}>
           <div>
             <Title level={4} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase' }}>
-              {query ? `Search: ${query}` : "All Properties"}
+              {drawnArea ? "Search Area Results" : query ? `Search: ${query}` : "All Properties"}
             </Title>
             <Text type="secondary" style={{ fontSize: '11px', fontWeight: 'bold' }}>
               {filteredProperties.length} AVAILABLE LISTINGS
               {activeFilterCount > 0 && ` · ${activeFilterCount} FILTER${activeFilterCount > 1 ? 'S' : ''} ACTIVE`}
+              {drawnArea && " · CUSTOM AREA"}
             </Text>
           </div>
 
@@ -253,6 +384,18 @@ export default function Properties() {
                  { value: 'sqft', label: 'Largest Sq Ft' }
                ]} 
              />
+             
+             {hasActiveFilters() && (
+               <Button
+                 type="default"
+                 icon={<SaveOutlined />}
+                 onClick={() => setShowSaveModal(true)}
+                 style={{ borderColor: '#b40101', color: '#b40101' }}
+               >
+                 Save Search
+               </Button>
+             )}
+             
              <Badge count={activeFilterCount} offset={[-5, 5]}>
                <Button 
                  type="default" 
@@ -301,43 +444,18 @@ export default function Properties() {
           style={{ 
             borderLeft: '1px solid #f0f0f0', 
             position: 'relative', 
-            background: '#e5e7eb',
+            background: '#f8f8f8',
             overflow: 'hidden'
           }}
         >
-          {/* Mock Interactive Map */}
-          <div style={{ 
-            position: 'absolute', 
-            inset: 0, 
-            backgroundImage: 'url("https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1200&q=80")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'grayscale(100%) opacity(0.3)'
-          }} />
-          
-          <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-            {filteredProperties.map((p, i) => (
-               <div 
-                 key={p.id}
-                 style={{ 
-                   position: 'absolute',
-                   left: `${20 + (i * 15) % 60}%`,
-                   top: `${20 + (i * 12) % 60}%`,
-                   padding: '8px 12px',
-                   background: '#b40101',
-                   color: 'white',
-                   fontWeight: 'bold',
-                   border: '2px solid white',
-                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                   cursor: 'pointer',
-                   zIndex: 2,
-                   borderRadius: '4px'
-                 }}
-               >
-                 ${(p.price / 1000).toFixed(0)}k
-               </div>
-            ))}
-          </div>
+          <PropertyMap
+            properties={filteredProperties}
+            onPropertySelect={handlePropertySelect}
+            onBoundsChange={handleMapBoundsChange}
+            onDrawComplete={handleDrawComplete}
+            height="100%"
+            showControls={true}
+          />
         </Sider>
       )}
 
@@ -351,6 +469,23 @@ export default function Properties() {
       >
         <FilterPanel />
       </Drawer>
+
+      {/* Save Search Modal */}
+      <SaveSearchModal
+        visible={showSaveModal}
+        onCancel={() => setShowSaveModal(false)}
+        onSave={handleSaveSearch}
+        currentFilters={{
+          minPrice: priceRange[0] > 0 ? priceRange[0] : null,
+          maxPrice: priceRange[1] < 5000000 ? priceRange[1] : null,
+          beds: bedrooms,
+          baths: bathrooms,
+          propertyType: propertyType,
+          query: query
+        }}
+        currentMapArea={drawnArea}
+        loading={savingSearch}
+      />
     </Layout>
   );
 }

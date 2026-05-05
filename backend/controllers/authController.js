@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, role } = req.body;
 
   if (!firstName || !lastName || !email || !password) {
     return res.status(400).json({ error: 'All fields are required.' });
@@ -17,12 +17,33 @@ exports.register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const userRole = role || 'user'; // Default to 'user' if not specified
+    
+    let agentId = null;
+
+    // If registering as an agent, create an agent record first
+    if (userRole === 'agent') {
+      const agent = await prisma.agent.create({
+        data: {
+          name: `${firstName} ${lastName}`,
+          email,
+          phone: '',
+          imageUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+          brokerage: 'Keller Williams Premier Realty',
+          license: 'Pending',
+          languages: ['English']
+        }
+      });
+      agentId = agent.id;
+    }
 
     const user = await prisma.user.create({
       data: {
         name: `${firstName} ${lastName}`,
         email,
         password: hashedPassword,
+        role: userRole,
+        agentId: agentId
       }
     });
 

@@ -9,6 +9,10 @@ import {
   EnvironmentOutlined, CheckCircleOutlined, UserOutlined,
   DollarOutlined, HomeOutlined, AreaChartOutlined
 } from "@ant-design/icons";
+import VirtualTourViewer from "../components/VirtualTourViewer";
+import AgentReviews from "../components/AgentReviews";
+import MarketReports from "../components/MarketReports";
+import SocialShare from "../components/SocialShare";
 
 const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
@@ -115,7 +119,14 @@ export default function PropertyDetails() {
           <ArrowLeftOutlined /> BACK TO ALL LISTINGS
         </Link>
         <Space>
-           <Button icon={<ShareAltOutlined />} onClick={handleShare}>SHARE</Button>
+           <SocialShare 
+             url={window.location.href}
+             title={property.address}
+             description={`${property.beds} bed, ${property.baths} bath home in ${property.city}, ${property.state}`}
+             price={property.price}
+             imageUrl={property.imageUrl}
+             propertyId={property.id}
+           />
            <Button 
              type="primary" 
              icon={isSaved ? <HeartFilled /> : <HeartOutlined />} 
@@ -202,7 +213,7 @@ export default function PropertyDetails() {
                </Paragraph>
             </Card>
 
-            <div style={{ background: '#111827', borderRadius: '12px', padding: '40px', color: 'white' }}>
+            <div style={{ background: '#111827', borderRadius: '12px', padding: '40px', color: 'white', marginBottom: '48px' }}>
                <Title level={3} style={{ color: 'white', textTransform: 'uppercase', fontWeight: 900, marginBottom: '32px' }}>Key Features</Title>
                <Row gutter={[32, 24]}>
                   {['Hardwood Floors', 'Quartz Countertops', '2-Car Garage', 'Fenced Backyard', 'Central AC', 'Open Layout'].map((f, i) => (
@@ -215,6 +226,24 @@ export default function PropertyDetails() {
                   ))}
                </Row>
             </div>
+
+            {/* Virtual Tours */}
+            <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
+              <Title level={3} style={{ textTransform: 'uppercase', fontWeight: 900, marginBottom: '24px', borderBottom: '1px solid #f0f0f0', paddingBottom: '16px' }}>Virtual Tours</Title>
+              <VirtualTourViewer propertyId={property.id} />
+            </Card>
+
+            {/* Market Reports */}
+            <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
+              <MarketReports zipCode={property.zip} city={property.city} state={property.state} />
+            </Card>
+
+            {/* Agent Reviews */}
+            {agent && (
+              <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
+                <AgentReviews agentId={agent.id} showSubmitForm={true} />
+              </Card>
+            )}
           </Col>
 
           {/* Right Column - Sticky Form */}
