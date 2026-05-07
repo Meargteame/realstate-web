@@ -6,6 +6,10 @@ const { PrismaClient } = require('@prisma/client');
 const connectionString = process.env.DATABASE_URL;
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+
+const prisma = new PrismaClient({ 
+  adapter,
+  log: ['error', 'warn']
+});
 
 module.exports = prisma;

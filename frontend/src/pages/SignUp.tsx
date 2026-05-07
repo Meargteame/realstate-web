@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
-import { X, Eye } from "lucide-react";
+import { X, Eye, EyeOff, AlertCircle } from "lucide-react";
 import React, { useState } from "react";
 
 export default function SignUp() {
@@ -10,147 +10,182 @@ export default function SignUp() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("agent"); // Default to agent
+  const [role, setRole] = useState("agent");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !email || !password) return;
+    setError("");
+    
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
+      setError("First name, last name, email, and password are all required.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
 
     setLoading(true);
-    setError("");
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password, role })
+        body: JSON.stringify({ 
+          firstName: firstName.trim(), 
+          lastName: lastName.trim(), 
+          email: email.trim(), 
+          password, 
+          role 
+        })
       });
-      const data = await res.json();
+      
+      const data = await res.json().catch(() => ({ error: "Invalid server response" }));
+      
       if (!res.ok) {
         throw new Error(data.error || "Failed to create account");
       }
 
+      const safeName = data.name ? data.name : `${firstName.trim()} ${lastName.trim()}`;
+
       localStorage.setItem("kw_user", JSON.stringify({
         id: data.id,
         agentId: data.agentId,
-        firstName: firstName,
-        name: data.name,
+        firstName: firstName.trim(),
+        name: safeName,
         email: data.email,
         role: data.role
       }));
       
       navigate("/command");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to sign up. Please try again.");
     } finally {
       setLoading(false);
     }
   };
   
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
-      {/* Visual / Branding Sidebar */}
-      <div className="hidden md:flex md:w-[45%] bg-[#111827] flex-col items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover mix-blend-overlay opacity-30"></div>
-        <div className="relative z-10 text-center flex flex-col items-center">
-          <div className="text-[#b40101] text-[80px] font-serif font-black tracking-tighter mb-8 leading-none drop-shadow-lg">kw</div>
-          <h2 className="text-white text-[32px] font-bold mb-6 tracking-tight leading-[1.2]">Join the largest<br/>real estate network.</h2>
-          <p className="text-white/80 text-lg font-medium max-w-md">Create your free Keller Williams account to unlock premium searches and expert matchmaking.</p>
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA]">
+      {/* Premium Visual Sidebar */}
+      <div className="hidden md:flex md:w-1/2 bg-[#111827] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-transparent to-[#111827]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
+        <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
+          <div className="text-[#B40101] text-[100px] font-serif font-black tracking-tighter mb-6 leading-none drop-shadow-2xl">kw</div>
+          <h2 className="text-white text-[42px] font-bold mb-6 tracking-tight leading-[1.1] drop-shadow-lg">
+            Join the largest<br/>real estate network.
+          </h2>
+          <p className="text-white/90 text-xl font-medium leading-relaxed drop-shadow-md">
+            Create your free Keller Williams account to unlock premium searches and expert matchmaking.
+          </p>
         </div>
       </div>
 
       {/* Main SignUp Area */}
-      <div className="flex-1 flex flex-col relative w-full items-center justify-center bg-white px-6 py-12 md:px-12">
-        <Link to="/" className="absolute top-6 right-6 md:top-10 md:right-10 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-colors">
+      <div className="flex-1 flex flex-col relative w-full items-center justify-center bg-white px-6 py-12 md:px-16 lg:px-24">
+        <Link to="/" className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
           <X className="w-6 h-6" />
         </Link>
 
-        <div className="w-full max-w-[440px]">
-          <div className="flex flex-col items-center text-center mb-10">
-            <h1 className="text-[32px] font-bold tracking-tight text-gray-900 mb-3">Create an Account</h1>
-            <p className="text-gray-500 text-[15px] font-medium">
+        <div className="w-full max-w-[460px]">
+          <div className="text-center mb-10">
+            <h1 className="text-[34px] font-bold tracking-tight text-gray-900 mb-3">Create an Account</h1>
+            <p className="text-gray-500 text-base font-medium">
               Already have an account?{" "}
-              <Link to="/login" className="text-[#b40101] hover:text-[#8a0000] underline underline-offset-4 font-bold">Log In</Link>
+              <Link to="/login" className="text-[#B40101] hover:text-[#8A0000] underline underline-offset-4 font-bold transition-colors">Log In</Link>
             </p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSignUp}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-[13px] font-bold text-gray-700 uppercase tracking-wider">First Name</label>
+                <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">First Name</label>
                 <Input 
-                  placeholder="First"
+                  placeholder="John"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="h-14 border-gray-300 focus-visible:ring-2 focus-visible:ring-[#b40101] rounded-full text-base px-4 bg-gray-50/50" 
-                  required
+                  className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm" 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[13px] font-bold text-gray-700 uppercase tracking-wider">Last Name</label>
+                <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Last Name</label>
                 <Input 
-                  placeholder="Last"
+                  placeholder="Doe"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="h-14 border-gray-300 focus-visible:ring-2 focus-visible:ring-[#b40101] rounded-full text-base px-4 bg-gray-50/50" 
-                  required
+                  className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm" 
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[13px] font-bold text-gray-700 uppercase tracking-wider">Account Type</label>
+              <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Account Type</label>
               <select 
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="h-14 w-full border border-gray-300 focus:ring-2 focus:ring-[#b40101] rounded-full text-base px-4 bg-gray-50/50 outline-none"
-                required
+                className="h-14 w-full border border-gray-200 focus:ring-2 focus:ring-[#B40101] focus:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm outline-none appearance-none cursor-pointer"
               >
                 <option value="agent">Agent Account</option>
-                <option value="user">Buyer/Seller Account</option>
+                <option value="user">Buyer / Seller Account</option>
               </select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[13px] font-bold text-gray-700 uppercase tracking-wider">Email Address</label>
+              <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Email Address</label>
               <Input 
                 type="email" 
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-14 border-gray-300 focus-visible:ring-2 focus-visible:ring-[#b40101] rounded-full text-base px-4 bg-gray-50/50"
-                required
+                className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-[13px] font-bold text-gray-700 uppercase tracking-wider">Password</label>
+              <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Password</label>
               <div className="relative">
                 <Input 
-                  type="password" 
-                  placeholder="Create a password"
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 pr-12 border-gray-300 focus-visible:ring-2 focus-visible:ring-[#b40101] rounded-full text-base px-4 bg-gray-50/50"
-                  required
+                  className="h-14 pr-12 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
                 />
-                <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-2 text-gray-400 hover:text-black hover:bg-transparent">
-                  <Eye className="w-5 h-5" />
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 top-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </Button>
               </div>
             </div>
 
-            {error && <p className="text-sm text-[#b40101] font-bold text-center bg-red-50 p-3 rounded-xl border border-red-100">{error}</p>}
+            {error && (
+              <div className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm font-bold">{error}</p>
+              </div>
+            )}
 
-            <Button type="submit" disabled={loading} className="w-full bg-[#111827] hover:bg-black text-white h-14 rounded-full font-bold text-[15px] uppercase tracking-widest mt-2 shadow-[0_4px_14px_rgba(0,0,0,0.1)] transition-all">
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full bg-[#111827] hover:bg-black text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.15)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
+            >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
-          <p className="text-[11px] text-gray-400 text-center font-medium mt-6 leading-relaxed">
-            By creating an account, you agree to our <Link to="#" className="underline hover:text-gray-900">Terms of Use</Link> and <Link to="#" className="underline hover:text-gray-900">Privacy Policy</Link>.
+          <p className="text-xs text-gray-500 text-center font-medium mt-8 leading-relaxed">
+            By creating an account, you agree to our <Link to="#" className="text-gray-900 underline underline-offset-2 hover:text-[#B40101]">Terms of Use</Link> and <Link to="#" className="text-gray-900 underline underline-offset-2 hover:text-[#B40101]">Privacy Policy</Link>.
           </p>
 
           <div className="relative my-8">
@@ -162,13 +197,12 @@ export default function SignUp() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {[
               { name: 'Google', icon: 'https://www.svgrepo.com/show/475656/google-color.svg' },
-              { name: 'Apple', icon: 'https://www.svgrepo.com/show/475633/apple-color.svg' },
-              { name: 'Facebook', icon: 'https://www.svgrepo.com/show/475647/facebook-color.svg' }
+              { name: 'Apple', icon: 'https://www.svgrepo.com/show/475633/apple-color.svg' }
             ].map((provider) => (
-              <Button key={provider.name} variant="outline" className="h-14 rounded-full border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px]">
+              <Button key={provider.name} variant="outline" className="h-14 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px] transition-all shadow-sm">
                 <img src={provider.icon} alt={provider.name} className="w-6 h-6" referrerPolicy="no-referrer" />
                 <span>Continue with {provider.name}</span>
               </Button>

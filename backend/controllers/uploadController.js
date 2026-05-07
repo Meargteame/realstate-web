@@ -9,9 +9,13 @@ const uploadAgentAvatar = async (req, res) => {
   try {
     const { id } = req.params;
 
+    console.log('📸 Uploading avatar for agent:', id);
+
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
+    console.log('✅ File received:', req.file.filename);
 
     // Generate URL for the uploaded file
     const imageUrl = `/uploads/${req.file.filename}`;
@@ -22,10 +26,17 @@ const uploadAgentAvatar = async (req, res) => {
       data: { imageUrl }
     });
 
+    console.log('✅ Agent avatar updated');
+
+    // Convert BigInt to Number for JSON serialization
+    const agentData = JSON.parse(JSON.stringify(agent, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
     res.json({
       success: true,
       imageUrl,
-      agent
+      agent: agentData
     });
 
   } catch (error) {
@@ -83,10 +94,15 @@ const uploadPropertyImages = async (req, res) => {
       }
     });
 
+    // Convert BigInt to Number for JSON serialization
+    const propertyData = JSON.parse(JSON.stringify(updatedProperty, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
     res.json({
       success: true,
       imageUrls,
-      property: updatedProperty
+      property: propertyData
     });
 
   } catch (error) {

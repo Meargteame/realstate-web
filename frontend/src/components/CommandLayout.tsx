@@ -53,7 +53,16 @@ export default function CommandLayout() {
 
     fetch(`/api/agents/${parsed.agentId}`)
       .then(res => {
-        if (!res.ok) throw new Error("Agent fetch failed");
+        if (!res.ok) {
+          // Agent not found - clear localStorage and redirect to login
+          if (res.status === 404) {
+            console.error('Agent not found in database. Clearing localStorage and redirecting to login.');
+            localStorage.removeItem("kw_user");
+            navigate("/login");
+            return null;
+          }
+          throw new Error("Agent fetch failed");
+        }
         return res.json();
       })
       .then(fullAgent => {

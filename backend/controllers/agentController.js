@@ -20,6 +20,7 @@ exports.getAgents = async (req, res) => {
 
 exports.getAgentById = async (req, res) => {
   try {
+    console.log('🔍 Fetching agent:', req.params.id);
     const agent = await prisma.agent.findUnique({
       where: { id: req.params.id },
       include: {
@@ -27,9 +28,20 @@ exports.getAgentById = async (req, res) => {
         leads: true
       }
     });
-    if (!agent) return res.status(404).json({ error: 'Agent not found' });
-    res.json(agent);
+    if (!agent) {
+      console.log('❌ Agent not found:', req.params.id);
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    console.log('✅ Agent found:', agent.name);
+    
+    // Convert BigInt to Number for JSON serialization
+    const agentData = JSON.parse(JSON.stringify(agent, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.json(agentData);
   } catch (error) {
+    console.error('❌ Error fetching agent:', error);
     res.status(500).json({ error: error.message });
   }
 };

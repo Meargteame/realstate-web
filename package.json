@@ -1,30 +1,28 @@
 {
   "name": "kw-realstate-web",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "KW Real Estate Platform - Full Stack Application",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev"
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Meargteame/realstate-web.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "real-estate",
+    "keller-williams",
+    "property-management"
+  ],
+  "author": "Meareg",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Meargteame/realstate-web/issues"
   },
   "homepage": "https://github.com/Meargteame/realstate-web#readme",
-  "devDependencies": {
-    "concurrently": "^9.2.1"
-  },
   "dependencies": {
-    "@ant-design/icons": "^6.1.1",
-    "antd": "^6.3.5"
+    "node-fetch": "^2.7.0"
   }
 }

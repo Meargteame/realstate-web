@@ -6,12 +6,15 @@ exports.getProperties = async (req, res) => {
   const { q } = req.query;
   
   try {
+    console.log('🏠 Fetching properties, query:', q);
+    
     // Generate cache key
     const cacheKey = cacheService.generatePropertyKey({ q });
     
     // Try cache first
     const cached = await cacheService.get(cacheKey);
     if (cached) {
+      console.log('✅ Returning cached properties:', cached.length);
       return res.json(cached);
     }
     
@@ -31,14 +34,22 @@ exports.getProperties = async (req, res) => {
       include: { agent: true }
     });
     
+    console.log('✅ Found properties:', properties.length);
+    
+    // Convert BigInt to Number for JSON serialization
+    const propertiesData = JSON.parse(JSON.stringify(properties, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
     // Cache for 5 minutes (hot data)
-    await cacheService.set(cacheKey, properties, 300);
+    await cacheService.set(cacheKey, propertiesData, 300);
     
     // Track business metric
     businessMetrics.track('property.search', { query: q, results: properties.length });
     
-    res.json(properties);
+    res.json(propertiesData);
   } catch (error) {
+    console.error('❌ Error fetching properties:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -122,6 +133,8 @@ exports.getPropertyById = async (req, res) => {
 exports.createProperty = async (req, res) => {
   const { price, bedrooms, bathrooms, sqft, address, city, state, zip, imageUrl, status, propertyType, agentId } = req.body;
 
+  console.log('🏠 Creating property for agent:', agentId);
+
   if (!price || !address || !city || !state || !zip || !agentId) {
     return res.status(400).json({ error: 'Missing required fields: price, address, city, state, zip, agentId' });
   }
@@ -144,8 +157,17 @@ exports.createProperty = async (req, res) => {
       },
       include: { agent: true }
     });
-    res.status(201).json(property);
+    
+    console.log('✅ Property created:', property.id);
+    
+    // Convert BigInt to Number for JSON serialization
+    const propertyData = JSON.parse(JSON.stringify(property, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.status(201).json(propertyData);
   } catch (error) {
+    console.error('❌ Error creating property:', error);
     res.status(500).json({ error: error.message });
   }
 };
