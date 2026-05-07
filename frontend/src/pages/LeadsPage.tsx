@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer } from "antd";
 import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined } from "@ant-design/icons";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useOutletContext, useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 const AntSelect = Select as any;
@@ -9,6 +9,7 @@ const AntOption = (Select as any).Option;
 
 export default function LeadsPage() {
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
+  const navigate = useNavigate();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -133,7 +134,15 @@ export default function LeadsPage() {
       render: (_: any, record: any) => (
         <Space size="small">
           <a href={`tel:${record.phone}`}><Button type="default" size="small" icon={<PhoneOutlined />}>Call</Button></a>
-          <a href={`mailto:${record.email}`}><Button type="primary" size="small" style={{ background: '#111827' }} icon={<MailOutlined />}>Message</Button></a>
+          <Button 
+            type="primary" 
+            size="small" 
+            style={{ background: '#111827' }} 
+            icon={<MailOutlined />}
+            onClick={() => navigate('/command/inbox', { state: { leadId: record.id } })}
+          >
+            Message
+          </Button>
         </Space>
       ),
     },

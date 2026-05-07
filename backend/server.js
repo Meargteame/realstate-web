@@ -99,6 +99,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const virtualTourRoutes = require('./routes/virtualTourRoutes');
 const marketDataRoutes = require('./routes/marketDataRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
@@ -113,6 +114,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/virtual-tours', virtualTourRoutes);
 app.use('/api/market-data', marketDataRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/messages', messageRoutes);
 
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS

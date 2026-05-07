@@ -111,8 +111,9 @@ kw-realstate-web/
 ### Public Features
 - ✅ Property search and filtering
 - ✅ Agent directory with search
-- ✅ Property detail pages
+- ✅ Property detail pages with beautiful UI
 - ✅ Agent profile pages
+- ✅ **Real-time messaging between buyers and agents**
 - ✅ City landing pages (SEO)
 - ✅ Mortgage calculator
 - ✅ Home value estimator
@@ -121,10 +122,20 @@ kw-realstate-web/
 ### Agent Dashboard (Protected)
 - ✅ Dashboard with KPIs
 - ✅ Lead management with status tracking
-- ✅ Lead inbox with messaging
+- ✅ **Inbox with real-time chat interface**
 - ✅ Active listings management
 - ✅ Opportunities pipeline
 - ✅ Agent settings
+
+### Messaging System 🆕
+- ✅ **No login required** - Buyers can message agents instantly
+- ✅ **Persistent conversations** - Chats saved in browser, can return anytime
+- ✅ **Unread notifications** - Visual badges show new agent responses
+- ✅ **Auto-polling** - Messages refresh automatically every 5-10 seconds
+- ✅ **Beautiful UI** - Modern chat interface with gradient design
+- ✅ **Mobile friendly** - Works seamlessly on all devices
+
+📖 **See [MESSAGING_SYSTEM.md](./MESSAGING_SYSTEM.md) for complete documentation**
 
 ## 🗄️ Database Schema
 
@@ -160,6 +171,12 @@ kw-realstate-web/
 - `GET /api/leads` - List all leads (with pagination)
 - `GET /api/agents/:agentId/leads` - Get leads for specific agent
 - `PATCH /api/leads/:id/status` - Update lead status
+
+### Messages 🆕
+- `POST /api/messages/send` - Send a message (creates conversation if needed)
+- `GET /api/messages/conversations/:agentId` - Get all conversations for an agent
+- `GET /api/messages/conversation/:conversationId` - Get messages in a conversation
+- `PATCH /api/messages/conversation/:conversationId/read` - Mark conversation as read
 
 ### Health
 - `GET /api/health` - API health check
@@ -222,11 +239,18 @@ npm run lint
 6. Check "Inbox" for lead messages
 7. View "Opportunities" pipeline
 
-### 4. Test Lead Capture
+### 4. Test Lead Capture & Messaging 🆕
 1. Logout (or use incognito)
 2. Go to any property detail page
-3. Fill out the contact form
-4. Login as agent and verify lead appears
+3. Click "Message Agent" button
+4. Fill in your name, email, and phone
+5. Start chatting with the agent
+6. Close the modal and reopen - conversation persists
+7. Login as agent (`sarah.j@kw.com`)
+8. Go to Inbox (`/command/inbox`)
+9. See the conversation and respond
+10. Return to property page as buyer - see unread badge
+11. Open chat to see agent's response
 
 ### 5. Test Search & Filtering
 1. Search properties by city (e.g., "Austin")

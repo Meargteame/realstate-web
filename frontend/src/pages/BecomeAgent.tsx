@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button, Row, Col, Typography, Input, Form, Card, Space, Divider, notification } from "antd";
 import { CheckCircleOutlined, RiseOutlined, HomeOutlined, BookOutlined } from "@ant-design/icons";
 
@@ -6,21 +6,29 @@ const { Title, Text, Paragraph } = Typography;
 
 export default function BecomeAgent() {
   const formRef = useRef<HTMLDivElement>(null);
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const scrollToForm = () => {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const onFinish = async (values: any) => {
+    setLoading(true);
     try {
+      // Combine firstName and lastName
+      const fullName = `${values.firstName} ${values.lastName}`;
+      
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...values,
+          name: fullName,
+          email: values.email,
           phone: values.phone || '',
-          message: 'Agent Inquiry: Interested in becoming a Keller Williams agent',
+          message: `Agent Recruitment Inquiry: ${fullName} is interested in becoming a Keller Williams agent. Phone: ${values.phone}`,
           type: 'agent_inquiry'
+          // Note: Backend will auto-assign to first available agent if no agentId provided
         })
       });
 
@@ -31,12 +39,18 @@ export default function BecomeAgent() {
         description: 'Thank you for your interest in joining Keller Williams. A recruiter will contact you within 24 hours.',
         duration: 6
       });
+      
+      // Reset form after successful submission
+      form.resetFields();
+      
     } catch (error) {
       notification.error({
         message: 'Submission Error',
-        description: 'Something went wrong. Please try again or call us directly.',
+        description: 'Something went wrong. Please try again or call us directly at (555) 123-4567.',
         duration: 4
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,18 +100,23 @@ export default function BecomeAgent() {
                   <Title level={3} style={{ textAlign: 'center', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>Join Our Network</Title>
                   <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase', marginBottom: '32px' }}>Take the first step toward a thriving career.</Text>
                   
-                  <Form layout="vertical" onFinish={onFinish}>
+                  <Form layout="vertical" form={form} onFinish={onFinish}>
                     <Row gutter={12}>
                       <Col span={12}><Form.Item name="firstName" rules={[{ required: true, message: 'Required' }]}><Input size="large" placeholder="FIRST NAME" style={{ borderRadius: '24px' }} /></Form.Item></Col>
                       <Col span={12}><Form.Item name="lastName" rules={[{ required: true, message: 'Required' }]}><Input size="large" placeholder="LAST NAME" style={{ borderRadius: '24px' }} /></Form.Item></Col>
                     </Row>
                     <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Valid email required' }]}><Input size="large" placeholder="EMAIL ADDRESS" style={{ borderRadius: '24px' }} /></Form.Item>
                     <Form.Item name="phone" rules={[{ required: true, message: 'Phone required' }]}><Input size="large" placeholder="PHONE NUMBER" style={{ borderRadius: '24px' }} /></Form.Item>
-                    <Form.Item name="name" hidden initialValue="">
-                      <Input />
-                    </Form.Item>
-                    <Button type="primary" block size="large" htmlType="submit" style={{ background: '#111827', borderColor: '#111827', height: '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}>
-                      SUBMIT INQUIRY
+                    <Button 
+                      type="primary" 
+                      block 
+                      size="large" 
+                      htmlType="submit" 
+                      loading={loading}
+                      disabled={loading}
+                      style={{ background: '#111827', borderColor: '#111827', height: '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}
+                    >
+                      {loading ? 'SUBMITTING...' : 'SUBMIT INQUIRY'}
                     </Button>
                   </Form>
                 </Card>

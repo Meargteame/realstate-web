@@ -26,9 +26,20 @@ export default function Opportunities() {
     try {
       const res = await fetch(`/api/opportunities?agentId=${parentAgent.id}&type=${activeSegment}`);
       const data = await res.json();
+      
+      // Check if response is an error
+      if (data.error || !Array.isArray(data)) {
+        console.error('Error fetching opportunities:', data.error || 'Invalid response');
+        setOpportunities([]);
+        setLoading(false);
+        return;
+      }
+      
       setOpportunities(data);
       setLoading(false);
-    } catch {
+    } catch (error) {
+      console.error('Error fetching opportunities:', error);
+      setOpportunities([]);
       setLoading(false);
     }
   };

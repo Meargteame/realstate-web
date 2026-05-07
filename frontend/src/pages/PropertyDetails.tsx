@@ -1,32 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { 
-  Layout, Button, Typography, Row, Col, Space, Card, Tag, 
-  Tabs, Form, Input, Avatar, Divider, Breadcrumb, notification, Result, Modal, Image
+  Button, Typography, Row, Col, Space, Card, Tag, 
+  Avatar, Divider, notification, Result, Modal, Image
 } from "antd";
 import { 
   ArrowLeftOutlined, ShareAltOutlined, HeartOutlined, HeartFilled,
   EnvironmentOutlined, CheckCircleOutlined, UserOutlined,
-  DollarOutlined, HomeOutlined, AreaChartOutlined
+  MessageOutlined, PhoneOutlined, MailOutlined,
+  ExpandOutlined
 } from "@ant-design/icons";
-import VirtualTourViewer from "../components/VirtualTourViewer";
-import AgentReviews from "../components/AgentReviews";
-import MarketReports from "../components/MarketReports";
-import SocialShare from "../components/SocialShare";
+import PropertyChatModal from "../components/PropertyChatModal";
 
-const { Content } = Layout;
 const { Title, Text, Paragraph } = Typography;
 
 export default function PropertyDetails() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [property, setProperty] = useState<any>(null);
   const [agent, setAgent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
-  const [form] = Form.useForm();
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [hasExistingChat, setHasExistingChat] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Mock gallery images
   const galleryImages = [
@@ -44,6 +41,23 @@ export default function PropertyDetails() {
       .then(data => {
         setProperty(data);
         if(data?.agent) setAgent(data.agent);
+        
+        // Check if there's an existing conversation
+        if (data?.id && data?.agent?.id) {
+          const storageKey = `conversation_${data.id}_${data.agent.id}`;
+          const stored = localStorage.getItem(storageKey);
+          if (stored) {
+            setHasExistingChat(true);
+            // Check for unread messages
+            try {
+              const convData = JSON.parse(stored);
+              checkUnreadMessages(convData.conversationId);
+            } catch (error) {
+              console.error('Error parsing stored conversation:', error);
+            }
+          }
+        }
+        
         setLoading(false);
       })
       .catch((err: any) => {
@@ -77,7 +91,6 @@ export default function PropertyDetails() {
   };
 
   const handleSave = () => {
-    // TODO: Implement actual save to favorites with authentication
     setIsSaved(!isSaved);
     notification.success({
       message: isSaved ? 'Removed from Favorites' : 'Saved to Favorites',
@@ -86,201 +99,414 @@ export default function PropertyDetails() {
     });
   };
 
-  const handleLeadSubmit = async (values: any) => {
+  const checkUnreadMessages = async (conversationId: string) => {
     try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...values,
-          agentId: property.agentId,
-          propertyId: property.id,
-        }),
-      });
-      if (!res.ok) throw new Error('Submission failed');
-      setSubmitted(true);
-      notification.success({ message: 'Request Sent', description: `Your inquiry for ${property.address} has been sent to ${agent?.name}.` });
-    } catch (err) {
-      notification.error({ message: 'Error', description: 'Something went wrong. Please try again.' });
+      const res = await fetch(`/api/messages/conversation/${conversationId}`);
+      if (!res.ok) return;
+      const messages = await res.json();
+      
+      // Get last read timestamp from localStorage
+      const lastReadKey = `lastRead_${conversationId}`;
+      const lastReadTime = localStorage.getItem(lastReadKey);
+      
+      if (lastReadTime) {
+        const unread = messages.filter((msg: any) => 
+          msg.senderType === 'agent' && new Date(msg.createdAt) > new Date(lastReadTime)
+        ).length;
+        setUnreadCount(unread);
+      } else {
+        // First time - count all agent messages
+        const unread = messages.filter((msg: any) => msg.senderType === 'agent').length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error('Error checking unread messages:', error);
     }
   };
 
-  if (loading) return <div style={{ padding: '200px', textAlign: 'center' }}><Title level={3}>Loading Luxury Listing...</Title></div>;
-  if (!property) return <div style={{ padding: '200px', textAlign: 'center' }}><Result status="404" title="Property Not Found" extra={<Link to="/properties"><Button type="primary">Back to Search</Button></Link>} /></div>;
+  // Poll for new messages periodically when there's an existing chat
+  useEffect(() => {
+    if (!hasExistingChat || !property?.id || !agent?.id) return;
+    
+    const storageKey = `conversation_${property.id}_${agent.id}`;
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) return;
+    
+    try {
+      const convData = JSON.parse(stored);
+      
+      // Check immediately
+      checkUnreadMessages(convData.conversationId);
+      
+      // Then check every 10 seconds
+      const interval = setInterval(() => {
+        checkUnreadMessages(convData.conversationId);
+      }, 10000);
+      
+      return () => clearInterval(interval);
+    } catch (error) {
+      console.error('Error setting up message polling:', error);
+    }
+  }, [hasExistingChat, property?.id, agent?.id]);
 
-  const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(property.price);
+  if (loading) return (
+    <div style={{ padding: '200px', textAlign: 'center', background: '#f8f9fa' }}>
+      <Title level={3}>Loading Property...</Title>
+    </div>
+  );
+  
+  if (!property) return (
+    <div style={{ padding: '200px', textAlign: 'center' }}>
+      <Result 
+        status="404" 
+        title="Property Not Found" 
+        extra={
+          <Link to="/properties">
+            <Button type="primary" size="large">Back to Search</Button>
+          </Link>
+        } 
+      />
+    </div>
+  );
+
+  const formattedPrice = new Intl.NumberFormat('en-US', { 
+    style: 'currency', 
+    currency: 'USD', 
+    maximumFractionDigits: 0 
+  }).format(property.price);
 
   return (
-    <div style={{ background: '#f4f4f4', paddingBottom: '96px', borderTop: '2px solid black' }}>
-      
-      {/* Top Navigation */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 64px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/properties" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 900, color: '#8c8c8c', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          <ArrowLeftOutlined /> BACK TO ALL LISTINGS
-        </Link>
-        <Space>
-           <SocialShare 
-             url={window.location.href}
-             title={property.address}
-             description={`${property.beds} bed, ${property.baths} bath home in ${property.city}, ${property.state}`}
-             price={property.price}
-             imageUrl={property.imageUrl}
-             propertyId={property.id}
-           />
-           <Button 
-             type="primary" 
-             icon={isSaved ? <HeartFilled /> : <HeartOutlined />} 
-             onClick={handleSave}
-             style={{ background: isSaved ? '#b40101' : '#111827', borderColor: isSaved ? '#b40101' : '#111827' }}
-           >
-             {isSaved ? 'SAVED' : 'SAVE'}
-           </Button>
-        </Space>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh' }}>
+      {/* Top Navigation Bar */}
+      <div style={{ 
+        background: 'white', 
+        borderBottom: '1px solid #e8e8e8',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+      }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Link to="/properties">
+            <Button icon={<ArrowLeftOutlined />} type="text" size="large">
+              Back to Listings
+            </Button>
+          </Link>
+          <Space size="middle">
+            <Button 
+              icon={<ShareAltOutlined />}
+              onClick={handleShare}
+              size="large"
+            >
+              Share
+            </Button>
+            <Button 
+              icon={isSaved ? <HeartFilled /> : <HeartOutlined />}
+              onClick={handleSave}
+              type={isSaved ? "primary" : "default"}
+              danger={isSaved}
+              size="large"
+            >
+              {isSaved ? 'Saved' : 'Save'}
+            </Button>
+          </Space>
+        </div>
       </div>
 
-      {/* Hero Image Section */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 64px 48px' }}>
-        <Row gutter={24} style={{ height: '600px' }}>
-          <Col span={16} style={{ height: '100%' }}>
-            <div style={{ position: 'relative', height: '100%', borderRadius: '12px', overflow: 'hidden', border: '2px solid white', boxShadow: '0 12px 32px rgba(0,0,0,0.1)' }}>
-               {property.status !== 'Active' && (
-                 <Tag color="#b40101" style={{ position: 'absolute', top: 16, left: 16, padding: '8px 16px', fontWeight: 900, borderRadius: '4px' }}>{property.status.toUpperCase()}</Tag>
-               )}
-               <img src={property.imageUrl} alt={property.address} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-          </Col>
-          <Col span={8} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-             <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '2px solid white', boxShadow: '0 12px 32px rgba(0,0,0,0.1)' }}>
-                <img src="https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=600&q=80" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-             </div>
-             <div style={{ flex: 1, borderRadius: '12px', overflow: 'hidden', border: '2px solid white', boxShadow: '0 12px 32px rgba(0,0,0,0.1)', position: 'relative' }}>
-                <img src="https://images.unsplash.com/photo-1544984243-ec57ea16facd?auto=format&fit=crop&w=600&q=80" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <div 
-                  onClick={() => setShowGallery(true)}
-                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                >
-                   <Title level={4} style={{ color: 'white', margin: 0 }}>VIEW ALL PHOTOS</Title>
-                </div>
-             </div>
-          </Col>
-        </Row>
-      </div>
-
-      {/* Content Section */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 64px' }}>
-        <Row gutter={64}>
-          {/* Left Column */}
-          <Col span={15}>
-            <div style={{ marginBottom: '48px', borderBottom: '4px solid black', paddingBottom: '32px' }}>
-              <Row justify="space-between" align="bottom" style={{ marginBottom: '32px' }}>
-                <Col><Title style={{ margin: 0, fontSize: '64px', fontWeight: 900, letterSpacing: '-2px' }}>{formattedPrice}</Title></Col>
-                <Col>
-                  <Card size="small" style={{ background: '#111827', color: 'white', borderRadius: '4px' }}>
-                    <Text style={{ color: 'white', fontWeight: 'bold', fontSize: '11px', textTransform: 'uppercase' }}>Est. Payment: ${(property.price * 0.0055).toFixed(0)}/mo</Text>
-                  </Card>
-                </Col>
-              </Row>
-
-              <div style={{ display: 'flex', background: 'white', border: '1px solid #d9d9d9', borderRadius: '12px', height: '100px', overflow: 'hidden', boxShadow: '0 8px 16px rgba(0,0,0,0.05)' }}>
-                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #f0f0f0' }}>
-                    <Title level={3} style={{ margin: 0 }}>{property.bedrooms}</Title>
-                    <Text type="secondary" style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900 }}>Beds</Text>
-                 </div>
-                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #f0f0f0' }}>
-                    <Title level={3} style={{ margin: 0 }}>{property.bathrooms}</Title>
-                    <Text type="secondary" style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900 }}>Baths</Text>
-                 </div>
-                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <Title level={3} style={{ margin: 0 }}>{property.sqft.toLocaleString()}</Title>
-                    <Text type="secondary" style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 900 }}>Sq Ft</Text>
-                 </div>
-              </div>
-
-              <div style={{ marginTop: '32px' }}>
-                <Title level={3} style={{ margin: 0, fontWeight: 700 }}>
-                  <EnvironmentOutlined style={{ color: '#b40101', marginRight: '16px' }} />
-                  {property.address}, {property.city}, {property.state} {property.zip}
-                </Title>
-              </div>
-            </div>
-
-            <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
-               <Title level={3} style={{ textTransform: 'uppercase', fontWeight: 900, marginBottom: '24px', borderBottom: '1px solid #f0f0f0', paddingBottom: '16px' }}>Property Overview</Title>
-               <Paragraph style={{ fontSize: '18px', color: '#4b5563', lineHeight: 1.8 }}>
-                 Beautifully maintained {property.propertyType?.toLowerCase() || 'home'} in the highly sought-after neighborhood of {property.city}. 
-                 This home offers a spacious open floor plan, abundant natural light, and modern finishes throughout. 
-                 The gourmet kitchen features quartz countertops and stainless appliances.
-               </Paragraph>
-            </Card>
-
-            <div style={{ background: '#111827', borderRadius: '12px', padding: '40px', color: 'white', marginBottom: '48px' }}>
-               <Title level={3} style={{ color: 'white', textTransform: 'uppercase', fontWeight: 900, marginBottom: '32px' }}>Key Features</Title>
-               <Row gutter={[32, 24]}>
-                  {['Hardwood Floors', 'Quartz Countertops', '2-Car Garage', 'Fenced Backyard', 'Central AC', 'Open Layout'].map((f, i) => (
-                    <Col span={12} key={i}>
-                      <Space>
-                        <CheckCircleOutlined style={{ color: '#b40101' }} />
-                        <Text style={{ color: 'white', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{f}</Text>
-                      </Space>
-                    </Col>
-                  ))}
-               </Row>
-            </div>
-
-            {/* Virtual Tours */}
-            <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
-              <Title level={3} style={{ textTransform: 'uppercase', fontWeight: 900, marginBottom: '24px', borderBottom: '1px solid #f0f0f0', paddingBottom: '16px' }}>Virtual Tours</Title>
-              <VirtualTourViewer propertyId={property.id} />
-            </Card>
-
-            {/* Market Reports */}
-            <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
-              <MarketReports zipCode={property.zip} city={property.city} state={property.state} />
-            </Card>
-
-            {/* Agent Reviews */}
-            {agent && (
-              <Card bordered={false} style={{ borderRadius: '24px', padding: '16px', marginBottom: '48px', boxShadow: '0 12px 32px rgba(0,0,0,0.05)' }}>
-                <AgentReviews agentId={agent.id} showSubmitForm={true} />
-              </Card>
+      {/* Image Gallery */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 32px' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '2fr 1fr 1fr',
+          gridTemplateRows: '300px 300px',
+          gap: '12px',
+          borderRadius: '16px',
+          overflow: 'hidden'
+        }}>
+          <div 
+            style={{ 
+              gridRow: '1 / 3',
+              position: 'relative',
+              cursor: 'pointer',
+              overflow: 'hidden'
+            }}
+            onClick={() => setShowGallery(true)}
+          >
+            <img 
+              src={property.imageUrl} 
+              alt={property.address}
+              style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover',
+                transition: 'transform 0.3s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            />
+            {property.status && property.status !== 'Active' && (
+              <Tag 
+                color="red" 
+                style={{ 
+                  position: 'absolute', 
+                  top: 16, 
+                  left: 16, 
+                  padding: '8px 16px',
+                  fontSize: 14,
+                  fontWeight: 'bold'
+                }}
+              >
+                {property.status.toUpperCase()}
+              </Tag>
             )}
+          </div>
+          {galleryImages.slice(1, 5).map((img, idx) => (
+            <div 
+              key={idx}
+              style={{ 
+                position: 'relative',
+                cursor: 'pointer',
+                overflow: 'hidden'
+              }}
+              onClick={() => setShowGallery(true)}
+            >
+              <img 
+                src={img} 
+                alt={`Property ${idx + 2}`}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover',
+                  transition: 'transform 0.3s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              />
+              {idx === 3 && (
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white'
+                }}>
+                  <Space direction="vertical" align="center">
+                    <ExpandOutlined style={{ fontSize: 32 }} />
+                    <Text style={{ color: 'white', fontSize: 16, fontWeight: 600 }}>
+                      View All Photos
+                    </Text>
+                  </Space>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 32px 64px' }}>
+        <Row gutter={32}>
+          {/* Left Column - Property Details */}
+          <Col xs={24} lg={16}>
+            <Card style={{ borderRadius: '16px', marginBottom: '24px' }}>
+              <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                {/* Price and Address */}
+                <div>
+                  <Title level={1} style={{ margin: 0, fontSize: 48, fontWeight: 700 }}>
+                    {formattedPrice}
+                  </Title>
+                  <Title level={4} style={{ margin: '8px 0 0', fontWeight: 400, color: '#595959' }}>
+                    <EnvironmentOutlined style={{ marginRight: 8 }} />
+                    {property.address}, {property.city}, {property.state} {property.zip}
+                  </Title>
+                </div>
+
+                <Divider style={{ margin: 0 }} />
+
+                {/* Property Stats */}
+                <Row gutter={24}>
+                  <Col span={8}>
+                    <div style={{ textAlign: 'center', padding: '16px', background: '#f8f9fa', borderRadius: 12 }}>
+                      <Title level={2} style={{ margin: 0 }}>{property.beds || 0}</Title>
+                      <Text type="secondary">Bedrooms</Text>
+                    </div>
+                  </Col>
+                  <Col span={8}>
+                    <div style={{ textAlign: 'center', padding: '16px', background: '#f8f9fa', borderRadius: 12 }}>
+                      <Title level={2} style={{ margin: 0 }}>{property.baths || 0}</Title>
+                      <Text type="secondary">Bathrooms</Text>
+                    </div>
+                  </Col>
+                  <Col span={8}>
+                    <div style={{ textAlign: 'center', padding: '16px', background: '#f8f9fa', borderRadius: 12 }}>
+                      <Title level={2} style={{ margin: 0 }}>
+                        {property.sqft ? property.sqft.toLocaleString() : 'N/A'}
+                      </Title>
+                      <Text type="secondary">Sq Ft</Text>
+                    </div>
+                  </Col>
+                </Row>
+
+                <Divider style={{ margin: 0 }} />
+
+                {/* Description */}
+                <div>
+                  <Title level={4}>About This Property</Title>
+                  <Paragraph style={{ fontSize: 16, lineHeight: 1.8, color: '#595959' }}>
+                    Beautifully maintained {property.propertyType?.toLowerCase() || 'home'} in the highly sought-after 
+                    neighborhood of {property.city}. This home offers a spacious open floor plan, abundant natural light, 
+                    and modern finishes throughout. The gourmet kitchen features quartz countertops and stainless appliances. 
+                    Perfect for families or anyone looking for comfortable living in a prime location.
+                  </Paragraph>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <Title level={4}>Key Features</Title>
+                  <Row gutter={[16, 16]}>
+                    {[
+                      'Hardwood Floors',
+                      'Granite Countertops',
+                      'Stainless Appliances',
+                      'Central Air',
+                      'Attached Garage',
+                      'Fenced Yard',
+                      'Updated Kitchen',
+                      'Walk-in Closets'
+                    ].map((feature, idx) => (
+                      <Col span={12} key={idx}>
+                        <Space>
+                          <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />
+                          <Text style={{ fontSize: 15 }}>{feature}</Text>
+                        </Space>
+                      </Col>
+                    ))}
+                  </Row>
+                </div>
+              </Space>
+            </Card>
           </Col>
 
-          {/* Right Column - Sticky Form */}
-          <Col span={9}>
-            <div style={{ position: 'sticky', top: '100px' }}>
-              <Card style={{ borderRadius: '12px', padding: '8px', boxShadow: '0 24px 48px rgba(0,0,0,0.1)' }}>
+          {/* Right Column - Agent Card (Sticky) */}
+          <Col xs={24} lg={8}>
+            <div style={{ position: 'sticky', top: 100 }}>
+              <Card 
+                style={{ 
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.12)'
+                }}
+              >
                 {agent && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #f0f0f0' }}>
-                     <Avatar size={64} src={agent.imageUrl} icon={<UserOutlined />} />
-                     <div>
-                        <Link to={`/agents/${agent.id}`}>
-                           <Title level={4} style={{ margin: 0, fontWeight: 900 }}>{agent.name}</Title>
-                        </Link>
-                        <Text type="secondary" style={{ fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>{agent.brokerage}</Text>
-                     </div>
-                  </div>
-                )}
+                  <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                    {/* Agent Info */}
+                    <div style={{ textAlign: 'center' }}>
+                      <Avatar 
+                        size={80} 
+                        src={agent.imageUrl} 
+                        icon={<UserOutlined />}
+                        style={{ marginBottom: 16 }}
+                      />
+                      <Title level={4} style={{ margin: 0 }}>{agent.name}</Title>
+                      <Text type="secondary">{agent.brokerage}</Text>
+                    </div>
 
-                <Title level={4} style={{ textAlign: 'center', textTransform: 'uppercase', fontWeight: 900, marginBottom: '24px' }}>Inquire About Residence</Title>
-                
-                {submitted ? (
-                  <Result status="success" title="Inquiry Sent" subTitle="The agent will contact you shortly." />
-                ) : (
-                  <Form layout="vertical" form={form} onFinish={handleLeadSubmit}>
-                    <Form.Item name="name" rules={[{ required: true }]}><Input size="large" placeholder="FULL NAME" style={{ borderRadius: '24px' }} /></Form.Item>
-                    <Form.Item name="email" rules={[{ required: true, type: 'email' }]}><Input size="large" placeholder="EMAIL ADDRESS" style={{ borderRadius: '24px' }} /></Form.Item>
-                    <Form.Item name="phone" rules={[{ required: true }]}><Input size="large" placeholder="PHONE NUMBER" style={{ borderRadius: '24px' }} /></Form.Item>
-                    <Form.Item name="message"><Input.TextArea rows={4} placeholder="ANY QUESTIONS?" style={{ borderRadius: '16px' }} /></Form.Item>
-                    <Button type="primary" block size="large" htmlType="submit" style={{ background: '#b40101', borderColor: '#b40101', height: '56px', fontWeight: 900, borderRadius: '28px', marginTop: '8px' }}>
-                      CONTACT AGENT
-                    </Button>
-                  </Form>
+                    <Divider style={{ margin: 0 }} />
+
+                    {/* Contact Buttons */}
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <Button
+                        type="primary"
+                        size="large"
+                        block
+                        icon={<MessageOutlined />}
+                        onClick={() => setShowChatModal(true)}
+                        style={{
+                          height: 50,
+                          fontSize: 16,
+                          fontWeight: 600,
+                          borderRadius: 8,
+                          background: hasExistingChat 
+                            ? 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)'
+                            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          border: 'none',
+                          position: 'relative'
+                        }}
+                      >
+                        {hasExistingChat ? 'Continue Chat' : 'Message Agent'}
+                        {unreadCount > 0 && (
+                          <span style={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            background: '#ff4d4f',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: 24,
+                            height: 24,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            border: '2px solid white'
+                          }}>
+                            {unreadCount}
+                          </span>
+                        )}
+                      </Button>
+
+                      <Button
+                        size="large"
+                        block
+                        icon={<PhoneOutlined />}
+                        href={`tel:${agent.phone}`}
+                        style={{
+                          height: 50,
+                          fontSize: 16,
+                          borderRadius: 8
+                        }}
+                      >
+                        Call Agent
+                      </Button>
+
+                      <Button
+                        size="large"
+                        block
+                        icon={<MailOutlined />}
+                        href={`mailto:${agent.email}`}
+                        style={{
+                          height: 50,
+                          fontSize: 16,
+                          borderRadius: 8
+                        }}
+                      >
+                        Email Agent
+                      </Button>
+                    </Space>
+
+                    <Divider style={{ margin: 0 }} />
+
+                    {/* Agent Stats */}
+                    <div>
+                      <Row gutter={16}>
+                        <Col span={12} style={{ textAlign: 'center' }}>
+                          <Title level={3} style={{ margin: 0, color: '#667eea' }}>
+                            {agent.totalSales || 0}
+                          </Title>
+                          <Text type="secondary" style={{ fontSize: 12 }}>Sales</Text>
+                        </Col>
+                        <Col span={12} style={{ textAlign: 'center' }}>
+                          <Title level={3} style={{ margin: 0, color: '#667eea' }}>
+                            {agent.rating || 5.0}★
+                          </Title>
+                          <Text type="secondary" style={{ fontSize: 12 }}>Rating</Text>
+                        </Col>
+                      </Row>
+                    </div>
+                  </Space>
                 )}
-                <Divider style={{ margin: '16px 0' }} />
-                <Text type="secondary" style={{ fontSize: '10px', textAlign: 'center', display: 'block', textTransform: 'uppercase' }}>
-                  By submitting, you agree to our terms of service.
-                </Text>
               </Card>
             </div>
           </Col>
@@ -294,9 +520,8 @@ export default function PropertyDetails() {
         footer={null}
         width="90%"
         style={{ top: 20 }}
-        bodyStyle={{ padding: '24px' }}
       >
-        <Title level={3} style={{ marginBottom: '24px' }}>Property Photos</Title>
+        <Title level={3} style={{ marginBottom: 24 }}>Property Photos</Title>
         <Image.PreviewGroup>
           <Row gutter={[16, 16]}>
             {galleryImages.map((img, idx) => (
@@ -304,13 +529,42 @@ export default function PropertyDetails() {
                 <Image
                   src={img}
                   alt={`Property photo ${idx + 1}`}
-                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' }}
+                  style={{ 
+                    width: '100%', 
+                    height: '200px', 
+                    objectFit: 'cover', 
+                    borderRadius: '8px' 
+                  }}
                 />
               </Col>
             ))}
           </Row>
         </Image.PreviewGroup>
       </Modal>
+
+      {/* Chat Modal */}
+      <PropertyChatModal
+        visible={showChatModal}
+        onClose={() => {
+          setShowChatModal(false);
+          // Mark messages as read
+          const storageKey = `conversation_${property.id}_${agent.id}`;
+          const stored = localStorage.getItem(storageKey);
+          if (stored) {
+            try {
+              const convData = JSON.parse(stored);
+              const lastReadKey = `lastRead_${convData.conversationId}`;
+              localStorage.setItem(lastReadKey, new Date().toISOString());
+              setUnreadCount(0);
+            } catch (error) {
+              console.error('Error updating last read time:', error);
+            }
+          }
+          setHasExistingChat(!!stored);
+        }}
+        property={property}
+        agent={agent}
+      />
     </div>
   );
 }

@@ -16,7 +16,12 @@ exports.getOpportunities = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
     
-    res.json(opportunities);
+    // Convert BigInt to Number for JSON serialization
+    const data = JSON.parse(JSON.stringify(opportunities, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -46,7 +51,12 @@ exports.createOpportunity = async (req, res) => {
       include: { agent: true }
     });
     
-    res.status(201).json(opportunity);
+    // Convert BigInt to Number for JSON serialization
+    const data = JSON.parse(JSON.stringify(opportunity, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.status(201).json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -72,7 +82,12 @@ exports.updateOpportunity = async (req, res) => {
       include: { agent: true }
     });
     
-    res.json(opportunity);
+    // Convert BigInt to Number for JSON serialization
+    const result = JSON.parse(JSON.stringify(opportunity, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

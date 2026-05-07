@@ -19,7 +19,7 @@ import SignUp from "./pages/SignUp";
 import BecomeAgent from "./pages/BecomeAgent";
 import LeadsPage from "./pages/LeadsPage";
 import AgentListings from "./pages/AgentListings";
-import LeadInbox from "./pages/LeadInbox";
+import Inbox from "./pages/Inbox";
 import AgentSettings from "./pages/AgentSettings";
 import Opportunities from "./pages/Opportunities";
 import CityPage from "./pages/CityPage";
@@ -51,7 +51,7 @@ export default function App() {
         <Route path="/command" element={<CommandLayout />}>
           <Route index element={<AgentDashboard />} />
           <Route path="leads" element={<LeadsPage />} />
-          <Route path="inbox" element={<LeadInbox />} />
+          <Route path="inbox" element={<Inbox />} />
           <Route path="listings" element={<AgentListings />} />
           <Route path="opportunities" element={<Opportunities />} />
           <Route path="settings" element={<AgentSettings />} />

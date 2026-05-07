@@ -88,6 +88,8 @@ exports.getPropertyById = async (req, res) => {
   try {
     const { id } = req.params;
     
+    console.log('🏠 Fetching property by ID:', id);
+    
     // Generate cache key
     const cacheKey = cacheService.generatePropertyIdKey(id);
     
@@ -106,8 +108,11 @@ exports.getPropertyById = async (req, res) => {
     });
     
     if (!property) {
+      console.log('❌ Property not found:', id);
       return res.status(404).json({ error: 'Property not found' });
     }
+    
+    console.log('✅ Property found:', property.address);
     
     // Update view count
     await prisma.property.update({
@@ -118,14 +123,20 @@ exports.getPropertyById = async (req, res) => {
       }
     });
     
+    // Convert BigInt to Number for JSON serialization
+    const propertyData = JSON.parse(JSON.stringify(property, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
     // Cache for 10 minutes
-    await cacheService.set(cacheKey, property, 600);
+    await cacheService.set(cacheKey, propertyData, 600);
     
     // Track business metric
     businessMetrics.track('property.view', { propertyId: id });
     
-    res.json(property);
+    res.json(propertyData);
   } catch (error) {
+    console.error('❌ Error fetching property:', error);
     res.status(500).json({ error: error.message });
   }
 };
