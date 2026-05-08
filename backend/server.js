@@ -105,6 +105,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const communicationRoutes = require('./routes/communicationRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
 const videoRoutes = require('./routes/videoRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
@@ -125,6 +126,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/video', videoRoutes);
+app.use('/api/admin', adminRoutes);
 
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS

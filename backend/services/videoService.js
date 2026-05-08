@@ -27,8 +27,7 @@
  * - Room management
  */
 
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 class VideoService {
   constructor() {
@@ -369,10 +368,6 @@ class VideoService {
       throw error;
     }
   }
-}
-
-module.exports = new VideoService();
-
 
   /**
    * Create a virtual tour session

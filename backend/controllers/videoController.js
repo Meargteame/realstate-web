@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
 const videoService = require('../services/videoService');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 // Helper to serialize BigInt
 const serializeBigInt = (obj) => {

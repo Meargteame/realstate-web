@@ -1,5 +1,8 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
@@ -57,12 +60,24 @@ exports.register = async (req, res) => {
       return user;
     });
 
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: result.id, 
+        email: result.email, 
+        role: result.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     res.status(201).json({
       id: result.id,
       name: result.name,
       email: result.email,
       role: result.role,
-      agentId: result.agentId
+      agentId: result.agentId,
+      token
     });
   } catch (error) {
     console.error('[Auth Register Error]:', error);
@@ -103,6 +118,17 @@ exports.login = async (req, res) => {
         return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
       }
 
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user.id, 
+          email: user.email, 
+          role: user.role 
+        },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
       console.log('✅ Login successful');
       return res.json({
         id: user.id,
@@ -110,6 +136,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         agentId: user.agentId,
+        token
       });
     }
 
