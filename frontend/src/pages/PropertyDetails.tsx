@@ -11,6 +11,7 @@ import {
   ExpandOutlined
 } from "@ant-design/icons";
 import PropertyChatModal from "../components/PropertyChatModal";
+import PropertyCard from "../components/PropertyCard";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -18,6 +19,7 @@ export default function PropertyDetails() {
   const { id } = useParams();
   const [property, setProperty] = useState<any>(null);
   const [agent, setAgent] = useState<any>(null);
+  const [similarProperties, setSimilarProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
@@ -64,6 +66,14 @@ export default function PropertyDetails() {
         console.error(err);
         setLoading(false);
       });
+    
+    // Fetch similar properties
+    fetch(`/api/properties/${id}/similar?limit=4`)
+      .then(res => res.json())
+      .then(data => {
+        setSimilarProperties(Array.isArray(data) ? data : []);
+      })
+      .catch(err => console.error('Error fetching similar properties:', err));
   }, [id]);
 
   const handleShare = async () => {
@@ -387,6 +397,22 @@ export default function PropertyDetails() {
                 </div>
               </Space>
             </Card>
+
+            {/* Similar Properties Section */}
+            {similarProperties.length > 0 && (
+              <Card style={{ borderRadius: '16px', marginTop: '24px' }}>
+                <Title level={4} style={{ marginBottom: 24 }}>
+                  You Might Also Like
+                </Title>
+                <Row gutter={[16, 16]}>
+                  {similarProperties.map((prop: any) => (
+                    <Col xs={24} sm={12} key={prop.id}>
+                      <PropertyCard property={prop} />
+                    </Col>
+                  ))}
+                </Row>
+              </Card>
+            )}
           </Col>
 
           {/* Right Column - Agent Card (Sticky) */}

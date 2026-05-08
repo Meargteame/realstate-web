@@ -26,6 +26,14 @@ import CityPage from "./pages/CityPage";
 import MortgageCalculator from "./pages/MortgageCalculator";
 import HomeValue from "./pages/HomeValue";
 import NotFound from "./pages/NotFound";
+import Calendar from "./pages/Calendar";
+import BookAppointment from "./pages/BookAppointment";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import AffordabilityCalculator from "./pages/AffordabilityCalculator";
+import Analytics from "./pages/Analytics";
+import VideoCall from "./pages/VideoCall";
+import StartVideoCall from "./pages/StartVideoCall";
 
 export default function App() {
   return (
@@ -40,6 +48,10 @@ export default function App() {
           <Route path="agents" element={<AgentSearch />} />
           <Route path="agents/:id" element={<AgentProfile />} />
           <Route path="become-agent" element={<BecomeAgent />} />
+          <Route path="book-appointment/:agentId" element={<BookAppointment />} />
+          <Route path="blog" element={<Blog />} />
+          <Route path="blog/:slug" element={<BlogPost />} />
+          <Route path="affordability-calculator" element={<AffordabilityCalculator />} />
           {/* SEO City Landing Template — generates thousands of pages from one component */}
           <Route path="homes/:city" element={<CityPage />} />
           {/* Lead Capture Micro-apps */}
@@ -54,10 +66,14 @@ export default function App() {
           <Route path="inbox" element={<Inbox />} />
           <Route path="listings" element={<AgentListings />} />
           <Route path="opportunities" element={<Opportunities />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="video/start" element={<StartVideoCall />} />
           <Route path="settings" element={<AgentSettings />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/video-call/:videoCallId" element={<VideoCall />} />
       </Routes>
     </Router>
   );

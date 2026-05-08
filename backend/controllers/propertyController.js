@@ -234,3 +234,77 @@ exports.deleteProperty = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// GET /api/properties/:id/similar - Get similar properties
+exports.getSimilarProperties = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit) || 4;
+    
+    // Get the current property
+    const property = await prisma.property.findUnique({
+      where: { id }
+    });
+    
+    if (!property) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    
+    // Define price range (±20%)
+    const priceMin = property.price * 0.8;
+    const priceMax = property.price * 1.2;
+    
+    // Find similar properties
+    const similarProperties = await prisma.property.findMany({
+      where: {
+        AND: [
+          { id: { not: id } }, // Exclude current property
+          { status: 'Active' }, // Only active listings
+          { city: property.city }, // Same city
+          { price: { gte: priceMin, lte: priceMax } }, // Similar price
+          {
+            OR: [
+              { beds: property.beds }, // Same bedrooms
+              { beds: property.beds - 1 }, // One less bedroom
+              { beds: property.beds + 1 }  // One more bedroom
+            ]
+          }
+        ]
+      },
+      include: { agent: true },
+      take: limit,
+      orderBy: [
+        { price: 'asc' } // Order by price similarity
+      ]
+    });
+    
+    // If not enough similar properties, get more from same city
+    if (similarProperties.length < limit) {
+      const additionalProperties = await prisma.property.findMany({
+        where: {
+          AND: [
+            { id: { not: id } },
+            { status: 'Active' },
+            { city: property.city },
+            { id: { notIn: similarProperties.map(p => p.id) } }
+          ]
+        },
+        include: { agent: true },
+        take: limit - similarProperties.length,
+        orderBy: { listedAt: 'desc' }
+      });
+      
+      similarProperties.push(...additionalProperties);
+    }
+    
+    // Convert BigInt to Number
+    const propertiesData = JSON.parse(JSON.stringify(similarProperties, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.json(propertiesData);
+  } catch (error) {
+    console.error('❌ Error fetching similar properties:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

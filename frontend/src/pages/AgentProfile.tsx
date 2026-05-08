@@ -135,9 +135,91 @@ export default function AgentProfile() {
                 <Title level={2} style={{ textTransform: 'uppercase', fontWeight: 900, borderBottom: '4px solid black', paddingBottom: '16px', marginBottom: '32px' }}>
                   Biography
                 </Title>
+                
+                {/* Video Introduction */}
+                {agent.videoUrl && (
+                  <div style={{ marginBottom: '32px' }}>
+                    <div style={{ 
+                      position: 'relative', 
+                      paddingBottom: '56.25%', 
+                      height: 0, 
+                      overflow: 'hidden',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}>
+                      <iframe
+                        src={agent.videoUrl}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          border: 'none',
+                          borderRadius: '12px'
+                        }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
+                
                 <Paragraph style={{ fontSize: '18px', lineHeight: 1.8, color: '#4b5563' }}>
                   {agent.bio || `As a lead specialist at Keller Williams®, ${agent.name} is dedicated to providing an unparalleled real estate experience. With a deep understanding of market dynamics and a commitment to excellence, they ensure every client achieves their property goals with precision and care.`}
                 </Paragraph>
+                
+                {/* Certifications */}
+                {agent.certifications && agent.certifications.length > 0 && (
+                  <div style={{ marginTop: '32px' }}>
+                    <Title level={4}>Professional Certifications</Title>
+                    <Space wrap size="middle">
+                      {agent.certifications.map((cert: string, idx: number) => (
+                        <Tag 
+                          key={idx}
+                          icon={<CheckCircleOutlined />}
+                          color="blue"
+                          style={{ 
+                            padding: '8px 16px', 
+                            fontSize: 14,
+                            borderRadius: '20px'
+                          }}
+                        >
+                          {cert}
+                        </Tag>
+                      ))}
+                    </Space>
+                  </div>
+                )}
+                
+                {/* Social Media Links */}
+                {agent.socialMedia && (
+                  <div style={{ marginTop: '32px' }}>
+                    <Title level={4}>Connect With Me</Title>
+                    <Space size="large">
+                      {agent.socialMedia.facebook && (
+                        <a href={agent.socialMedia.facebook} target="_blank" rel="noopener noreferrer">
+                          <Button size="large" icon={<GlobalOutlined />}>Facebook</Button>
+                        </a>
+                      )}
+                      {agent.socialMedia.instagram && (
+                        <a href={agent.socialMedia.instagram} target="_blank" rel="noopener noreferrer">
+                          <Button size="large" icon={<GlobalOutlined />}>Instagram</Button>
+                        </a>
+                      )}
+                      {agent.socialMedia.linkedin && (
+                        <a href={agent.socialMedia.linkedin} target="_blank" rel="noopener noreferrer">
+                          <Button size="large" icon={<GlobalOutlined />}>LinkedIn</Button>
+                        </a>
+                      )}
+                      {agent.socialMedia.twitter && (
+                        <a href={agent.socialMedia.twitter} target="_blank" rel="noopener noreferrer">
+                          <Button size="large" icon={<GlobalOutlined />}>Twitter</Button>
+                        </a>
+                      )}
+                    </Space>
+                  </div>
+                )}
              </section>
 
              <section>

@@ -34,6 +34,11 @@ model Agent {
   location      String?
   specialties   String?
   
+  // Phase 1: New Fields
+  videoUrl      String?       // YouTube/Vimeo embed URL
+  certifications String[]     @default([]) // Professional certifications
+  socialMedia   Json?         // { facebook, instagram, linkedin, twitter }
+  
   // Performance Metrics
   totalSales    Int           @default(0)
   totalVolume   BigInt        @default(0)
@@ -58,6 +63,7 @@ model Agent {
   opportunities Opportunity[]
   openHouses    OpenHouse[]
   agentReviews  Review[]
+  blogPosts     BlogPost[]
   
   @@index([email])
   @@index([location, isActive])
@@ -82,6 +88,14 @@ model Property {
   latitude     Float?
   longitude    Float?
   geocoded     Boolean       @default(false)
+  
+  // Phase 1: Advanced Filters
+  lotSize      Int?          // in square feet
+  yearBuilt    Int?
+  hasGarage    Boolean       @default(false)
+  garageSpaces Int?
+  hasPool      Boolean       @default(false)
+  features     String[]      @default([]) // ["hardwood floors", "granite counters", etc.]
   
   // Performance & Analytics Fields
   viewCount    Int           @default(0)
@@ -299,9 +313,275 @@ model Message {
   senderType     String       // "agent" or "lead"
   content        String
   isRead         Boolean      @default(false)
+  readAt         DateTime?    // Phase 4: When message was read
+  attachments    Json?        // Phase 4: File attachments [{name, url, type, size}]
   createdAt      DateTime     @default(now())
   
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   
   @@index([conversationId, createdAt])
+}
+
+// Phase 4: SMS Integration
+model SMSMessage {
+  id          String   @id @default(uuid())
+  to          String   // Phone number
+  from        String   // Twilio number
+  body        String
+  status      String   // queued, sent, delivered, failed
+  sid         String?  // Twilio message SID
+  leadId      String?
+  agentId     String?
+  direction   String   // inbound, outbound
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([leadId])
+  @@index([agentId])
+  @@index([status])
+}
+
+// Phase 4: Email Integration
+model EmailMessage {
+  id          String   @id @default(uuid())
+  to          String
+  from        String
+  subject     String
+  body        String   // HTML content
+  status      String   // queued, sent, delivered, failed
+  messageId   String?  // Email service message ID
+  leadId      String?
+  agentId     String?
+  attachments Json?    // [{name, url, type, size}]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([leadId])
+  @@index([agentId])
+  @@index([status])
+}
+
+// Phase 2: Blog/Content System
+model BlogPost {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  content         String    // Rich text content
+  excerpt         String?   // Short summary
+  coverImage      String?
+  authorId        String
+  authorName      String    // Denormalized for performance
+  status          String    @default("draft") // draft, published, archived
+  featured        Boolean   @default(false)
+  viewCount       Int       @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  author          Agent     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags            BlogTag[]
+  categories      BlogCategory[]
+  
+  @@index([status, publishedAt])
+  @@index([slug])
+  @@index([authorId])
+}
+
+model BlogTag {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  slug      String     @unique
+  posts     BlogPost[]
+  createdAt DateTime   @default(now())
+}
+
+model BlogCategory {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  posts       BlogPost[]
+  createdAt   DateTime   @default(now())
+}
+
+model EmailTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  subject     String
+  content     String   // HTML content with variables
+  variables   String[] // Available variables like {{name}}, {{property}}
+  type        String   // welcome, follow_up, listing_alert, etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([type, isActive])
+}
+
+// Phase 5: Calendar & Scheduling System
+model CalendarEvent {
+  id              String    @id @default(uuid())
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  location        String?
+  eventType       String    // showing, appointment, open_house, meeting, personal
+  status          String    @default("scheduled") // scheduled, cancelled, completed
+  allDay          Boolean   @default(false)
+  agentId         String
+  leadId          String?
+  propertyId      String?
+  isRecurring     Boolean   @default(false)
+  recurrenceRule  String?   // RRULE format for recurring events
+  parentEventId   String?   // For recurring event instances
+  reminderMinutes Int[]     @default([15, 60])
+  googleEventId   String?   // Google Calendar sync
+  outlookEventId  String?   // Outlook Calendar sync
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([agentId, startTime])
+  @@index([leadId])
+  @@index([propertyId])
+  @@index([status])
+  @@map("CalendarEvent")
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  agentId     String
+  dayOfWeek   Int      // 0-6 where 0=Sunday, 6=Saturday
+  startTime   String   // HH:MM format (e.g., "09:00")
+  endTime     String   // HH:MM format (e.g., "17:00")
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([agentId, dayOfWeek, startTime])
+  @@index([agentId])
+  @@map("Availability")
+}
+
+model BookingRequest {
+  id               String   @id @default(uuid())
+  agentId          String
+  leadName         String
+  leadEmail        String
+  leadPhone        String?
+  propertyId       String?
+  requestedDate    DateTime
+  requestedTime    String   // HH:MM format
+  duration         Int      @default(60) // minutes
+  message          String?
+  status           String   @default("pending") // pending, confirmed, rejected, cancelled
+  confirmedEventId String?  // Link to CalendarEvent if confirmed
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([agentId, status])
+  @@index([status])
+  @@map("BookingRequest")
+}
+
+// Phase 6: Video Chat & WebRTC System
+model VideoCall {
+  id           String   @id @default(uuid())
+  roomId       String   @unique
+  agentId      String
+  leadId       String?
+  leadName     String?
+  leadEmail    String?
+  propertyId   String?
+  status       String   @default("scheduled") // scheduled, active, completed, cancelled
+  startTime    DateTime?
+  endTime      DateTime?
+  duration     Int?     // in seconds
+  recordingUrl String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  participants VideoCallParticipant[]
+  tourSessions VirtualTourSession[]
+  
+  @@index([agentId])
+  @@index([roomId])
+  @@index([status])
+  @@map("VideoCall")
+}
+
+model VirtualTourSession {
+  id               String    @id @default(uuid())
+  videoCallId      String
+  propertyId       String
+  agentId          String
+  viewerCount      Int       @default(0)
+  chatEnabled      Boolean   @default(true)
+  screenSharing    Boolean   @default(false)
+  recordingEnabled Boolean   @default(false)
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  createdAt        DateTime  @default(now())
+  
+  videoCall        VideoCall @relation(fields: [videoCallId], references: [id], onDelete: Cascade)
+  
+  @@index([propertyId])
+  @@index([agentId])
+  @@map("VirtualTourSession")
+}
+
+model VideoCallParticipant {
+  id               String    @id @default(uuid())
+  videoCallId      String
+  participantName  String
+  participantEmail String?
+  role             String    @default("viewer") // host, viewer, guest
+  joinedAt         DateTime  @default(now())
+  leftAt           DateTime?
+  duration         Int?      // in seconds
+  createdAt        DateTime  @default(now())
+  
+  videoCall        VideoCall @relation(fields: [videoCallId], references: [id], onDelete: Cascade)
+  
+  @@index([videoCallId])
+  @@map("VideoCallParticipant")
+}
+
+// Phase 6: Video Chat & Virtual Tours
+model VirtualTourSession {
+  id          String    @id @default(uuid())
+  roomName    String    @unique
+  roomSid     String
+  agentId     String
+  propertyId  String
+  leadEmail   String
+  status      String    @default("scheduled") // scheduled, in-progress, completed, cancelled
+  provider    String    @default("mock") // mock, twilio
+  startedAt   DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([agentId])
+  @@index([propertyId])
+  @@index([status])
+  @@map("VirtualTourSession")
+}
+
+model VideoCallLog {
+  id            String   @id @default(uuid())
+  roomName      String
+  roomSid       String
+  participants  String[] // Array of participant identities
+  duration      Int?     // Duration in seconds
+  status        String   // completed, failed
+  provider      String   @default("mock")
+  recordingUrl  String?
+  createdAt     DateTime @default(now())
+  endedAt       DateTime?
+  
+  @@index([roomName])
+  @@index([status])
+  @@map("VideoCallLog")
 }

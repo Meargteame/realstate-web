@@ -100,6 +100,11 @@ const virtualTourRoutes = require('./routes/virtualTourRoutes');
 const marketDataRoutes = require('./routes/marketDataRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const communicationRoutes = require('./routes/communicationRoutes');
+const calendarRoutes = require('./routes/calendarRoutes');
+const videoRoutes = require('./routes/videoRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
@@ -115,6 +120,11 @@ app.use('/api/virtual-tours', virtualTourRoutes);
 app.use('/api/market-data', marketDataRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/blog', blogRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/communication', communicationRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/video', videoRoutes);
 
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS
@@ -177,6 +187,59 @@ async function startServer() {
       }, 2000);
     });
 
+    // =====================================================
+    // SOCKET.IO SETUP FOR VIDEO SIGNALING
+    // =====================================================
+    const { Server } = require('socket.io');
+    const io = new Server(server, {
+      cors: {
+        origin: allowedOrigins,
+        methods: ['GET', 'POST'],
+        credentials: true
+      }
+    });
+
+    // WebRTC signaling for peer-to-peer video calls
+    io.on('connection', (socket) => {
+      console.log(`🔌 Socket connected: ${socket.id}`);
+
+      // Join a video room
+      socket.on('join-room', (roomName, identity) => {
+        socket.join(roomName);
+        socket.to(roomName).emit('user-joined', { identity, socketId: socket.id });
+        console.log(`👤 ${identity} joined room: ${roomName}`);
+      });
+
+      // WebRTC signaling: offer
+      socket.on('offer', (roomName, offer) => {
+        socket.to(roomName).emit('offer', offer);
+      });
+
+      // WebRTC signaling: answer
+      socket.on('answer', (roomName, answer) => {
+        socket.to(roomName).emit('answer', answer);
+      });
+
+      // WebRTC signaling: ICE candidate
+      socket.on('ice-candidate', (roomName, candidate) => {
+        socket.to(roomName).emit('ice-candidate', candidate);
+      });
+
+      // Leave room
+      socket.on('leave-room', (roomName, identity) => {
+        socket.leave(roomName);
+        socket.to(roomName).emit('user-left', { identity, socketId: socket.id });
+        console.log(`👤 ${identity} left room: ${roomName}`);
+      });
+
+      // Disconnect
+      socket.on('disconnect', () => {
+        console.log(`🔌 Socket disconnected: ${socket.id}`);
+      });
+    });
+
+    console.log('🎥 WebRTC signaling server ready');
+
     // Graceful shutdown
     process.on('SIGTERM', async () => {
       console.log('⚠️  SIGTERM received, shutting down gracefully...');
@@ -188,6 +251,7 @@ async function startServer() {
         // Disconnect services
         await cacheService.disconnect();
         notificationService.stop();
+        io.close();
         
         console.log('✅ All services stopped');
         process.exit(0);

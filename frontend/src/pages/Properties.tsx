@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification } from "antd";
-import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, DollarOutlined, HomeOutlined, SaveOutlined } from "@ant-design/icons";
+import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification, Checkbox, Card } from "antd";
+import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, AppstoreOutlined, DollarOutlined, HomeOutlined, SaveOutlined } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
-import PropertyMap from "@/components/PropertyMap";
+import PropertyMapLeaflet from "@/components/PropertyMapLeaflet";
 import SaveSearchModal from "@/components/SaveSearchModal";
 
 const { Content, Sider } = Layout;
@@ -15,6 +15,7 @@ export default function Properties() {
   const query = searchParams.get("q") || "";
   const typeParam = searchParams.get("type") || "";
   const [showMap, setShowMap] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [properties, setProperties] = useState<any[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,13 @@ export default function Properties() {
   const [bathrooms, setBathrooms] = useState<number | null>(null);
   const [propertyType, setPropertyType] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("newest");
+  
+  // Advanced filters
+  const [lotSize, setLotSize] = useState<number | null>(null);
+  const [yearBuilt, setYearBuilt] = useState<number | null>(null);
+  const [hasGarage, setHasGarage] = useState<boolean>(false);
+  const [hasPool, setHasPool] = useState<boolean>(false);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
 
   // Set property type from URL parameter
   useEffect(() => {
@@ -154,6 +162,11 @@ export default function Properties() {
     setPropertyType(null);
     setSortBy("newest");
     setDrawnArea(null); // Clear drawn area
+    setLotSize(null);
+    setYearBuilt(null);
+    setHasGarage(false);
+    setHasPool(false);
+    setSelectedFeatures([]);
   };
 
   // Handle map interactions
@@ -239,8 +252,26 @@ export default function Properties() {
     bedrooms !== null,
     bathrooms !== null,
     propertyType !== null,
-    drawnArea !== null
+    drawnArea !== null,
+    lotSize !== null,
+    yearBuilt !== null,
+    hasGarage,
+    hasPool,
+    selectedFeatures.length > 0
   ].filter(Boolean).length;
+
+  const propertyFeatures = [
+    'Hardwood Floors',
+    'Granite Counters',
+    'Stainless Appliances',
+    'Central Air',
+    'Fireplace',
+    'Walk-in Closet',
+    'Updated Kitchen',
+    'Updated Bathroom',
+    'Basement',
+    'Deck/Patio'
+  ];
 
   const FilterPanel = () => (
     <div style={{ padding: '24px' }}>
@@ -343,6 +374,58 @@ export default function Properties() {
           <Select.Option value="Commercial">Commercial</Select.Option>
         </Select>
       </div>
+
+      {/* Advanced Filters */}
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
+          Lot Size (Min Sq Ft)
+        </Text>
+        <InputNumber
+          value={lotSize}
+          onChange={setLotSize}
+          style={{ width: '100%' }}
+          placeholder="Any"
+          formatter={value => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+        />
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
+          Year Built (Min)
+        </Text>
+        <InputNumber
+          value={yearBuilt}
+          onChange={setYearBuilt}
+          style={{ width: '100%' }}
+          placeholder="Any"
+          min={1800}
+          max={new Date().getFullYear()}
+        />
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Checkbox checked={hasGarage} onChange={(e) => setHasGarage(e.target.checked)}>
+          <Text strong>Has Garage</Text>
+        </Checkbox>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Checkbox checked={hasPool} onChange={(e) => setHasPool(e.target.checked)}>
+          <Text strong>Has Pool</Text>
+        </Checkbox>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
+          Property Features
+        </Text>
+        <Checkbox.Group
+          options={propertyFeatures}
+          value={selectedFeatures}
+          onChange={setSelectedFeatures}
+          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+        />
+      </div>
     </div>
   );
 
@@ -405,6 +488,26 @@ export default function Properties() {
                  More Filters
                </Button>
              </Badge>
+             
+             <Button.Group>
+               <Button 
+                 type={viewMode === 'grid' ? "primary" : "default"}
+                 icon={<AppstoreOutlined />}
+                 onClick={() => setViewMode('grid')}
+                 style={viewMode === 'grid' ? { background: '#b40101', borderColor: '#b40101' } : {}}
+               >
+                 Grid
+               </Button>
+               <Button 
+                 type={viewMode === 'list' ? "primary" : "default"}
+                 icon={<UnorderedListOutlined />}
+                 onClick={() => setViewMode('list')}
+                 style={viewMode === 'list' ? { background: '#b40101', borderColor: '#b40101' } : {}}
+               >
+                 List
+               </Button>
+             </Button.Group>
+             
              <Button 
                type={showMap ? "primary" : "default"} 
                icon={showMap ? <UnorderedListOutlined /> : <PushpinOutlined />}
@@ -418,19 +521,70 @@ export default function Properties() {
 
         {/* Results Area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '32px', background: '#f8f8f8' }}>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: showMap ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
-            gap: '24px' 
-          }}>
-            {filteredProperties.length > 0 ? (
-              filteredProperties.map(p => <div key={p.id}><PropertyCard property={p} /></div>)
-            ) : (
-              !loading && <div style={{ gridColumn: '1/-1', padding: '100px 0' }}>
-                <Empty description={<span>No properties found matching your filters. Try adjusting your search.</span>} />
-              </div>
-            )}
-          </div>
+          {viewMode === 'grid' ? (
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: showMap ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
+              gap: '24px' 
+            }}>
+              {filteredProperties.length > 0 ? (
+                filteredProperties.map(p => <div key={p.id}><PropertyCard property={p} /></div>)
+              ) : (
+                !loading && <div style={{ gridColumn: '1/-1', padding: '100px 0' }}>
+                  <Empty description={<span>No properties found matching your filters. Try adjusting your search.</span>} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              {filteredProperties.length > 0 ? (
+                filteredProperties.map(p => (
+                  <Card 
+                    key={p.id}
+                    hoverable
+                    style={{ borderRadius: '12px' }}
+                    styles={{ body: { padding: 0 } }}
+                  >
+                    <Row>
+                      <Col xs={24} md={8}>
+                        <img 
+                          src={p.imageUrl} 
+                          alt={p.address}
+                          style={{ 
+                            width: '100%', 
+                            height: '250px', 
+                            objectFit: 'cover',
+                            borderRadius: '12px 0 0 12px'
+                          }}
+                        />
+                      </Col>
+                      <Col xs={24} md={16} style={{ padding: '24px' }}>
+                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                          <Title level={3} style={{ margin: 0, color: '#b40101' }}>
+                            ${p.price?.toLocaleString()}
+                          </Title>
+                          <Text strong style={{ fontSize: 16 }}>{p.address}</Text>
+                          <Text type="secondary">{p.city}, {p.state} {p.zip}</Text>
+                          <Space size="large" style={{ marginTop: 12 }}>
+                            <Text><strong>{p.beds}</strong> Beds</Text>
+                            <Text><strong>{p.baths}</strong> Baths</Text>
+                            <Text><strong>{p.sqft?.toLocaleString()}</strong> Sq Ft</Text>
+                          </Space>
+                          <div style={{ marginTop: 16 }}>
+                            <Button type="primary" href={`/properties/${p.id}`} style={{ background: '#b40101', borderColor: '#b40101' }}>
+                              View Details
+                            </Button>
+                          </div>
+                        </Space>
+                      </Col>
+                    </Row>
+                  </Card>
+                ))
+              ) : (
+                !loading && <Empty description={<span>No properties found matching your filters. Try adjusting your search.</span>} />
+              )}
+            </Space>
+          )}
           
           {loading && <div style={{ textAlign: 'center', padding: '80px' }}><Text type="secondary">Loading properties...</Text></div>}
         </div>
@@ -448,7 +602,7 @@ export default function Properties() {
             overflow: 'hidden'
           }}
         >
-          <PropertyMap
+          <PropertyMapLeaflet
             properties={filteredProperties}
             onPropertySelect={handlePropertySelect}
             onBoundsChange={handleMapBoundsChange}
