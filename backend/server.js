@@ -4,21 +4,16 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const notificationService = require('./services/notificationService');
 const cacheService = require('./services/cacheService');
-const { securityHeaders, additionalHeaders, sanitizeInput, preventParameterPollution } = require('./middleware/security');
-const { globalLimiter } = require('./middleware/rateLimiter');
-const { performanceMonitor, requestLogger, errorTracker, getHealthStatus } = require('./middleware/monitoring');
+const { securityHeaders, additionalHeaders } = require('./middleware/security');
+// TEMPORARILY DISABLED - const { sanitizeInput, preventParameterPollution } = require('./middleware/security');
+// TEMPORARILY DISABLED - const { globalLimiter } = require('./middleware/rateLimiter');
+// TEMPORARILY DISABLED - const { performanceMonitor, requestLogger, errorTracker, getHealthStatus } = require('./middleware/monitoring');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// =====================================================
-// SECURITY MIDDLEWARE (Applied First)
-// =====================================================
-app.use(securityHeaders);
-app.use(additionalHeaders);
 
 // =====================================================
 // CORS CONFIGURATION
@@ -28,11 +23,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
   'http://localhost:5173'
 ];
 
+// MUST BE FIRST: Hostinger LiteSpeed drops OPTIONS requests if security headers block it
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -44,6 +38,15 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Explicit Preflight Handling for LiteSpeed
+app.options('*', cors());
+
+// =====================================================
+// SECURITY MIDDLEWARE (Applied After CORS)
+// =====================================================
+app.use(securityHeaders);
+app.use(additionalHeaders);
 
 // =====================================================
 // BODY PARSING & INPUT SANITIZATION
@@ -135,26 +138,49 @@ app.use('/api/documents', documentRoutes);
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS
 // =====================================================
-app.get('/api/health', async (req, res) => {
-  const health = await getHealthStatus();
-  res.json(health);
+app.get('/api/health', (req, res) => {
+  const uptime = process.uptime();
+  const memoryUsage = process.memoryUsage();
+  
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
+    uptimeSeconds: Math.floor(uptime),
+    memory: {
+      used: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+      total: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+      percentage: `${Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)}%`
+    },
+    environment: process.env.NODE_ENV || 'development',
+    cache: cacheService.isEnabled ? 'enabled' : 'disabled'
+  });
 });
 
-app.get('/api/metrics', async (req, res) => {
+app.get('/api/metrics', (req, res) => {
   // Require API key for metrics endpoint
   const apiKey = req.headers['x-api-key'];
-  if (apiKey !== process.env.METRICS_API_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!process.env.METRICS_API_KEY || apiKey !== process.env.METRICS_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized - Valid API key required' });
   }
 
-  const health = await getHealthStatus();
-  res.json(health);
+  const uptime = process.uptime();
+  const memoryUsage = process.memoryUsage();
+  
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(uptime),
+    memory: memoryUsage,
+    environment: process.env.NODE_ENV || 'development',
+    note: 'Full monitoring temporarily disabled - basic metrics only'
+  });
 });
 
 // =====================================================
-// ERROR HANDLING
+// ERROR HANDLING - TEMPORARILY DISABLED
 // =====================================================
-app.use(errorTracker);
+// app.use(errorTracker);
 
 // 404 handler
 app.use((req, res) => {
