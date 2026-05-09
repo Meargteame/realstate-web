@@ -12,9 +12,14 @@ model User {
   email        String        @unique
   password     String
   role         String        @default("user")
-  agentId      String?
+  agentId      String?       @unique
+  agent        Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
   favorites    Favorite[]
   savedSearches SavedSearch[]
+  documents    Document[]    @relation("UploadedDocuments")
+  documentVersions DocumentVersion[]
+  documentAccess DocumentAccess[]
+  comparisons  PropertyComparison[]
   createdAt    DateTime      @default(now())
 }
 
@@ -58,6 +63,7 @@ model Agent {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
+  user          User?
   properties    Property[]
   leads         Lead[]
   opportunities Opportunity[]
@@ -89,13 +95,31 @@ model Property {
   longitude    Float?
   geocoded     Boolean       @default(false)
   
-  // Phase 1: Advanced Filters
+  // Phase 1 & 7A: Advanced Filters
   lotSize      Int?          // in square feet
   yearBuilt    Int?
   hasGarage    Boolean       @default(false)
   garageSpaces Int?
   hasPool      Boolean       @default(false)
   features     String[]      @default([]) // ["hardwood floors", "granite counters", etc.]
+  
+  // Phase 7A: Additional Advanced Filters
+  hoaFees          Int?          // Monthly HOA fees
+  hasBasement      Boolean       @default(false)
+  hasFireplace     Boolean       @default(false)
+  isWaterfront     Boolean       @default(false)
+  isPetFriendly    Boolean       @default(false)
+  stories          Int           @default(1)
+  condition        String        @default("Good") // New, Excellent, Good, Fair, Needs Work
+  daysOnMarket     Int           @default(0)
+  parkingSpaces    Int           @default(0)
+  heating          String?       // Central, Gas, Electric, etc.
+  cooling          String?       // Central AC, Window Units, etc.
+  roofType         String?       // Shingle, Tile, Metal, etc.
+  flooring         String[]      @default([]) // Hardwood, Carpet, Tile, etc.
+  appliances       String[]      @default([]) // Refrigerator, Dishwasher, etc.
+  exteriorFeatures String[]      @default([]) // Deck, Patio, Fence, etc.
+  interiorFeatures String[]      @default([]) // Walk-in Closet, High Ceilings, etc.
   
   // Performance & Analytics Fields
   viewCount    Int           @default(0)
@@ -122,6 +146,8 @@ model Property {
   searchAlerts SearchAlert[]
   openHouses   OpenHouse[]
   virtualTours VirtualTour[]
+  documents    Document[]
+  priceHistory PropertyPriceHistory[]
   
   // Critical Performance Indexes
   @@index([city, state, status])
@@ -153,6 +179,8 @@ model Lead {
   
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   propertyId String?
+  
+  documents  Document[]
 }
 
 model Opportunity {
@@ -549,26 +577,6 @@ model VideoCallParticipant {
 }
 
 // Phase 6: Video Chat & Virtual Tours
-model VirtualTourSession {
-  id          String    @id @default(uuid())
-  roomName    String    @unique
-  roomSid     String
-  agentId     String
-  propertyId  String
-  leadEmail   String
-  status      String    @default("scheduled") // scheduled, in-progress, completed, cancelled
-  provider    String    @default("mock") // mock, twilio
-  startedAt   DateTime?
-  endedAt     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  @@index([agentId])
-  @@index([propertyId])
-  @@index([status])
-  @@map("VirtualTourSession")
-}
-
 model VideoCallLog {
   id            String   @id @default(uuid())
   roomName      String
@@ -584,4 +592,96 @@ model VideoCallLog {
   @@index([roomName])
   @@index([status])
   @@map("VideoCallLog")
+}
+
+// Phase 7C: Document Management System
+model Document {
+  id          String   @id @default(uuid())
+  name        String
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  fileType    String
+  category    String   @default("general") // contract, disclosure, inspection, listing, offer, general
+  propertyId  String?
+  property    Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  leadId      String?
+  lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  uploadedBy  String
+  uploader    User      @relation("UploadedDocuments", fields: [uploadedBy], references: [id], onDelete: Cascade)
+  sharedWith  String[]  @default([]) // User IDs
+  version     Int       @default(1)
+  status      String    @default("active") // active, archived, deleted
+  description String?
+  tags        String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  versions    DocumentVersion[]
+  accessLogs  DocumentAccess[]
+  
+  @@index([uploadedBy])
+  @@index([propertyId])
+  @@index([leadId])
+  @@index([category, status])
+  @@index([createdAt(sort: Desc)])
+  @@map("Document")
+}
+
+model DocumentVersion {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version     Int
+  fileUrl     String
+  fileSize    Int
+  uploadedBy  String
+  uploader    User     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  changeNote  String?
+  createdAt   DateTime @default(now())
+  
+  @@index([documentId])
+  @@map("DocumentVersion")
+}
+
+model DocumentAccess {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String   // view, download, share, delete
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@index([documentId])
+  @@index([userId])
+  @@map("DocumentAccess")
+}
+
+// Phase 7D: Enhanced Property Features
+model PropertyPriceHistory {
+  id         String   @id @default(uuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  price      Float
+  changeType String   // listed, reduced, increased
+  changedAt  DateTime @default(now())
+  
+  @@index([propertyId])
+  @@index([changedAt(sort: Desc)])
+  @@map("PropertyPriceHistory")
+}
+
+model PropertyComparison {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyIds String[]
+  name        String?
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@map("PropertyComparison")
 }

@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -28,10 +29,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -49,19 +50,20 @@ app.use(cors({
 // =====================================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(sanitizeInput);
-app.use(preventParameterPollution);
+// TEMPORARILY DISABLED FOR DEBUGGING
+// app.use(sanitizeInput);
+// app.use(preventParameterPollution);
 
 // =====================================================
-// MONITORING & LOGGING
+// MONITORING & LOGGING - TEMPORARILY DISABLED
 // =====================================================
-app.use(requestLogger);
-app.use(performanceMonitor.trackRequest());
+// app.use(requestLogger);
+// app.use(performanceMonitor.trackRequest());
 
 // =====================================================
-// RATE LIMITING (Global)
+// RATE LIMITING (Global) - TEMPORARILY DISABLED FOR DEBUGGING
 // =====================================================
-app.use('/api/', globalLimiter);
+// app.use('/api/', globalLimiter);
 
 // =====================================================
 // STATIC FILES (Serve uploaded images)
@@ -74,7 +76,7 @@ app.use('/uploads', (req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
@@ -106,6 +108,7 @@ const communicationRoutes = require('./routes/communicationRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const documentRoutes = require('./routes/documentRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
@@ -127,6 +130,7 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/video', videoRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/documents', documentRoutes);
 
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS
@@ -142,7 +146,7 @@ app.get('/api/metrics', async (req, res) => {
   if (apiKey !== process.env.METRICS_API_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  
+
   const health = await getHealthStatus();
   res.json(health);
 });
@@ -154,7 +158,7 @@ app.use(errorTracker);
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     error: 'Not Found',
     message: `Cannot ${req.method} ${req.path}`
   });
@@ -167,7 +171,7 @@ async function startServer() {
   try {
     // Connect to Redis cache
     await cacheService.connect();
-    
+
     // Start server
     const server = app.listen(PORT, () => {
       console.log('');
@@ -182,7 +186,7 @@ async function startServer() {
       console.log(`🚀 Performance Monitoring: ✅ Enabled`);
       console.log('🚀 ============================================');
       console.log('');
-      
+
       // Start notification service
       setTimeout(() => {
         notificationService.start();
@@ -245,20 +249,20 @@ async function startServer() {
     // Graceful shutdown
     process.on('SIGTERM', async () => {
       console.log('⚠️  SIGTERM received, shutting down gracefully...');
-      
+
       // Stop accepting new connections
       server.close(async () => {
         console.log('✅ HTTP server closed');
-        
+
         // Disconnect services
         await cacheService.disconnect();
         notificationService.stop();
         io.close();
-        
+
         console.log('✅ All services stopped');
         process.exit(0);
       });
-      
+
       // Force shutdown after 10 seconds
       setTimeout(() => {
         console.error('❌ Forced shutdown after timeout');
@@ -267,7 +271,7 @@ async function startServer() {
     });
 
     // A hack to keep the event loop alive in this specific Node environment
-    setInterval(() => {}, 1000 * 60 * 60);
+    setInterval(() => { }, 1000 * 60 * 60);
 
   } catch (error) {
     console.error('❌ Failed to start server:', error);

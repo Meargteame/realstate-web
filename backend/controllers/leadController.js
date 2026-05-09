@@ -97,7 +97,12 @@ exports.getAllLeads = async (req, res) => {
       prisma.lead.count({ where })
     ]);
 
-    res.json({ leads, total, page: parseInt(page), limit: parseInt(limit) });
+    res.json({ 
+      leads, 
+      total: Number(total), 
+      page: parseInt(page), 
+      limit: parseInt(limit) 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

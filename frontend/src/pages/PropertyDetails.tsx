@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons";
 import PropertyChatModal from "../components/PropertyChatModal";
 import PropertyCard from "../components/PropertyCard";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -26,6 +27,7 @@ export default function PropertyDetails() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [hasExistingChat, setHasExistingChat] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isMobile = useIsMobile();
 
   // Mock gallery images
   const galleryImages = [
@@ -196,46 +198,46 @@ export default function PropertyDetails() {
         zIndex: 100,
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '12px 16px' : '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/properties">
-            <Button icon={<ArrowLeftOutlined />} type="text" size="large">
-              Back to Listings
+            <Button icon={<ArrowLeftOutlined />} type="text" size={isMobile ? "middle" : "large"}>
+              {isMobile ? "Back" : "Back to Listings"}
             </Button>
           </Link>
-          <Space size="middle">
+          <Space size={isMobile ? "small" : "middle"}>
             <Button 
               icon={<ShareAltOutlined />}
               onClick={handleShare}
-              size="large"
+              size={isMobile ? "middle" : "large"}
             >
-              Share
+              {isMobile ? "" : "Share"}
             </Button>
             <Button 
               icon={isSaved ? <HeartFilled /> : <HeartOutlined />}
               onClick={handleSave}
               type={isSaved ? "primary" : "default"}
               danger={isSaved}
-              size="large"
+              size={isMobile ? "middle" : "large"}
             >
-              {isSaved ? 'Saved' : 'Save'}
+              {isMobile ? "" : (isSaved ? 'Saved' : 'Save')}
             </Button>
           </Space>
         </div>
       </div>
 
       {/* Image Gallery */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 32px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '16px' : '24px 32px' }}>
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '2fr 1fr 1fr',
-          gridTemplateRows: '300px 300px',
-          gap: '12px',
-          borderRadius: '16px',
+          gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr',
+          gridTemplateRows: isMobile ? '250px' : '300px 300px',
+          gap: isMobile ? '8px' : '12px',
+          borderRadius: isMobile ? '12px' : '16px',
           overflow: 'hidden'
         }}>
           <div 
             style={{ 
-              gridRow: '1 / 3',
+              gridRow: isMobile ? 'auto' : '1 / 3',
               position: 'relative',
               cursor: 'pointer',
               overflow: 'hidden'

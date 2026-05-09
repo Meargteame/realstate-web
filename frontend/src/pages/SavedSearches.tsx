@@ -27,6 +27,7 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '../hooks/useBreakpoint';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -52,6 +53,7 @@ export default function SavedSearches() {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningSearch, setRunningSearch] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchSavedSearches();
@@ -278,20 +280,22 @@ export default function SavedSearches() {
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#f8f8f8' }}>
-      <Content style={{ padding: '32px' }}>
+      <Content style={{ padding: isMobile ? '24px 16px' : '32px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Header */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '32px'
+            alignItems: isMobile ? 'flex-start' : 'center',
+            marginBottom: isMobile ? '24px' : '32px',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '16px' : '0'
           }}>
             <div>
-              <Title level={2} style={{ margin: 0, fontWeight: 900 }}>
+              <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
                 SAVED SEARCHES
               </Title>
-              <Text type="secondary" style={{ fontSize: '14px' }}>
+              <Text type="secondary" style={{ fontSize: isMobile ? '13px' : '14px' }}>
                 Manage your saved property searches and email alerts
               </Text>
             </div>
@@ -300,24 +304,24 @@ export default function SavedSearches() {
               type="primary"
               icon={<PlusOutlined />}
               onClick={() => navigate('/properties')}
-              style={{ backgroundColor: '#b40101', borderColor: '#b40101' }}
+              style={{ backgroundColor: '#b40101', borderColor: '#b40101', width: isMobile ? '100%' : 'auto' }}
             >
-              Create New Search
+              {isMobile ? "New Search" : "Create New Search"}
             </Button>
           </div>
 
           {/* Saved Searches Grid */}
           {savedSearches.length === 0 ? (
-            <Card style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <Card style={{ textAlign: 'center', padding: isMobile ? '40px 20px' : '60px 20px' }}>
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <div>
-                    <Text style={{ fontSize: '16px', color: '#666' }}>
+                    <Text style={{ fontSize: isMobile ? '15px' : '16px', color: '#666' }}>
                       No saved searches yet
                     </Text>
                     <br />
-                    <Text type="secondary" style={{ fontSize: '14px' }}>
+                    <Text type="secondary" style={{ fontSize: isMobile ? '13px' : '14px' }}>
                       Create your first saved search to get notified about new properties
                     </Text>
                   </div>
@@ -327,7 +331,7 @@ export default function SavedSearches() {
                   type="primary"
                   icon={<SearchOutlined />}
                   onClick={() => navigate('/properties')}
-                  style={{ backgroundColor: '#b40101', borderColor: '#b40101' }}
+                  style={{ backgroundColor: '#b40101', borderColor: '#b40101', marginTop: '16px' }}
                 >
                   Start Searching Properties
                 </Button>
@@ -336,8 +340,8 @@ export default function SavedSearches() {
           ) : (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', 
-              gap: '24px' 
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(400px, 1fr))', 
+              gap: isMobile ? '16px' : '24px' 
             }}>
               {savedSearches.map((search) => (
                 <Card
@@ -353,9 +357,9 @@ export default function SavedSearches() {
                       icon={<PlayCircleOutlined />}
                       onClick={() => runSavedSearch(search.id, search.name)}
                       loading={runningSearch === search.id}
-                      style={{ color: '#b40101' }}
+                      style={{ color: '#b40101', fontSize: isMobile ? '13px' : '14px' }}
                     >
-                      Run Search
+                      {isMobile ? "Run" : "Run Search"}
                     </Button>,
                     <Tooltip title={search.emailAlerts ? 'Disable alerts' : 'Enable alerts'}>
                       <Switch
@@ -376,7 +380,7 @@ export default function SavedSearches() {
                 >
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <Title level={4} style={{ margin: 0, fontSize: '18px' }}>
+                      <Title level={4} style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
                         {search.name}
                       </Title>
                       {search.unreadAlerts > 0 && (
@@ -384,13 +388,13 @@ export default function SavedSearches() {
                       )}
                     </div>
                     
-                    <Text type="secondary" style={{ fontSize: '13px', display: 'block', marginTop: '4px' }}>
+                    <Text type="secondary" style={{ fontSize: isMobile ? '12px' : '13px', display: 'block', marginTop: '4px' }}>
                       Created {formatDate(search.createdAt)}
                     </Text>
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
-                    <Text style={{ fontSize: '14px', color: '#666' }}>
+                    <Text style={{ fontSize: isMobile ? '13px' : '14px', color: '#666' }}>
                       {getFilterSummary(search.filters)}
                     </Text>
                   </div>

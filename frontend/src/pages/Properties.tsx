@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification, Checkbox, Card } from "antd";
-import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, AppstoreOutlined, DollarOutlined, HomeOutlined, SaveOutlined } from "@ant-design/icons";
+import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification, Checkbox, Card, FloatButton } from "antd";
+import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, AppstoreOutlined, DollarOutlined, HomeOutlined, SaveOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
 import PropertyMapLeaflet from "@/components/PropertyMapLeaflet";
 import SaveSearchModal from "@/components/SaveSearchModal";
+import { useIsMobile, useIsTablet } from "../hooks/useBreakpoint";
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -25,6 +26,10 @@ export default function Properties() {
   const [drawnArea, setDrawnArea] = useState<any>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [savingSearch, setSavingSearch] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
   
   // Filter states
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
@@ -33,12 +38,19 @@ export default function Properties() {
   const [propertyType, setPropertyType] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("newest");
   
-  // Advanced filters
-  const [lotSize, setLotSize] = useState<number | null>(null);
-  const [yearBuilt, setYearBuilt] = useState<number | null>(null);
-  const [hasGarage, setHasGarage] = useState<boolean>(false);
+  // Phase 7A: Advanced filters
+  const [yearRange, setYearRange] = useState<[number, number]>([1900, new Date().getFullYear()]);
+  const [lotSizeRange, setLotSizeRange] = useState<[number, number]>([0, 100000]);
+  const [hoaFeesRange, setHoaFeesRange] = useState<[number, number]>([0, 1000]);
+  const [minGarageSpaces, setMinGarageSpaces] = useState<number | null>(null);
   const [hasPool, setHasPool] = useState<boolean>(false);
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [hasBasement, setHasBasement] = useState<boolean>(false);
+  const [hasFireplace, setHasFireplace] = useState<boolean>(false);
+  const [isWaterfront, setIsWaterfront] = useState<boolean>(false);
+  const [isPetFriendly, setIsPetFriendly] = useState<boolean>(false);
+  const [storiesRange, setStoriesRange] = useState<[number, number]>([1, 5]);
+  const [condition, setCondition] = useState<string | null>(null);
+  const [maxDaysOnMarket, setMaxDaysOnMarket] = useState<number | null>(null);
 
   // Set property type from URL parameter
   useEffect(() => {
@@ -55,40 +67,54 @@ export default function Properties() {
   useEffect(() => {
     setLoading(true);
     
-    // Use map API if we have drawn area, otherwise use regular search
-    const url = drawnArea 
-      ? "/api/map/search-area"
-      : query 
-        ? `/api/properties?q=${encodeURIComponent(query)}` 
-        : "/api/properties";
-
     const fetchProperties = async () => {
       try {
         let response;
         
         if (drawnArea) {
           // Search within drawn area
-          response = await fetch(url, {
+          response = await fetch("/api/map/search-area", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               geometry: drawnArea,
-              filters: {
-                minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
-                maxPrice: priceRange[1] < 5000000 ? priceRange[1] : undefined,
-                beds: bedrooms,
-                baths: bathrooms,
-                propertyType: propertyType
-              }
+              filters: buildFilterParams()
             })
           });
           const data = await response.json();
           setProperties(data.properties || []);
         } else {
-          // Regular search
-          response = await fetch(url);
+          // Build query string with all filters
+          const params = new URLSearchParams();
+          
+          if (query) params.append('q', query);
+          if (priceRange[0] > 0) params.append('minPrice', priceRange[0].toString());
+          if (priceRange[1] < 5000000) params.append('maxPrice', priceRange[1].toString());
+          if (bedrooms) params.append('beds', bedrooms.toString());
+          if (bathrooms) params.append('baths', bathrooms.toString());
+          if (propertyType) params.append('propertyType', propertyType);
+          
+          // Phase 7A: Advanced filters
+          if (yearRange[0] > 1900) params.append('minYear', yearRange[0].toString());
+          if (yearRange[1] < new Date().getFullYear()) params.append('maxYear', yearRange[1].toString());
+          if (lotSizeRange[0] > 0) params.append('minLotSize', lotSizeRange[0].toString());
+          if (lotSizeRange[1] < 100000) params.append('maxLotSize', lotSizeRange[1].toString());
+          if (hoaFeesRange[0] > 0) params.append('minHoaFees', hoaFeesRange[0].toString());
+          if (hoaFeesRange[1] < 1000) params.append('maxHoaFees', hoaFeesRange[1].toString());
+          if (minGarageSpaces) params.append('minGarageSpaces', minGarageSpaces.toString());
+          if (hasPool) params.append('hasPool', 'true');
+          if (hasBasement) params.append('hasBasement', 'true');
+          if (hasFireplace) params.append('hasFireplace', 'true');
+          if (isWaterfront) params.append('isWaterfront', 'true');
+          if (isPetFriendly) params.append('isPetFriendly', 'true');
+          if (storiesRange[0] > 1) params.append('minStories', storiesRange[0].toString());
+          if (storiesRange[1] < 5) params.append('maxStories', storiesRange[1].toString());
+          if (condition) params.append('condition', condition);
+          if (maxDaysOnMarket) params.append('maxDaysOnMarket', maxDaysOnMarket.toString());
+          
+          response = await fetch(`/api/properties?${params.toString()}`);
           const data = await response.json();
           setProperties(Array.isArray(data) ? data : []);
         }
@@ -102,49 +128,52 @@ export default function Properties() {
     };
 
     fetchProperties();
-  }, [query, drawnArea]);
+  }, [query, drawnArea, priceRange, bedrooms, bathrooms, propertyType, yearRange, lotSizeRange, hoaFeesRange, minGarageSpaces, hasPool, hasBasement, hasFireplace, isWaterfront, isPetFriendly, storiesRange, condition, maxDaysOnMarket]);
+  
+  // Helper function to build filter params
+  const buildFilterParams = () => {
+    const filters: any = {};
+    if (priceRange[0] > 0) filters.minPrice = priceRange[0];
+    if (priceRange[1] < 5000000) filters.maxPrice = priceRange[1];
+    if (bedrooms) filters.beds = bedrooms;
+    if (bathrooms) filters.baths = bathrooms;
+    if (propertyType) filters.propertyType = propertyType;
+    if (yearRange[0] > 1900) filters.minYear = yearRange[0];
+    if (yearRange[1] < new Date().getFullYear()) filters.maxYear = yearRange[1];
+    if (lotSizeRange[0] > 0) filters.minLotSize = lotSizeRange[0];
+    if (lotSizeRange[1] < 100000) filters.maxLotSize = lotSizeRange[1];
+    if (hoaFeesRange[0] > 0) filters.minHoaFees = hoaFeesRange[0];
+    if (hoaFeesRange[1] < 1000) filters.maxHoaFees = hoaFeesRange[1];
+    if (minGarageSpaces) filters.minGarageSpaces = minGarageSpaces;
+    if (hasPool) filters.hasPool = true;
+    if (hasBasement) filters.hasBasement = true;
+    if (hasFireplace) filters.hasFireplace = true;
+    if (isWaterfront) filters.isWaterfront = true;
+    if (isPetFriendly) filters.isPetFriendly = true;
+    if (storiesRange[0] > 1) filters.minStories = storiesRange[0];
+    if (storiesRange[1] < 5) filters.maxStories = storiesRange[1];
+    if (condition) filters.condition = condition;
+    if (maxDaysOnMarket) filters.maxDaysOnMarket = maxDaysOnMarket;
+    return filters;
+  };
 
-  // Apply filters (only if not using drawn area, as area search handles filters on backend)
+  // Apply sorting (filters are now handled by backend)
   useEffect(() => {
-    if (drawnArea) {
-      // For drawn area searches, properties are already filtered on backend
-      setFilteredProperties(properties);
-      return;
-    }
-
-    let filtered = [...properties];
-
-    // Price filter
-    filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-
-    // Bedrooms filter
-    if (bedrooms !== null) {
-      filtered = filtered.filter(p => p.beds >= bedrooms);
-    }
-
-    // Bathrooms filter
-    if (bathrooms !== null) {
-      filtered = filtered.filter(p => p.baths >= bathrooms);
-    }
-
-    // Property type filter
-    if (propertyType) {
-      filtered = filtered.filter(p => p.propertyType === propertyType);
-    }
+    let sorted = [...properties];
 
     // Sort
     switch (sortBy) {
       case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
+        sorted.sort((a, b) => a.price - b.price);
         break;
       case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
+        sorted.sort((a, b) => b.price - a.price);
         break;
       case "beds":
-        filtered.sort((a, b) => b.beds - a.beds);
+        sorted.sort((a, b) => b.beds - a.beds);
         break;
       case "sqft":
-        filtered.sort((a, b) => b.sqft - a.sqft);
+        sorted.sort((a, b) => b.sqft - a.sqft);
         break;
       case "newest":
       default:
@@ -152,8 +181,8 @@ export default function Properties() {
         break;
     }
 
-    setFilteredProperties(filtered);
-  }, [properties, priceRange, bedrooms, bathrooms, propertyType, sortBy, drawnArea]);
+    setFilteredProperties(sorted);
+  }, [properties, sortBy]);
 
   const clearFilters = () => {
     setPriceRange([0, 5000000]);
@@ -161,12 +190,19 @@ export default function Properties() {
     setBathrooms(null);
     setPropertyType(null);
     setSortBy("newest");
-    setDrawnArea(null); // Clear drawn area
-    setLotSize(null);
-    setYearBuilt(null);
-    setHasGarage(false);
+    setDrawnArea(null);
+    setYearRange([1900, new Date().getFullYear()]);
+    setLotSizeRange([0, 100000]);
+    setHoaFeesRange([0, 1000]);
+    setMinGarageSpaces(null);
     setHasPool(false);
-    setSelectedFeatures([]);
+    setHasBasement(false);
+    setHasFireplace(false);
+    setIsWaterfront(false);
+    setIsPetFriendly(false);
+    setStoriesRange([1, 5]);
+    setCondition(null);
+    setMaxDaysOnMarket(null);
   };
 
   // Handle map interactions
@@ -202,7 +238,24 @@ export default function Properties() {
             propertyType: propertyType,
             query: query,
             mapArea: drawnArea,
-            bounds: mapBounds
+            bounds: mapBounds,
+            // Phase 7A: Advanced filters
+            minYear: yearRange[0] > 1900 ? yearRange[0] : null,
+            maxYear: yearRange[1] < new Date().getFullYear() ? yearRange[1] : null,
+            minLotSize: lotSizeRange[0] > 0 ? lotSizeRange[0] : null,
+            maxLotSize: lotSizeRange[1] < 100000 ? lotSizeRange[1] : null,
+            minHoaFees: hoaFeesRange[0] > 0 ? hoaFeesRange[0] : null,
+            maxHoaFees: hoaFeesRange[1] < 1000 ? hoaFeesRange[1] : null,
+            minGarageSpaces: minGarageSpaces,
+            hasPool: hasPool || null,
+            hasBasement: hasBasement || null,
+            hasFireplace: hasFireplace || null,
+            isWaterfront: isWaterfront || null,
+            isPetFriendly: isPetFriendly || null,
+            minStories: storiesRange[0] > 1 ? storiesRange[0] : null,
+            maxStories: storiesRange[1] < 5 ? storiesRange[1] : null,
+            condition: condition,
+            maxDaysOnMarket: maxDaysOnMarket
           },
           emailAlerts: searchData.emailAlerts,
           frequency: searchData.frequency
@@ -243,7 +296,23 @@ export default function Properties() {
       bathrooms !== null || 
       propertyType !== null || 
       drawnArea !== null ||
-      query !== ""
+      query !== "" ||
+      yearRange[0] > 1900 ||
+      yearRange[1] < new Date().getFullYear() ||
+      lotSizeRange[0] > 0 ||
+      lotSizeRange[1] < 100000 ||
+      hoaFeesRange[0] > 0 ||
+      hoaFeesRange[1] < 1000 ||
+      minGarageSpaces !== null ||
+      hasPool ||
+      hasBasement ||
+      hasFireplace ||
+      isWaterfront ||
+      isPetFriendly ||
+      storiesRange[0] > 1 ||
+      storiesRange[1] < 5 ||
+      condition !== null ||
+      maxDaysOnMarket !== null
     );
   };
 
@@ -253,25 +322,19 @@ export default function Properties() {
     bathrooms !== null,
     propertyType !== null,
     drawnArea !== null,
-    lotSize !== null,
-    yearBuilt !== null,
-    hasGarage,
+    yearRange[0] > 1900 || yearRange[1] < new Date().getFullYear(),
+    lotSizeRange[0] > 0 || lotSizeRange[1] < 100000,
+    hoaFeesRange[0] > 0 || hoaFeesRange[1] < 1000,
+    minGarageSpaces !== null,
     hasPool,
-    selectedFeatures.length > 0
+    hasBasement,
+    hasFireplace,
+    isWaterfront,
+    isPetFriendly,
+    storiesRange[0] > 1 || storiesRange[1] < 5,
+    condition !== null,
+    maxDaysOnMarket !== null
   ].filter(Boolean).length;
-
-  const propertyFeatures = [
-    'Hardwood Floors',
-    'Granite Counters',
-    'Stainless Appliances',
-    'Central Air',
-    'Fireplace',
-    'Walk-in Closet',
-    'Updated Kitchen',
-    'Updated Bathroom',
-    'Basement',
-    'Deck/Patio'
-  ];
 
   const FilterPanel = () => (
     <div style={{ padding: '32px' }}>
@@ -365,66 +428,200 @@ export default function Properties() {
           style={{ width: '100%' }}
           placeholder="All Types"
           allowClear
-        >
-          <Select.Option value="Single Family">Single Family</Select.Option>
-          <Select.Option value="Condo">Condo</Select.Option>
-          <Select.Option value="Townhouse">Townhouse</Select.Option>
-          <Select.Option value="Multi-Family">Multi-Family</Select.Option>
-          <Select.Option value="Land">Land</Select.Option>
-          <Select.Option value="Commercial">Commercial</Select.Option>
-        </Select>
-      </div>
-
-      {/* Advanced Filters */}
-      <div style={{ marginBottom: '32px' }}>
-        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
-          Lot Size (Min Sq Ft)
-        </Text>
-        <InputNumber
-          value={lotSize}
-          onChange={setLotSize}
-          style={{ width: '100%' }}
-          placeholder="Any"
-          formatter={value => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+          options={[
+            { value: 'Single Family', label: 'Single Family' },
+            { value: 'Condo', label: 'Condo' },
+            { value: 'Townhouse', label: 'Townhouse' },
+            { value: 'Multi-Family', label: 'Multi-Family' },
+            { value: 'Land', label: 'Land' },
+            { value: 'Commercial', label: 'Commercial' }
+          ]}
         />
       </div>
 
+      {/* Phase 7A: Advanced Filters */}
       <div style={{ marginBottom: '32px' }}>
-        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
-          Year Built (Min)
+        <Text strong style={{ display: 'block', marginBottom: '16px' }}>
+          Year Built
         </Text>
-        <InputNumber
-          value={yearBuilt}
-          onChange={setYearBuilt}
-          style={{ width: '100%' }}
-          placeholder="Any"
-          min={1800}
+        <Slider
+          range
+          min={1900}
           max={new Date().getFullYear()}
+          step={5}
+          value={yearRange}
+          onChange={setYearRange}
+        />
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <InputNumber
+            value={yearRange[0]}
+            onChange={(v) => setYearRange([v || 1900, yearRange[1]])}
+            style={{ width: '100%' }}
+          />
+          <InputNumber
+            value={yearRange[1]}
+            onChange={(v) => setYearRange([yearRange[0], v || new Date().getFullYear()])}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '16px' }}>
+          Lot Size (Sq Ft)
+        </Text>
+        <Slider
+          range
+          min={0}
+          max={100000}
+          step={1000}
+          value={lotSizeRange}
+          onChange={setLotSizeRange}
+          tooltip={{ formatter: (v) => `${(v! / 1000).toFixed(0)}K` }}
+        />
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <InputNumber
+            value={lotSizeRange[0]}
+            onChange={(v) => setLotSizeRange([v || 0, lotSizeRange[1]])}
+            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+            style={{ width: '100%' }}
+          />
+          <InputNumber
+            value={lotSizeRange[1]}
+            onChange={(v) => setLotSizeRange([lotSizeRange[0], v || 100000])}
+            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '16px' }}>
+          HOA Fees (Monthly)
+        </Text>
+        <Slider
+          range
+          min={0}
+          max={1000}
+          step={25}
+          value={hoaFeesRange}
+          onChange={setHoaFeesRange}
+          tooltip={{ formatter: (v) => `$${v}` }}
+        />
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <InputNumber
+            prefix="$"
+            value={hoaFeesRange[0]}
+            onChange={(v) => setHoaFeesRange([v || 0, hoaFeesRange[1]])}
+            style={{ width: '100%' }}
+          />
+          <InputNumber
+            prefix="$"
+            value={hoaFeesRange[1]}
+            onChange={(v) => setHoaFeesRange([hoaFeesRange[0], v || 1000])}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
+          Garage Spaces
+        </Text>
+        <Space wrap>
+          {[null, 1, 2, 3, 4].map(num => (
+            <Button
+              key={num === null ? 'any' : num}
+              type={minGarageSpaces === num ? 'primary' : 'default'}
+              onClick={() => setMinGarageSpaces(num)}
+              style={minGarageSpaces === num ? { background: '#b40101', borderColor: '#b40101' } : {}}
+            >
+              {num === null ? 'Any' : `${num}+`}
+            </Button>
+          ))}
+        </Space>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '16px' }}>
+          Stories
+        </Text>
+        <Slider
+          range
+          min={1}
+          max={5}
+          step={1}
+          value={storiesRange}
+          onChange={setStoriesRange}
+        />
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+          <InputNumber
+            value={storiesRange[0]}
+            onChange={(v) => setStoriesRange([v || 1, storiesRange[1]])}
+            style={{ width: '100%' }}
+          />
+          <InputNumber
+            value={storiesRange[1]}
+            onChange={(v) => setStoriesRange([storiesRange[0], v || 5])}
+            style={{ width: '100%' }}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '32px' }}>
+        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
+          Property Condition
+        </Text>
+        <Select
+          value={condition}
+          onChange={setCondition}
+          style={{ width: '100%' }}
+          placeholder="Any Condition"
+          allowClear
+          options={[
+            { value: 'New', label: 'New' },
+            { value: 'Excellent', label: 'Excellent' },
+            { value: 'Good', label: 'Good' },
+            { value: 'Fair', label: 'Fair' },
+            { value: 'Needs Work', label: 'Needs Work' }
+          ]}
         />
       </div>
 
       <div style={{ marginBottom: '32px' }}>
-        <Checkbox checked={hasGarage} onChange={(e) => setHasGarage(e.target.checked)}>
-          <Text strong>Has Garage</Text>
-        </Checkbox>
+        <Text strong style={{ display: 'block', marginBottom: '12px' }}>
+          Days on Market (Max)
+        </Text>
+        <InputNumber
+          value={maxDaysOnMarket}
+          onChange={setMaxDaysOnMarket}
+          style={{ width: '100%' }}
+          placeholder="Any"
+          min={1}
+        />
       </div>
 
-      <div style={{ marginBottom: '32px' }}>
-        <Checkbox checked={hasPool} onChange={(e) => setHasPool(e.target.checked)}>
-          <Text strong>Has Pool</Text>
-        </Checkbox>
-      </div>
-
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '16px' }}>
         <Text strong style={{ display: 'block', marginBottom: '12px' }}>
           Property Features
         </Text>
-        <Checkbox.Group
-          options={propertyFeatures}
-          value={selectedFeatures}
-          onChange={setSelectedFeatures}
-          style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
-        />
+        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+          <Checkbox checked={hasPool} onChange={(e) => setHasPool(e.target.checked)}>
+            Has Pool
+          </Checkbox>
+          <Checkbox checked={hasBasement} onChange={(e) => setHasBasement(e.target.checked)}>
+            Has Basement
+          </Checkbox>
+          <Checkbox checked={hasFireplace} onChange={(e) => setHasFireplace(e.target.checked)}>
+            Has Fireplace
+          </Checkbox>
+          <Checkbox checked={isWaterfront} onChange={(e) => setIsWaterfront(e.target.checked)}>
+            Waterfront Property
+          </Checkbox>
+          <Checkbox checked={isPetFriendly} onChange={(e) => setIsPetFriendly(e.target.checked)}>
+            Pet Friendly
+          </Checkbox>
+        </Space>
       </div>
     </div>
   );
@@ -434,41 +631,44 @@ export default function Properties() {
       <Content style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Top Filter Bar */}
         <div style={{ 
-          height: '88px', 
+          minHeight: isMobile ? '120px' : '88px', 
           borderBottom: '2px solid #f0f0f0', 
-          padding: '0 40px', 
+          padding: isMobile ? '16px 16px' : '0 40px', 
           background: 'white', 
           display: 'flex', 
-          alignItems: 'center', 
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center', 
           justifyContent: 'space-between',
+          gap: isMobile ? '12px' : '0',
           zIndex: 10
         }}>
           <div>
-            <Title level={3} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase', fontSize: '24px', letterSpacing: '-0.5px' }}>
+            <Title level={3} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase', fontSize: isMobile ? '18px' : '24px', letterSpacing: '-0.5px' }}>
               {drawnArea ? "Search Area Results" : query ? `Search: ${query}` : "All Properties"}
             </Title>
-            <Text type="secondary" style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px' }}>
+            <Text type="secondary" style={{ fontSize: isMobile ? '11px' : '12px', fontWeight: 700, letterSpacing: '0.5px' }}>
               {filteredProperties.length} AVAILABLE LISTINGS
               {activeFilterCount > 0 && ` · ${activeFilterCount} FILTER${activeFilterCount > 1 ? 'S' : ''} ACTIVE`}
               {drawnArea && " · CUSTOM AREA"}
             </Text>
           </div>
 
-          <Space size="middle">
+          <Space size={isMobile ? "small" : "middle"} wrap>
              <Select 
                value={sortBy} 
                onChange={setSortBy}
-               style={{ width: 150 }} 
+               style={{ width: isMobile ? 120 : 150 }} 
+               size={isMobile ? "middle" : "large"}
                options={[
                  { value: 'newest', label: 'Newest' },
-                 { value: 'price-low', label: 'Price: Low to High' },
-                 { value: 'price-high', label: 'Price: High to Low' },
-                 { value: 'beds', label: 'Most Bedrooms' },
-                 { value: 'sqft', label: 'Largest Sq Ft' }
+                 { value: 'price-low', label: 'Price: Low' },
+                 { value: 'price-high', label: 'Price: High' },
+                 { value: 'beds', label: 'Most Beds' },
+                 { value: 'sqft', label: 'Largest' }
                ]} 
              />
              
-             {hasActiveFilters() && (
+             {hasActiveFilters() && !isMobile && (
                <Button
                  type="default"
                  icon={<SaveOutlined />}
@@ -484,53 +684,64 @@ export default function Properties() {
                  type="default" 
                  icon={<FilterOutlined />}
                  onClick={() => setShowFilters(true)}
+                 size={isMobile ? "middle" : "large"}
                >
-                 More Filters
+                 {isMobile ? "Filters" : "More Filters"}
                </Button>
              </Badge>
              
-             <Button.Group>
-               <Button 
-                 type={viewMode === 'grid' ? "primary" : "default"}
-                 icon={<AppstoreOutlined />}
-                 onClick={() => setViewMode('grid')}
-                 style={viewMode === 'grid' ? { background: '#b40101', borderColor: '#b40101' } : {}}
-               >
-                 Grid
-               </Button>
-               <Button 
-                 type={viewMode === 'list' ? "primary" : "default"}
-                 icon={<UnorderedListOutlined />}
-                 onClick={() => setViewMode('list')}
-                 style={viewMode === 'list' ? { background: '#b40101', borderColor: '#b40101' } : {}}
-               >
-                 List
-               </Button>
-             </Button.Group>
+             {!isMobile && (
+               <Button.Group>
+                 <Button 
+                   type={viewMode === 'grid' ? "primary" : "default"}
+                   icon={<AppstoreOutlined />}
+                   onClick={() => setViewMode('grid')}
+                   style={viewMode === 'grid' ? { background: '#b40101', borderColor: '#b40101' } : {}}
+                 >
+                   Grid
+                 </Button>
+                 <Button 
+                   type={viewMode === 'list' ? "primary" : "default"}
+                   icon={<UnorderedListOutlined />}
+                   onClick={() => setViewMode('list')}
+                   style={viewMode === 'list' ? { background: '#b40101', borderColor: '#b40101' } : {}}
+                 >
+                   List
+                 </Button>
+               </Button.Group>
+             )}
              
-             <Button 
-               type={showMap ? "primary" : "default"} 
-               icon={showMap ? <UnorderedListOutlined /> : <PushpinOutlined />}
-               onClick={() => setShowMap(!showMap)}
-               style={showMap ? { background: '#373a4b', borderColor: '#373a4b' } : {}}
-             >
-               {showMap ? "HIDE MAP" : "SHOW MAP"}
-             </Button>
+             {!isMobile && (
+               <Button 
+                 type={showMap ? "primary" : "default"} 
+                 icon={showMap ? <UnorderedListOutlined /> : <PushpinOutlined />}
+                 onClick={() => setShowMap(!showMap)}
+                 style={showMap ? { background: '#373a4b', borderColor: '#373a4b' } : {}}
+               >
+                 {showMap ? "HIDE MAP" : "SHOW MAP"}
+               </Button>
+             )}
           </Space>
         </div>
 
         {/* Results Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '40px', background: '#fafafa' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '40px', background: '#fafafa' }}>
           {viewMode === 'grid' ? (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: showMap ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(320px, 1fr))', 
-              gap: '32px' 
+              gridTemplateColumns: isMobile 
+                ? '1fr' 
+                : isTablet 
+                  ? 'repeat(2, 1fr)' 
+                  : showMap 
+                    ? 'repeat(2, 1fr)' 
+                    : 'repeat(auto-fill, minmax(320px, 1fr))', 
+              gap: isMobile ? '16px' : '32px' 
             }}>
               {filteredProperties.length > 0 ? (
                 filteredProperties.map(p => <div key={p.id}><PropertyCard property={p} /></div>)
               ) : (
-                !loading && <div style={{ gridColumn: '1/-1', padding: '120px 0', textAlign: 'center' }}>
+                !loading && <div style={{ gridColumn: '1/-1', padding: isMobile ? '60px 0' : '120px 0', textAlign: 'center' }}>
                   <Empty 
                     description={
                       <div style={{ marginTop: '24px' }}>
@@ -565,16 +776,16 @@ export default function Properties() {
                             width: '100%', 
                             height: '250px', 
                             objectFit: 'cover',
-                            borderRadius: '12px 0 0 12px'
+                            borderRadius: isMobile ? '12px 12px 0 0' : '12px 0 0 12px'
                           }}
                         />
                       </Col>
-                      <Col xs={24} md={16} style={{ padding: '24px' }}>
+                      <Col xs={24} md={16} style={{ padding: isMobile ? '16px' : '24px' }}>
                         <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                          <Title level={3} style={{ margin: 0, color: '#b40101' }}>
+                          <Title level={3} style={{ margin: 0, color: '#b40101', fontSize: isMobile ? '20px' : '24px' }}>
                             ${p.price?.toLocaleString()}
                           </Title>
-                          <Text strong style={{ fontSize: 16 }}>{p.address}</Text>
+                          <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>{p.address}</Text>
                           <Text type="secondary">{p.city}, {p.state} {p.zip}</Text>
                           <Space size="large" style={{ marginTop: 12 }}>
                             <Text><strong>{p.beds}</strong> Beds</Text>
@@ -601,8 +812,8 @@ export default function Properties() {
         </div>
       </Content>
 
-      {/* Map Sider */}
-      {showMap && (
+      {/* Map Sider - Desktop only */}
+      {!isMobile && showMap && (
         <Sider 
           width="40%" 
           theme="light" 
@@ -624,13 +835,43 @@ export default function Properties() {
         </Sider>
       )}
 
+      {/* Mobile Map Button */}
+      {isMobile && (
+        <FloatButton
+          icon={<EnvironmentOutlined />}
+          type="primary"
+          style={{ right: 16, bottom: 80, background: '#b40101' }}
+          onClick={() => setShowMapModal(true)}
+          badge={{ count: filteredProperties.length }}
+        />
+      )}
+
+      {/* Mobile Map Modal */}
+      <Drawer
+        title="Map View"
+        placement="bottom"
+        onClose={() => setShowMapModal(false)}
+        open={showMapModal}
+        height="90%"
+        styles={{ body: { padding: 0 } }}
+      >
+        <PropertyMapLeaflet
+          properties={filteredProperties}
+          onPropertySelect={handlePropertySelect}
+          onBoundsChange={handleMapBoundsChange}
+          onDrawComplete={handleDrawComplete}
+          height="100%"
+          showControls={true}
+        />
+      </Drawer>
+
       {/* Filter Drawer for Mobile/Desktop */}
       <Drawer
         title="Filter Properties"
         placement="right"
         onClose={() => setShowFilters(false)}
         open={showFilters}
-        width={400}
+        width={isMobile ? '100%' : 400}
       >
         <FilterPanel />
       </Drawer>

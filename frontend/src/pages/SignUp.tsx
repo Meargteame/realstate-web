@@ -58,7 +58,8 @@ export default function SignUp() {
         firstName: firstName.trim(),
         name: safeName,
         email: data.email,
-        role: data.role
+        role: data.role,
+        token: data.token  // Save the token!
       }));
       
       navigate("/command");

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm } from "antd";
-import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm, Avatar } from "antd";
+import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -17,6 +18,7 @@ export default function AdminUsers() {
     pageSize: 10,
     total: 0
   });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchUsers();
@@ -159,15 +161,8 @@ export default function AdminUsers() {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (name: string, record: any) => (
-        <div>
-          <div style={{ fontWeight: 600 }}>{name}</div>
-          {record.agent && (
-            <Tag color="blue" style={{ marginTop: 4, fontSize: 11 }}>
-              Agent Profile
-            </Tag>
-          )}
-        </div>
+      render: (name: string) => (
+        <div style={{ fontWeight: 600 }}>{name}</div>
       )
     },
     {
@@ -184,23 +179,6 @@ export default function AdminUsers() {
           {role?.toUpperCase()}
         </Tag>
       ),
-    },
-    {
-      title: 'Stats',
-      key: 'stats',
-      render: (_: any, record: any) => {
-        if (!record.agent) return <span style={{ color: '#8c8c8c' }}>-</span>;
-        return (
-          <Space direction="vertical" size={0}>
-            <span style={{ fontSize: 12 }}>
-              {record.agent.properties?.length || 0} listings
-            </span>
-            <span style={{ fontSize: 12, color: '#8c8c8c' }}>
-              {record.agent.leads?.length || 0} leads
-            </span>
-          </Space>
-        );
-      }
     },
     {
       title: 'Joined',
@@ -239,9 +217,9 @@ export default function AdminUsers() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 900 }}>
+    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '24px' : '32px', flexWrap: 'wrap', gap: '16px' }}>
+        <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
           Users Management
         </Title>
         <Button 
@@ -250,7 +228,7 @@ export default function AdminUsers() {
           onClick={handleAddUser}
           style={{ background: '#b40101', borderColor: '#b40101', height: '40px', fontWeight: 600 }}
         >
-          Add User
+          {isMobile ? "Add" : "Add User"}
         </Button>
       </div>
 
@@ -263,16 +241,68 @@ export default function AdminUsers() {
           prefix={<SearchOutlined />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          style={{ marginBottom: 16, width: 300, borderRadius: 8 }}
+          style={{ marginBottom: 16, width: isMobile ? '100%' : 300, borderRadius: 8 }}
         />
-        <Table
-          dataSource={users}
-          columns={columns}
-          rowKey="id"
-          loading={loading}
-          pagination={pagination}
-          onChange={handleTableChange}
-        />
+        
+        {isMobile ? (
+          // Mobile Card View
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {users.map((user: any) => (
+              <Card 
+                key={user.id}
+                size="small"
+                style={{ borderRadius: 8 }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <Avatar size={48} icon={<UserOutlined />} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>{user.name}</div>
+                    <div style={{ fontSize: '13px', color: '#8c8c8c', marginBottom: '8px' }}>{user.email}</div>
+                    <Space size="small" wrap>
+                      <Tag color={user.role === 'admin' ? 'red' : user.role === 'agent' ? 'blue' : 'default'}>
+                        {user.role?.toUpperCase()}
+                      </Tag>
+                    </Space>
+                    <div style={{ marginTop: '12px' }}>
+                      <Space size="small">
+                        <Button 
+                          type="link" 
+                          icon={<EditOutlined />} 
+                          size="small"
+                          onClick={() => handleEditUser(user)}
+                          style={{ padding: 0 }}
+                        >
+                          Edit
+                        </Button>
+                        <Popconfirm
+                          title="Delete this user?"
+                          onConfirm={() => handleDeleteUser(user.id)}
+                          okText="Yes"
+                          cancelText="No"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: 0 }}>
+                            Delete
+                          </Button>
+                        </Popconfirm>
+                      </Space>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // Desktop Table View
+          <Table
+            dataSource={users}
+            columns={columns}
+            rowKey="id"
+            loading={loading}
+            pagination={pagination}
+            onChange={handleTableChange}
+          />
+        )}
       </Card>
 
       <Modal
@@ -285,6 +315,7 @@ export default function AdminUsers() {
         }}
         okText={editingUser ? 'Update' : 'Create'}
         okButtonProps={{ style: { background: '#b40101', borderColor: '#b40101' } }}
+        width={isMobile ? '100%' : 520}
       >
         <Form form={form} layout="vertical">
           <Form.Item

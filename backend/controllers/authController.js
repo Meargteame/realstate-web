@@ -6,15 +6,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
+  console.log('🔥 REGISTER ENDPOINT HIT!');
+  console.log('📦 Request body:', req.body);
+  
   try {
     const { firstName, lastName, email, password, role } = req.body;
 
     // Validate Required Fields
     if (!firstName || !lastName || !email || !password) {
+      console.log('❌ Validation failed: missing fields');
       return res.status(400).json({ error: 'First name, last name, email, and password are required.' });
     }
 
     const emailLower = email.toLowerCase().trim();
+    console.log('📧 Creating account for:', emailLower);
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ 
@@ -22,17 +27,20 @@ exports.register = async (req, res) => {
     });
 
     if (existingUser) {
+      console.log('❌ User already exists');
       return res.status(400).json({ error: 'An account with this email already exists. Please log in.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userRole = role === 'agent' ? 'agent' : 'user'; 
+    console.log('👤 Creating user with role:', userRole);
     
     let agentId = null;
 
     // Use Prisma transaction to ensure both user and agent are created together cleanly
     const result = await prisma.$transaction(async (tx) => {
       if (userRole === 'agent') {
+        console.log('🏢 Creating agent profile...');
         const agent = await tx.agent.create({
           data: {
             name: `${firstName.trim()} ${lastName.trim()}`,
@@ -45,8 +53,10 @@ exports.register = async (req, res) => {
           }
         });
         agentId = agent.id;
+        console.log('✅ Agent created:', agent.id);
       }
 
+      console.log('👤 Creating user record...');
       const user = await tx.user.create({
         data: {
           name: `${firstName.trim()} ${lastName.trim()}`,
@@ -56,6 +66,7 @@ exports.register = async (req, res) => {
           agentId: agentId
         }
       });
+      console.log('✅ User created:', user.id);
 
       return user;
     });
@@ -71,6 +82,7 @@ exports.register = async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log('✅ Registration successful!');
     res.status(201).json({
       id: result.id,
       name: result.name,
@@ -162,5 +174,32 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error('[Auth Login Error]:', error);
     res.status(500).json({ error: 'An internal server error occurred during login.' });
+  }
+};
+
+// GET /api/auth/me - Get current user
+exports.getCurrentUser = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        agentId: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('[Get Current User Error]:', error);
+    res.status(500).json({ error: 'Failed to fetch user data' });
   }
 };

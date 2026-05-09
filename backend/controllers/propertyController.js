@@ -3,13 +3,40 @@ const cacheService = require('../services/cacheService');
 const { businessMetrics } = require('../middleware/monitoring');
 
 exports.getProperties = async (req, res) => {
-  const { q } = req.query;
+  const { 
+    q, 
+    minPrice, 
+    maxPrice, 
+    beds, 
+    baths, 
+    propertyType,
+    // Phase 7A: Advanced Filters
+    minYear,
+    maxYear,
+    minLotSize,
+    maxLotSize,
+    minHoaFees,
+    maxHoaFees,
+    minGarageSpaces,
+    hasPool,
+    hasBasement,
+    hasFireplace,
+    isWaterfront,
+    isPetFriendly,
+    minStories,
+    maxStories,
+    condition,
+    maxDaysOnMarket,
+    city,
+    state,
+    zip
+  } = req.query;
   
   try {
-    console.log('🏠 Fetching properties, query:', q);
+    console.log('🏠 Fetching properties with filters:', req.query);
     
-    // Generate cache key
-    const cacheKey = cacheService.generatePropertyKey({ q });
+    // Generate cache key from all filters
+    const cacheKey = cacheService.generatePropertyKey(req.query);
     
     // Try cache first
     const cached = await cacheService.get(cacheKey);
@@ -18,20 +45,83 @@ exports.getProperties = async (req, res) => {
       return res.json(cached);
     }
     
-    // Cache miss - query database
-    const where = q ? {
-      OR: [
-        { city: { contains: q, mode: 'insensitive' } },
-        { address: { contains: q, mode: 'insensitive' } },
-        { zip: { contains: q, mode: 'insensitive' } },
-        { propertyType: { contains: q, mode: 'insensitive' } },
-        { state: { contains: q, mode: 'insensitive' } }
-      ]
-    } : {};
+    // Build where clause with all filters
+    const where = {
+      AND: []
+    };
+    
+    // Text search
+    if (q) {
+      where.AND.push({
+        OR: [
+          { city: { contains: q, mode: 'insensitive' } },
+          { address: { contains: q, mode: 'insensitive' } },
+          { zip: { contains: q, mode: 'insensitive' } },
+          { propertyType: { contains: q, mode: 'insensitive' } },
+          { state: { contains: q, mode: 'insensitive' } }
+        ]
+      });
+    }
+    
+    // Location filters
+    if (city) where.AND.push({ city: { contains: city, mode: 'insensitive' } });
+    if (state) where.AND.push({ state: { contains: state, mode: 'insensitive' } });
+    if (zip) where.AND.push({ zip });
+    
+    // Price range
+    if (minPrice) where.AND.push({ price: { gte: parseInt(minPrice) } });
+    if (maxPrice) where.AND.push({ price: { lte: parseInt(maxPrice) } });
+    
+    // Beds & Baths
+    if (beds) where.AND.push({ beds: { gte: parseFloat(beds) } });
+    if (baths) where.AND.push({ baths: { gte: parseFloat(baths) } });
+    
+    // Property Type
+    if (propertyType) where.AND.push({ propertyType });
+    
+    // Phase 7A: Advanced Filters
+    
+    // Year Built
+    if (minYear) where.AND.push({ yearBuilt: { gte: parseInt(minYear) } });
+    if (maxYear) where.AND.push({ yearBuilt: { lte: parseInt(maxYear) } });
+    
+    // Lot Size
+    if (minLotSize) where.AND.push({ lotSize: { gte: parseInt(minLotSize) } });
+    if (maxLotSize) where.AND.push({ lotSize: { lte: parseInt(maxLotSize) } });
+    
+    // HOA Fees
+    if (minHoaFees !== undefined) where.AND.push({ hoaFees: { gte: parseInt(minHoaFees) } });
+    if (maxHoaFees !== undefined) where.AND.push({ hoaFees: { lte: parseInt(maxHoaFees) } });
+    
+    // Garage Spaces
+    if (minGarageSpaces) where.AND.push({ garageSpaces: { gte: parseInt(minGarageSpaces) } });
+    
+    // Boolean Features
+    if (hasPool === 'true') where.AND.push({ hasPool: true });
+    if (hasBasement === 'true') where.AND.push({ hasBasement: true });
+    if (hasFireplace === 'true') where.AND.push({ hasFireplace: true });
+    if (isWaterfront === 'true') where.AND.push({ isWaterfront: true });
+    if (isPetFriendly === 'true') where.AND.push({ isPetFriendly: true });
+    
+    // Stories
+    if (minStories) where.AND.push({ stories: { gte: parseInt(minStories) } });
+    if (maxStories) where.AND.push({ stories: { lte: parseInt(maxStories) } });
+    
+    // Condition
+    if (condition) where.AND.push({ condition });
+    
+    // Days on Market
+    if (maxDaysOnMarket) where.AND.push({ daysOnMarket: { lte: parseInt(maxDaysOnMarket) } });
+    
+    // If no filters, remove AND clause
+    const finalWhere = where.AND.length > 0 ? where : {};
     
     const properties = await prisma.property.findMany({
-      where,
-      include: { agent: true }
+      where: finalWhere,
+      include: { agent: true },
+      orderBy: [
+        { listedAt: 'desc' }
+      ]
     });
     
     console.log('✅ Found properties:', properties.length);
@@ -45,7 +135,11 @@ exports.getProperties = async (req, res) => {
     await cacheService.set(cacheKey, propertiesData, 300);
     
     // Track business metric
-    businessMetrics.track('property.search', { query: q, results: properties.length });
+    businessMetrics.track('property.search', { 
+      query: q, 
+      results: properties.length,
+      filters: Object.keys(req.query).length 
+    });
     
     res.json(propertiesData);
   } catch (error) {
@@ -305,6 +399,188 @@ exports.getSimilarProperties = async (req, res) => {
     res.json(propertiesData);
   } catch (error) {
     console.error('❌ Error fetching similar properties:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+// Phase 7D: Enhanced Property Features
+
+// GET /api/properties/:id/price-history - Get price history
+exports.getPriceHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const history = await prisma.propertyPriceHistory.findMany({
+      where: { propertyId: id },
+      orderBy: { changedAt: 'asc' }
+    });
+    
+    res.json(history);
+  } catch (error) {
+    console.error('❌ Error fetching price history:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST /api/properties/:id/price-history - Add price change
+exports.addPriceChange = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price, changeType } = req.body;
+    
+    if (!price || !changeType) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Create price history entry
+    const history = await prisma.propertyPriceHistory.create({
+      data: {
+        propertyId: id,
+        price: parseFloat(price),
+        changeType
+      }
+    });
+    
+    // Update property price
+    await prisma.property.update({
+      where: { id },
+      data: { price: parseInt(price) }
+    });
+    
+    res.status(201).json(history);
+  } catch (error) {
+    console.error('❌ Error adding price change:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST /api/properties/compare - Create property comparison
+exports.createComparison = async (req, res) => {
+  try {
+    const { propertyIds, name } = req.body;
+    const userId = req.user?.id || req.body.userId;
+    
+    if (!propertyIds || !Array.isArray(propertyIds) || propertyIds.length < 2) {
+      return res.status(400).json({ error: 'At least 2 properties required for comparison' });
+    }
+    
+    if (propertyIds.length > 4) {
+      return res.status(400).json({ error: 'Maximum 4 properties can be compared' });
+    }
+    
+    const comparison = await prisma.propertyComparison.create({
+      data: {
+        userId,
+        propertyIds,
+        name: name || `Comparison ${new Date().toLocaleDateString()}`
+      }
+    });
+    
+    res.status(201).json(comparison);
+  } catch (error) {
+    console.error('❌ Error creating comparison:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/properties/comparisons - Get user's saved comparisons
+exports.getComparisons = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.query.userId;
+    
+    const comparisons = await prisma.propertyComparison.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    // Fetch property details for each comparison
+    const comparisonsWithProperties = await Promise.all(
+      comparisons.map(async (comparison) => {
+        const properties = await prisma.property.findMany({
+          where: {
+            id: { in: comparison.propertyIds }
+          },
+          include: { agent: true }
+        });
+        
+        return {
+          ...comparison,
+          properties: JSON.parse(JSON.stringify(properties, (key, value) =>
+            typeof value === 'bigint' ? Number(value) : value
+          ))
+        };
+      })
+    );
+    
+    res.json(comparisonsWithProperties);
+  } catch (error) {
+    console.error('❌ Error fetching comparisons:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/properties/compare/:id - Get single comparison
+exports.getComparisonById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const comparison = await prisma.propertyComparison.findUnique({
+      where: { id }
+    });
+    
+    if (!comparison) {
+      return res.status(404).json({ error: 'Comparison not found' });
+    }
+    
+    // Fetch property details
+    const properties = await prisma.property.findMany({
+      where: {
+        id: { in: comparison.propertyIds }
+      },
+      include: { agent: true }
+    });
+    
+    const propertiesData = JSON.parse(JSON.stringify(properties, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+    
+    res.json({
+      ...comparison,
+      properties: propertiesData
+    });
+  } catch (error) {
+    console.error('❌ Error fetching comparison:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// DELETE /api/properties/compare/:id - Delete comparison
+exports.deleteComparison = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id || req.query.userId;
+    
+    // Check ownership
+    const comparison = await prisma.propertyComparison.findUnique({
+      where: { id }
+    });
+    
+    if (!comparison) {
+      return res.status(404).json({ error: 'Comparison not found' });
+    }
+    
+    if (comparison.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    await prisma.propertyComparison.delete({
+      where: { id }
+    });
+    
+    res.json({ message: 'Comparison deleted successfully' });
+  } catch (error) {
+    console.error('❌ Error deleting comparison:', error);
     res.status(500).json({ error: error.message });
   }
 };

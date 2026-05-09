@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select } from "antd";
-import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, HomeOutlined, TeamOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -16,6 +17,7 @@ export default function AdminAgents() {
     total: 0
   });
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchAgents();
@@ -244,9 +246,9 @@ export default function AdminAgents() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 900 }}>
+    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
+        <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
           Agents Management
         </Title>
       </div>
@@ -260,16 +262,94 @@ export default function AdminAgents() {
           prefix={<SearchOutlined />}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          style={{ marginBottom: 16, width: 300, borderRadius: 8 }}
+          style={{ marginBottom: 16, width: isMobile ? '100%' : 300, borderRadius: 8 }}
         />
-        <Table
-          dataSource={agents}
-          columns={columns}
-          rowKey="id"
-          loading={loading}
-          pagination={pagination}
-          onChange={handleTableChange}
-        />
+        
+        {isMobile ? (
+          // Mobile Card View
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {agents.map((agent: any) => (
+              <Card 
+                key={agent.id}
+                size="small"
+                style={{ borderRadius: 8 }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <Avatar src={agent.imageUrl} size={56} style={{ backgroundColor: '#b40101' }}>
+                    {agent.name?.charAt(0)}
+                  </Avatar>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>{agent.name}</div>
+                    <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: '8px' }}>{agent.email}</div>
+                    
+                    <Space size="small" wrap style={{ marginBottom: '8px' }}>
+                      <Tag color={agent.status === 'active' ? 'green' : agent.status === 'inactive' ? 'red' : 'orange'}>
+                        {(agent.status || 'active').toUpperCase()}
+                      </Tag>
+                    </Space>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                      <div style={{ textAlign: 'center', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#b40101' }}>
+                          {agent.stats?.totalListings || 0}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Listings</div>
+                      </div>
+                      <div style={{ textAlign: 'center', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#3b82f6' }}>
+                          {agent.stats?.totalLeads || 0}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Leads</div>
+                      </div>
+                      <div style={{ textAlign: 'center', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
+                          {agent.stats?.totalOpportunities || 0}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Opps</div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '12px' }}>
+                      <Space size="small">
+                        <Button 
+                          type="link" 
+                          icon={<EyeOutlined />} 
+                          size="small"
+                          onClick={() => navigate(`/agents/${agent.id}`)}
+                          style={{ padding: 0 }}
+                        >
+                          View
+                        </Button>
+                        <Popconfirm
+                          title="Delete this agent?"
+                          description="This will also delete all associated data."
+                          onConfirm={() => handleDeleteAgent(agent.id)}
+                          okText="Yes"
+                          cancelText="No"
+                          okButtonProps={{ danger: true }}
+                        >
+                          <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: 0 }}>
+                            Delete
+                          </Button>
+                        </Popconfirm>
+                      </Space>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // Desktop Table View
+          <Table
+            dataSource={agents}
+            columns={columns}
+            rowKey="id"
+            loading={loading}
+            pagination={pagination}
+            onChange={handleTableChange}
+          />
+        )}
       </Card>
     </div>
   );

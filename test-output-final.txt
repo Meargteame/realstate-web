@@ -1,0 +1,97 @@
+[1m
+============================================================[0m
+[1m🧪 COMPREHENSIVE FUNCTIONALITY TEST SUITE[0m
+[1m============================================================
+[0m
+[34mTesting Backend: http://localhost:5000[0m
+[34mTesting Frontend: http://localhost:3001[0m
+[34mStarted: 5/9/2026, 1:50:33 PM
+[0m
+[36m
+📝 Testing Authentication & User Management...[0m
+[31m  ✗ User Registration: request to http://localhost:5000/api/auth/register failed, reason: [0m
+[31m  ✗ User Login[0m
+[31m  ✗ Admin Login[0m
+[36m
+🏠 Testing Property Management...[0m
+[31m  ✗ Get All Properties[0m
+[31m  ✗ Search with Filters[0m
+[31m  ✗ Advanced Search Filters[0m
+[36m
+🔍 Testing Saved Searches...[0m
+[33m  ⚠ All Tests: Skipped - No user token[0m
+[36m
+❤️  Testing Favorites...[0m
+[33m  ⚠ All Tests: Skipped - No user token or property ID[0m
+[36m
+📊 Testing Leads & Opportunities...[0m
+[33m  ⚠ All Tests: Skipped - No admin token[0m
+[36m
+📝 Testing Blog System...[0m
+[31m  ✗ Get All Blog Posts[0m
+[31m  ✗ Get Blog Categories[0m
+[31m  ✗ Get Blog Tags[0m
+[36m
+📅 Testing Calendar & Appointments...[0m
+[33m  ⚠ All Tests: Skipped - No user token[0m
+[36m
+🏡 Testing Open Houses...[0m
+[31m  ✗ Get All Open Houses[0m
+[36m
+👑 Testing Admin Panel...[0m
+[33m  ⚠ All Tests: Skipped - No admin token[0m
+[36m
+📄 Testing Document Management...[0m
+[33m  ⚠ All Tests: Skipped - No admin token[0m
+[36m
+⚖️  Testing Property Comparison...[0m
+[33m  ⚠ All Tests: Skipped - No user token[0m
+[36m
+🗺️  Testing Map & Geocoding...[0m
+[31m  ✗ Search Properties in Area[0m
+[36m
+📈 Testing Analytics...[0m
+[33m  ⚠ All Tests: Skipped - No admin token[0m
+[36m
+💬 Testing Messaging System...[0m
+[33m  ⚠ All Tests: Skipped - No user token or property ID[0m
+[1m
+============================================================[0m
+[1m📊 TEST SUMMARY[0m
+[1m============================================================[0m
+[32m
+✓ Passed:  0[0m
+[31m✗ Failed:  11[0m
+[33m⚠ Warnings: 9[0m
+[36m━ Total:   20
+[0m
+[31mSuccess Rate: 0.0%[0m
+[31m
+❌ Failed Tests:[0m
+[31m  • Auth: User Registration - request to http://localhost:5000/api/auth/register failed, reason: [0m
+[31m  • Auth: User Login - No error message[0m
+[31m  • Auth: Admin Login - No error message[0m
+[31m  • Properties: Get All Properties - No error message[0m
+[31m  • Properties: Search with Filters - No error message[0m
+[31m  • Properties: Advanced Search Filters - No error message[0m
+[31m  • Blog: Get All Blog Posts - No error message[0m
+[31m  • Blog: Get Blog Categories - No error message[0m
+[31m  • Blog: Get Blog Tags - No error message[0m
+[31m  • Open Houses: Get All Open Houses - No error message[0m
+[31m  • Map: Search Properties in Area - No error message[0m
+[33m
+⚠️  Warnings:[0m
+[33m  • Saved Searches: All Tests - Skipped - No user token[0m
+[33m  • Favorites: All Tests - Skipped - No user token or property ID[0m
+[33m  • Leads: All Tests - Skipped - No admin token[0m
+[33m  • Calendar: All Tests - Skipped - No user token[0m
+[33m  • Admin: All Tests - Skipped - No admin token[0m
+[33m  • Documents: All Tests - Skipped - No admin token[0m
+[33m  • Comparison: All Tests - Skipped - No user token[0m
+[33m  • Analytics: All Tests - Skipped - No admin token[0m
+[33m  • Messaging: All Tests - Skipped - No user token or property ID[0m
+[1m
+============================================================[0m
+[34mCompleted: 5/9/2026, 1:50:33 PM[0m
+[1m============================================================
+[0m

@@ -31,21 +31,7 @@ exports.getAllUsers = async (req, res) => {
           name: true,
           email: true,
           role: true,
-          createdAt: true,
-          updatedAt: true,
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              imageUrl: true,
-              properties: {
-                select: { id: true }
-              },
-              leads: {
-                select: { id: true }
-              }
-            }
-          }
+          createdAt: true
         },
         orderBy: {
           createdAt: 'desc'
@@ -59,10 +45,10 @@ exports.getAllUsers = async (req, res) => {
     res.json({
       users,
       pagination: {
-        total,
+        total: Number(total),
         page: parseInt(page),
         limit: parseInt(limit),
-        totalPages: Math.ceil(total / parseInt(limit))
+        totalPages: Math.ceil(Number(total) / parseInt(limit))
       }
     });
   } catch (error) {
@@ -173,7 +159,7 @@ exports.updateUser = async (req, res) => {
         name: true,
         email: true,
         role: true,
-        updatedAt: true
+        createdAt: true
       }
     });
 
@@ -242,14 +228,6 @@ exports.getAllAgents = async (req, res) => {
       prisma.agent.findMany({
         where,
         include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              role: true,
-              createdAt: true
-            }
-          },
           properties: {
             select: {
               id: true,
@@ -266,8 +244,7 @@ exports.getAllAgents = async (req, res) => {
           opportunities: {
             select: {
               id: true,
-              stage: true,
-              value: true
+              price: true
             }
           }
         },
@@ -283,23 +260,24 @@ exports.getAllAgents = async (req, res) => {
     // Calculate stats for each agent
     const agentsWithStats = agents.map(agent => ({
       ...agent,
+      status: agent.isActive ? 'active' : 'inactive', // Map isActive to status for frontend
       stats: {
         totalListings: agent.properties.length,
         activeListings: agent.properties.filter(p => p.status === 'Active').length,
         totalLeads: agent.leads.length,
         activeLeads: agent.leads.filter(l => l.status === 'new' || l.status === 'contacted').length,
         totalOpportunities: agent.opportunities.length,
-        totalValue: agent.opportunities.reduce((sum, o) => sum + (o.value || 0), 0)
+        totalValue: agent.opportunities.reduce((sum, o) => sum + Number(o.price || 0), 0)
       }
     }));
 
     res.json({
       agents: agentsWithStats,
       pagination: {
-        total,
+        total: Number(total),
         page: parseInt(page),
         limit: parseInt(limit),
-        totalPages: Math.ceil(total / parseInt(limit))
+        totalPages: Math.ceil(Number(total) / parseInt(limit))
       }
     });
   } catch (error) {
@@ -314,9 +292,12 @@ exports.updateAgentStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    // Map status to isActive boolean
+    const isActive = status === 'active';
+
     const agent = await prisma.agent.update({
       where: { id },
-      data: { status },
+      data: { isActive },
       include: {
         user: {
           select: {
@@ -327,7 +308,7 @@ exports.updateAgentStatus = async (req, res) => {
       }
     });
 
-    res.json(agent);
+    res.json({ ...agent, status: agent.isActive ? 'active' : 'inactive' });
   } catch (error) {
     console.error('Error updating agent status:', error);
     res.status(500).json({ error: 'Failed to update agent status' });
@@ -586,7 +567,7 @@ exports.getTopAgents = async (req, res) => {
         opportunities: {
           select: {
             id: true,
-            value: true
+            price: true
           }
         }
       }
@@ -596,7 +577,7 @@ exports.getTopAgents = async (req, res) => {
     const agentsWithScore = agents.map(agent => {
       const activeListings = agent.properties.filter(p => p.status === 'Active').length;
       const totalLeads = agent.leads.length;
-      const totalValue = agent.opportunities.reduce((sum, o) => sum + (o.value || 0), 0);
+      const totalValue = agent.opportunities.reduce((sum, o) => sum + Number(o.price || 0), 0);
       
       return {
         id: agent.id,

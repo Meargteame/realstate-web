@@ -10,7 +10,9 @@ import {
   SettingOutlined,
   LogoutOutlined,
   SearchOutlined,
-  BellOutlined
+  BellOutlined,
+  FileTextOutlined,
+  FolderOutlined
 } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
@@ -66,6 +68,8 @@ export default function AdminLayout() {
     { key: '/admin/users', icon: <UserOutlined />, label: 'Users Management' },
     { key: '/admin/agents', icon: <TeamOutlined />, label: 'Agents Management' },
     { key: '/admin/properties', icon: <HomeOutlined />, label: 'Properties Management' },
+    { key: '/admin/blog', icon: <FileTextOutlined />, label: 'Blog Management' },
+    { key: '/admin/documents', icon: <FolderOutlined />, label: 'Document Management' },
     { key: '/admin/analytics', icon: <BarChartOutlined />, label: 'Platform Analytics' },
   ];
 

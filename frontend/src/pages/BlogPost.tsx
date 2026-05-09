@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Typography, Avatar, Space, Tag, Divider, Card, Row, Col, Button } from "antd";
-import { ClockCircleOutlined, EyeOutlined, ArrowLeftOutlined, UserOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, EyeOutlined, ArrowLeftOutlined, UserOutlined, ShareAltOutlined } from "@ant-design/icons";
+import SocialShare from "@/components/SocialShare";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -13,6 +14,49 @@ export default function BlogPost() {
   useEffect(() => {
     fetchPost();
   }, [slug]);
+
+  useEffect(() => {
+    // Update page title and meta tags for SEO
+    if (post) {
+      document.title = `${post.title} | KW Real Estate Blog`;
+      
+      // Update meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', post.excerpt || post.content.substring(0, 160));
+      }
+      
+      // Update Open Graph tags for social sharing
+      updateMetaTag('og:title', post.title);
+      updateMetaTag('og:description', post.excerpt || post.content.substring(0, 160));
+      updateMetaTag('og:image', post.coverImage || '');
+      updateMetaTag('og:url', window.location.href);
+      updateMetaTag('og:type', 'article');
+      
+      // Update Twitter Card tags
+      updateMetaTag('twitter:card', 'summary_large_image');
+      updateMetaTag('twitter:title', post.title);
+      updateMetaTag('twitter:description', post.excerpt || post.content.substring(0, 160));
+      updateMetaTag('twitter:image', post.coverImage || '');
+    }
+  }, [post]);
+
+  const updateMetaTag = (property: string, content: string) => {
+    let element = document.querySelector(`meta[property="${property}"]`) || 
+                  document.querySelector(`meta[name="${property}"]`);
+    
+    if (!element) {
+      element = document.createElement('meta');
+      if (property.startsWith('og:') || property.startsWith('twitter:')) {
+        element.setAttribute('property', property);
+      } else {
+        element.setAttribute('name', property);
+      }
+      document.head.appendChild(element);
+    }
+    
+    element.setAttribute('content', content);
+  };
 
   const fetchPost = async () => {
     try {
@@ -122,6 +166,11 @@ export default function BlogPost() {
                 <EyeOutlined />
                 <Text type="secondary">{post.viewCount} views</Text>
               </Space>
+              <SocialShare
+                url={window.location.href}
+                title={post.title}
+                description={post.excerpt || ''}
+              />
             </Space>
           </div>
 

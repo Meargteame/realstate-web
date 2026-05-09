@@ -120,6 +120,309 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* ============================================
+   RESPONSIVE FOUNDATION
+   ============================================ */
+
+/* Ensure proper box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal scroll */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive iframes (videos, maps) */
+iframe {
+  max-width: 100%;
+}
+
+/* ============================================
+   MOBILE TOUCH TARGETS
+   ============================================ */
+
+/* Minimum touch target size (44x44px) */
+button, a, input[type="button"], input[type="submit"] {
+  min-height: 44px;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================ */
+
+/* Base font size scales with viewport */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Prevent text size adjustment on mobile */
+body {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ============================================
+   RESPONSIVE CONTAINERS
+   ============================================ */
+
+.container-responsive {
+  width: 100%;
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    padding-left: 24px;
+    padding-right: 24px;
+    max-width: 1200px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .container-responsive {
+    max-width: 1400px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE TABLES
+   ============================================ */
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .table-responsive table {
+    min-width: 600px;
+  }
+}
+
+/* ============================================
+   MOBILE UTILITIES
+   ============================================ */
+
+/* Hide on mobile */
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+@media (min-width: 768px) {
+  .visible-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hidden-tablet {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 1024px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE SPACING
+   ============================================ */
+
+.spacing-mobile {
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .spacing-mobile {
+    padding: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .spacing-mobile {
+    padding: 32px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE GRIDS
+   ============================================ */
+
+.grid-responsive {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   ANT DESIGN OVERRIDES FOR MOBILE
+   ============================================ */
+
+/* Make Ant Design modals full screen on mobile */
+@media (max-width: 767px) {
+  .ant-modal {
+    max-width: 100% !important;
+    margin: 0 !important;
+    top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  .ant-modal-content {
+    border-radius: 0 !important;
+    min-height: 100vh;
+  }
+}
+
+/* Responsive Ant Design tables */
+@media (max-width: 767px) {
+  .ant-table {
+    font-size: 12px;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px 4px;
+  }
+}
+
+/* Responsive Ant Design forms */
+@media (max-width: 767px) {
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+  
+  .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+}
+
+/* Responsive Ant Design buttons */
+@media (max-width: 767px) {
+  .ant-btn {
+    height: 44px;
+    padding: 0 20px;
+  }
+  
+  .ant-btn-sm {
+    height: 36px;
+    padding: 0 12px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE CARDS
+   ============================================ */
+
+@media (max-width: 767px) {
+  .ant-card {
+    margin-bottom: 16px;
+  }
+  
+  .ant-card-body {
+    padding: 16px;
+  }
+  
+  .ant-card-head {
+    padding: 12px 16px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE NAVIGATION
+   ============================================ */
+
+@media (max-width: 767px) {
+  .ant-layout-header {
+    padding: 0 16px;
+    height: 56px;
+    line-height: 56px;
+  }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* GPU acceleration for animations */
+.animated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 
 /* Clean Sidebar Menu Styles */
 .clean-sidebar-menu .ant-menu-item {

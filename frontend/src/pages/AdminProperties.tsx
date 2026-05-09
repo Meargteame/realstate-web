@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select } from "antd";
 import { SearchOutlined, EyeOutlined, DeleteOutlined, HomeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -17,6 +18,7 @@ export default function AdminProperties() {
     total: 0
   });
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchProperties();
@@ -273,9 +275,9 @@ export default function AdminProperties() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 900 }}>
+    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
+        <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
           Properties Management
         </Title>
       </div>
@@ -284,19 +286,19 @@ export default function AdminProperties() {
         variant="borderless"
         style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
       >
-        <Space style={{ marginBottom: 16 }}>
+        <Space style={{ marginBottom: 16, width: '100%' }} direction={isMobile ? 'vertical' : 'horizontal'}>
           <Input
             placeholder="Search properties..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 300, borderRadius: 8 }}
+            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
           />
           <Select
             placeholder="Filter by status"
             value={statusFilter || undefined}
             onChange={setStatusFilter}
-            style={{ width: 150 }}
+            style={{ width: isMobile ? '100%' : 150 }}
             allowClear
           >
             <Option value="Active">Active</Option>
@@ -305,14 +307,109 @@ export default function AdminProperties() {
             <Option value="Inactive">Inactive</Option>
           </Select>
         </Space>
-        <Table
-          dataSource={properties}
-          columns={columns}
-          rowKey="id"
-          loading={loading}
-          pagination={pagination}
-          onChange={handleTableChange}
-        />
+        
+        {isMobile ? (
+          // Mobile Card View
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {properties.map((property: any) => (
+              <Card 
+                key={property.id}
+                size="small"
+                style={{ borderRadius: 8 }}
+                cover={
+                  property.images?.[0] ? (
+                    <img 
+                      src={property.images[0]} 
+                      alt={property.title}
+                      style={{ height: 180, objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      height: 180, 
+                      background: '#f0f0f0', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                    }}>
+                      <HomeOutlined style={{ fontSize: 48, color: '#bfbfbf' }} />
+                    </div>
+                  )
+                }
+              >
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: '16px' }}>
+                    ${property.price?.toLocaleString() || 0}
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
+                    {property.title}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: '8px' }}>
+                    {property.address}, {property.city}
+                  </div>
+                  
+                  <Space size="small" wrap style={{ marginBottom: '8px' }}>
+                    <Tag>{property.type}</Tag>
+                    <Tag color={
+                      property.status === 'Active' ? 'green' : 
+                      property.status === 'Pending' ? 'orange' : 
+                      property.status === 'Sold' ? 'blue' : 'red'
+                    }>
+                      {property.status || 'ACTIVE'}
+                    </Tag>
+                  </Space>
+                  
+                  <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                    {property.bedrooms} bed • {property.bathrooms} bath • {property.sqft?.toLocaleString()} sqft
+                  </div>
+                  
+                  {property.agent && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
+                      <Avatar src={property.agent.imageUrl} size={32} style={{ backgroundColor: '#b40101' }}>
+                        {property.agent.name?.charAt(0)}
+                      </Avatar>
+                      <span style={{ fontSize: '13px' }}>{property.agent.name}</span>
+                    </div>
+                  )}
+                  
+                  <div style={{ marginTop: '12px' }}>
+                    <Space size="small">
+                      <Button 
+                        type="link" 
+                        icon={<EyeOutlined />} 
+                        size="small"
+                        onClick={() => navigate(`/properties/${property.id}`)}
+                        style={{ padding: 0 }}
+                      >
+                        View
+                      </Button>
+                      <Popconfirm
+                        title="Delete this property?"
+                        onConfirm={() => handleDeleteProperty(property.id)}
+                        okText="Yes"
+                        cancelText="No"
+                        okButtonProps={{ danger: true }}
+                      >
+                        <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: 0 }}>
+                          Delete
+                        </Button>
+                      </Popconfirm>
+                    </Space>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // Desktop Table View
+          <Table
+            dataSource={properties}
+            columns={columns}
+            rowKey="id"
+            loading={loading}
+            pagination={pagination}
+            onChange={handleTableChange}
+          />
+        )}
       </Card>
     </div>
   );

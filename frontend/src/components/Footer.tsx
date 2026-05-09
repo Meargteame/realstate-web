@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20 border-b border-white/10 pb-20">
           {/* Logo & Address */}
           <div>
-            <h2 className="text-3xl font-black tracking-tight mb-8 text-brand-red">ESTATE</h2>
+            <h2 className="text-3xl font-black tracking-tight mb-8 text-brand-red">kw®</h2>
             <div className="text-[12px] text-gray-400 font-medium leading-relaxed uppercase tracking-wider mb-10">
               <p className="mb-1">Global Headquarters</p>
               <p className="mb-1">One Financial Center, Suite 4500</p>
@@ -38,61 +38,77 @@ export default function Footer() {
 
           {/* Company Links */}
           <div>
-            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Company</h3>
+            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Explore</h3>
             <ul className="flex flex-col gap-5">
               <li>
                 <Link 
-                  to="#" 
+                  to="/properties" 
                   className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
                 >
-                  Privacy Policy
+                  Property Search
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="#" 
+                  to="/agents" 
                   className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
                 >
-                  Terms of Service
+                  Find an Agent
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="#" 
+                  to="/open-houses" 
                   className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
                 >
-                  Cookie Settings
+                  Open Houses
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/blog" 
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                >
+                  Real Estate Insights
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Exclusives */}
+          {/* Tools */}
           <div>
-            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Exclusives</h3>
+            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Tools</h3>
             <ul className="flex flex-col gap-5">
               <li>
                 <Link 
-                  to="#" 
+                  to="/mortgage-calculator" 
                   className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
                 >
-                  Architectural Standards
+                  Mortgage Calculator
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="#" 
+                  to="/home-value" 
                   className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
                 >
-                  Partner Program
+                  Home Value Estimator
                 </Link>
               </li>
               <li>
                 <Link 
-                  to="#" 
+                  to="/affordability-calculator" 
                   className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
                 >
-                  Concierge
+                  Affordability Calculator
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/become-agent" 
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                >
+                  Become an Agent
                 </Link>
               </li>
             </ul>
@@ -118,8 +134,8 @@ export default function Footer() {
         </div>
 
         <div className="flex justify-between items-center text-[11px] text-gray-500 uppercase tracking-wider font-bold">
-          <p>© 2026 ESTATE RESERVE. ALL RIGHTS RESERVED.</p>
-          <p className="text-gray-600">BUILT WITH EXCELLENCE</p>
+          <p>© 2026 KELLER WILLIAMS REALTY. ALL RIGHTS RESERVED.</p>
+          <p className="text-gray-600">INDEPENDENTLY OWNED AND OPERATED</p>
         </div>
       </div>
     </footer>

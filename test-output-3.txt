@@ -1,0 +1,17 @@
+[1m
+============================================================[0m
+[1m🧪 COMPREHENSIVE FUNCTIONALITY TEST SUITE[0m
+[1m============================================================
+[0m
+[34mTesting Backend: http://localhost:5000[0m
+[34mTesting Frontend: http://localhost:3001[0m
+[34mStarted: 5/9/2026, 1:49:39 PM
+[0m
+[36m
+📝 Testing Authentication & User Management...[0m
+[31m
+❌ Fatal Error: Cannot read properties of undefined (reading 'error')[0m
+TypeError: Cannot read properties of undefined (reading 'error')
+    at testAuthentication (/home/meareg/kw-realstate-web/test-all-functionality.js:96:72)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runAllTests (/home/meareg/kw-realstate-web/test-all-functionality.js:534:22)

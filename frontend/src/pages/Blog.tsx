@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Layout, Card, Row, Col, Typography, Tag, Space, Input, Select, Pagination, Avatar, Empty } from "antd";
 import { SearchOutlined, ClockCircleOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -16,6 +17,7 @@ export default function Blog() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchPosts();
@@ -78,27 +80,27 @@ export default function Blog() {
       {/* Hero Section */}
       <div style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '80px 32px',
+        padding: isMobile ? '48px 16px' : '80px 32px',
         textAlign: 'center',
         color: 'white'
       }}>
-        <Title level={1} style={{ color: 'white', fontSize: 56, fontWeight: 900, margin: 0 }}>
+        <Title level={1} style={{ color: 'white', fontSize: isMobile ? 32 : 56, fontWeight: 900, margin: 0 }}>
           REAL ESTATE INSIGHTS
         </Title>
-        <Text style={{ color: 'white', fontSize: 20, opacity: 0.9 }}>
+        <Text style={{ color: 'white', fontSize: isMobile ? 16 : 20, opacity: 0.9 }}>
           Expert advice, market trends, and tips from our agents
         </Text>
       </div>
 
       {/* Filters */}
-      <div style={{ maxWidth: '1400px', margin: '-40px auto 0', padding: '0 32px' }}>
-        <Card style={{ borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)' }}>
+      <div style={{ maxWidth: '1400px', margin: isMobile ? '-32px auto 0' : '-40px auto 0', padding: isMobile ? '0 16px' : '0 32px' }}>
+        <Card style={{ borderRadius: isMobile ? '12px' : '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)' }}>
           <Row gutter={[16, 16]} align="middle">
             <Col xs={24} md={12}>
               <Search
                 placeholder="Search articles..."
                 allowClear
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 onSearch={setSearch}
                 prefix={<SearchOutlined />}
                 style={{ borderRadius: '8px' }}
@@ -107,7 +109,7 @@ export default function Blog() {
             <Col xs={24} md={6}>
               <Select
                 placeholder="All Categories"
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 style={{ width: '100%' }}
                 allowClear
                 onChange={setSelectedCategory}
@@ -123,7 +125,7 @@ export default function Blog() {
             <Col xs={24} md={6}>
               <Select
                 placeholder="All Tags"
-                size="large"
+                size={isMobile ? "middle" : "large"}
                 style={{ width: '100%' }}
                 allowClear
                 onChange={setSelectedTag}
@@ -141,14 +143,14 @@ export default function Blog() {
       </div>
 
       {/* Blog Posts Grid */}
-      <div style={{ maxWidth: '1400px', margin: '48px auto 0', padding: '0 32px' }}>
+      <div style={{ maxWidth: '1400px', margin: isMobile ? '32px auto 0' : '48px auto 0', padding: isMobile ? '0 16px' : '0 32px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '100px 0' }}>
+          <div style={{ textAlign: 'center', padding: isMobile ? '60px 0' : '100px 0' }}>
             <Text type="secondary">Loading articles...</Text>
           </div>
         ) : posts.length > 0 ? (
           <>
-            <Row gutter={[24, 24]}>
+            <Row gutter={[isMobile ? 16 : 24, isMobile ? 16 : 24]}>
               {posts.map(post => (
                 <Col xs={24} sm={12} lg={8} key={post.id}>
                   <Link to={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
@@ -156,7 +158,7 @@ export default function Blog() {
                       hoverable
                       cover={
                         <div style={{
-                          height: '240px',
+                          height: isMobile ? '200px' : '240px',
                           background: `url(${post.coverImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
@@ -185,15 +187,15 @@ export default function Blog() {
                         </Space>
 
                         {/* Title */}
-                        <Title level={4} style={{ margin: '8px 0', minHeight: '60px' }}>
+                        <Title level={4} style={{ margin: '8px 0', minHeight: isMobile ? '48px' : '60px', fontSize: isMobile ? '16px' : '18px' }}>
                           {post.title}
                         </Title>
 
                         {/* Excerpt */}
                         <Paragraph
-                          ellipsis={{ rows: 3 }}
+                          ellipsis={{ rows: isMobile ? 2 : 3 }}
                           type="secondary"
-                          style={{ marginBottom: 16 }}
+                          style={{ marginBottom: 16, fontSize: isMobile ? '13px' : '14px' }}
                         >
                           {post.excerpt || post.content.substring(0, 150)}
                         </Paragraph>
@@ -204,21 +206,23 @@ export default function Blog() {
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           paddingTop: 16,
-                          borderTop: '1px solid #f0f0f0'
+                          borderTop: '1px solid #f0f0f0',
+                          flexWrap: 'wrap',
+                          gap: '8px'
                         }}>
-                          <Space>
+                          <Space size="small">
                             <Avatar
                               size="small"
                               src={post.author?.imageUrl}
                               icon={<UserOutlined />}
                             />
-                            <Text strong style={{ fontSize: 12 }}>
+                            <Text strong style={{ fontSize: isMobile ? 11 : 12 }}>
                               {post.authorName}
                             </Text>
                           </Space>
                           <Space size="small">
-                            <ClockCircleOutlined style={{ fontSize: 12 }} />
-                            <Text type="secondary" style={{ fontSize: 12 }}>
+                            <ClockCircleOutlined style={{ fontSize: isMobile ? 11 : 12 }} />
+                            <Text type="secondary" style={{ fontSize: isMobile ? 11 : 12 }}>
                               {formatDate(post.publishedAt)}
                             </Text>
                           </Space>
@@ -227,7 +231,7 @@ export default function Blog() {
                         {/* Tags */}
                         {post.tags && post.tags.length > 0 && (
                           <Space wrap size="small" style={{ marginTop: 8 }}>
-                            {post.tags.map((tag: any) => (
+                            {post.tags.slice(0, isMobile ? 2 : 3).map((tag: any) => (
                               <Tag key={tag.id} style={{ fontSize: 11 }}>
                                 #{tag.name}
                               </Tag>
@@ -242,20 +246,21 @@ export default function Blog() {
             </Row>
 
             {/* Pagination */}
-            <div style={{ textAlign: 'center', marginTop: 48 }}>
+            <div style={{ textAlign: 'center', marginTop: isMobile ? 32 : 48 }}>
               <Pagination
                 current={page}
                 total={total}
                 pageSize={9}
                 onChange={setPage}
                 showSizeChanger={false}
+                size={isMobile ? "small" : "default"}
               />
             </div>
           </>
         ) : (
           <Empty
             description="No articles found"
-            style={{ padding: '100px 0' }}
+            style={{ padding: isMobile ? '60px 0' : '100px 0' }}
           />
         )}
       </div>

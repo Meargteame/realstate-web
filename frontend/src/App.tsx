@@ -15,6 +15,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAgents from "./pages/AdminAgents";
 import AdminProperties from "./pages/AdminProperties";
+import AdminBlog from "./pages/AdminBlog";
+import AdminDocuments from "./pages/AdminDocuments";
 import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
 import SavedSearches from "./pages/SavedSearches";
@@ -81,7 +83,8 @@ export default function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="agents" element={<AdminAgents />} />
           <Route path="properties" element={<AdminProperties />} />
-          <Route path="blog" element={<Blog />} />
+          <Route path="blog" element={<AdminBlog />} />
+          <Route path="documents" element={<AdminDocuments />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<AgentSettings />} />
         </Route>

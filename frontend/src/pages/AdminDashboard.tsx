@@ -14,6 +14,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { Line, Column } from '@ant-design/plots';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
   const [recentProperties, setRecentProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchDashboardData();
@@ -164,18 +166,18 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px', minHeight: 'calc(100vh - 72px)', background: '#fafafa' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <Title level={2} style={{ marginBottom: '8px', fontWeight: 900 }}>
+    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px', minHeight: 'calc(100vh - 72px)', background: '#fafafa' }}>
+      <div style={{ marginBottom: isMobile ? '24px' : '32px' }}>
+        <Title level={2} style={{ marginBottom: '8px', fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
           Platform Overview
         </Title>
-        <Text type="secondary" style={{ fontSize: '14px' }}>
+        <Text type="secondary" style={{ fontSize: isMobile ? '13px' : '14px' }}>
           Monitor and manage your real estate platform
         </Text>
       </div>
 
       {/* KPI Cards */}
-      <Row gutter={[24, 24]} style={{ marginBottom: '32px' }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: isMobile ? '24px' : '32px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card 
             variant="borderless"
@@ -186,12 +188,16 @@ export default function AdminDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+              }
             }}
             onMouseLeave={(e: any) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+              }
             }}
             onClick={() => navigate('/admin/users')}
           >
@@ -199,10 +205,10 @@ export default function AdminDashboard() {
               title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>Total Users</Text>}
               value={stats.totalUsers}
               prefix={<UserOutlined style={{ color: '#b40101' }} />}
-              valueStyle={{ color: '#b40101', fontSize: '36px', fontWeight: 900 }}
+              valueStyle={{ color: '#b40101', fontSize: isMobile ? '28px' : '36px', fontWeight: 900 }}
               suffix={
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#10b981', marginLeft: 8 }}>
-                  <ArrowUpOutlined /> +{stats.newUsersThisMonth} this month
+                  <ArrowUpOutlined /> +{stats.newUsersThisMonth}
                 </div>
               }
             />
@@ -219,12 +225,16 @@ export default function AdminDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+              }
             }}
             onMouseLeave={(e: any) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+              }
             }}
             onClick={() => navigate('/admin/agents')}
           >
@@ -232,10 +242,10 @@ export default function AdminDashboard() {
               title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>Active Agents</Text>}
               value={stats.totalAgents}
               prefix={<TeamOutlined style={{ color: '#373a4b' }} />}
-              valueStyle={{ color: '#373a4b', fontSize: '36px', fontWeight: 900 }}
+              valueStyle={{ color: '#373a4b', fontSize: isMobile ? '28px' : '36px', fontWeight: 900 }}
               suffix={
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#10b981', marginLeft: 8 }}>
-                  <ArrowUpOutlined /> +{stats.newAgentsThisMonth} this month
+                  <ArrowUpOutlined /> +{stats.newAgentsThisMonth}
                 </div>
               }
             />
@@ -252,12 +262,16 @@ export default function AdminDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+              }
             }}
             onMouseLeave={(e: any) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+              }
             }}
             onClick={() => navigate('/admin/properties')}
           >
@@ -265,7 +279,7 @@ export default function AdminDashboard() {
               title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>Total Properties</Text>}
               value={stats.totalProperties}
               prefix={<HomeOutlined style={{ color: '#373a4b' }} />}
-              valueStyle={{ color: '#373a4b', fontSize: '36px', fontWeight: 900 }}
+              valueStyle={{ color: '#373a4b', fontSize: isMobile ? '28px' : '36px', fontWeight: 900 }}
               suffix={
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', marginLeft: 8 }}>
                   {stats.activeListings} active
@@ -288,7 +302,7 @@ export default function AdminDashboard() {
               title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '1px' }}>Platform Value</Text>}
               value={stats.totalRevenue}
               prefix={<DollarOutlined style={{ color: '#10b981' }} />}
-              valueStyle={{ color: '#10b981', fontSize: '36px', fontWeight: 900 }}
+              valueStyle={{ color: '#10b981', fontSize: isMobile ? '28px' : '36px', fontWeight: 900 }}
               precision={0}
             />
           </Card>
@@ -296,13 +310,13 @@ export default function AdminDashboard() {
       </Row>
 
       {/* Secondary Stats */}
-      <Row gutter={[24, 24]} style={{ marginBottom: '32px' }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: isMobile ? '24px' : '32px' }}>
         <Col xs={24} sm={8}>
           <Card variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
             <Statistic
               title="Active Listings"
               value={stats.activeListings}
-              valueStyle={{ color: '#10b981', fontSize: '28px', fontWeight: 700 }}
+              valueStyle={{ color: '#10b981', fontSize: isMobile ? '24px' : '28px', fontWeight: 700 }}
             />
             <Progress percent={Math.round((stats.activeListings / stats.totalProperties) * 100)} strokeColor="#10b981" showInfo={false} />
           </Card>
@@ -312,7 +326,7 @@ export default function AdminDashboard() {
             <Statistic
               title="Pending Sales"
               value={stats.pendingListings}
-              valueStyle={{ color: '#f59e0b', fontSize: '28px', fontWeight: 700 }}
+              valueStyle={{ color: '#f59e0b', fontSize: isMobile ? '24px' : '28px', fontWeight: 700 }}
             />
             <Progress percent={Math.round((stats.pendingListings / stats.totalProperties) * 100)} strokeColor="#f59e0b" showInfo={false} />
           </Card>
@@ -323,7 +337,7 @@ export default function AdminDashboard() {
               title="Avg Property Value"
               value={stats.totalProperties > 0 ? Math.round(stats.totalRevenue / stats.totalProperties) : 0}
               prefix="$"
-              valueStyle={{ color: '#373a4b', fontSize: '28px', fontWeight: 700 }}
+              valueStyle={{ color: '#373a4b', fontSize: isMobile ? '24px' : '28px', fontWeight: 700 }}
               precision={0}
             />
           </Card>
@@ -331,10 +345,10 @@ export default function AdminDashboard() {
       </Row>
 
       {/* Activity and Top Agents */}
-      <Row gutter={[24, 24]}>
+      <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <Card 
-            title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Recent Activity</span>}
+            title={<span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Recent Activity</span>}
             variant="borderless"
             style={{ 
               borderRadius: 12, 
@@ -352,8 +366,8 @@ export default function AdminDashboard() {
                     icon={item.type === 'user' ? <UserOutlined /> : item.type === 'agent' ? <TeamOutlined /> : <HomeOutlined />}
                   />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 500, marginBottom: '2px' }}>{item.action}</div>
-                    <div style={{ fontSize: '13px', color: '#8c8c8c' }}>{item.user} • {item.time}</div>
+                    <div style={{ fontWeight: 500, marginBottom: '2px', fontSize: isMobile ? '13px' : '14px' }}>{item.action}</div>
+                    <div style={{ fontSize: isMobile ? '12px' : '13px', color: '#8c8c8c' }}>{item.user} • {item.time}</div>
                   </div>
                 </div>
               ))}
@@ -363,15 +377,17 @@ export default function AdminDashboard() {
 
         <Col xs={24} lg={12}>
           <Card 
-            title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Top Performing Agents</span>}
+            title={<span style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Top Performing Agents</span>}
             extra={
-              <Button 
-                type="link" 
-                onClick={() => navigate("/admin/agents")}
-                style={{ color: '#b40101', fontWeight: 700, fontSize: '13px' }}
-              >
-                View All →
-              </Button>
+              !isMobile && (
+                <Button 
+                  type="link" 
+                  onClick={() => navigate("/admin/agents")}
+                  style={{ color: '#b40101', fontWeight: 700, fontSize: '13px' }}
+                >
+                  View All →
+                </Button>
+              )
             }
             variant="borderless"
             style={{ 
@@ -383,15 +399,15 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {topAgents.map((agent: any) => (
                 <div key={agent.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
-                  <Avatar src={agent.imageUrl} size={48}>{agent.name?.charAt(0)}</Avatar>
+                  <Avatar src={agent.imageUrl} size={isMobile ? 40 : 48}>{agent.name?.charAt(0)}</Avatar>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>{agent.name}</div>
-                    <Space size="large">
-                      <span style={{ fontSize: '13px', color: '#8c8c8c' }}><HomeOutlined /> {agent.listingsCount} listings</span>
-                      <span style={{ fontSize: '13px', color: '#8c8c8c' }}><TeamOutlined /> {agent.leadsCount} leads</span>
+                    <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: isMobile ? '13px' : '14px' }}>{agent.name}</div>
+                    <Space size={isMobile ? "small" : "large"}>
+                      <span style={{ fontSize: isMobile ? '12px' : '13px', color: '#8c8c8c' }}><HomeOutlined /> {agent.listingsCount}</span>
+                      <span style={{ fontSize: isMobile ? '12px' : '13px', color: '#8c8c8c' }}><TeamOutlined /> {agent.leadsCount}</span>
                     </Space>
                   </div>
-                  <Button type="link" onClick={() => navigate(`/agents/${agent.id}`)}>View</Button>
+                  {!isMobile && <Button type="link" onClick={() => navigate(`/agents/${agent.id}`)}>View</Button>}
                 </div>
               ))}
             </div>
