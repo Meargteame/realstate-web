@@ -4,17 +4,31 @@
 @theme {
   --font-sans: "GeistVariable", "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
   
-  --color-primary: #ce1f26; /* Deep red for Explore button and accents */
+  /* KW Brand Colors */
+  --color-kw-red: #b40101;
+  --color-kw-red-dark: #8b0000;
+  --color-kw-navy: #373a4b;
+  --color-kw-navy-dark: #2a2d3a;
+  
+  --color-primary: #b40101;
   --color-primary-foreground: #ffffff;
   
   --color-surface: #ffffff;
-  --color-surface-container: #f9fafb;
+  --color-surface-container: #f8f9fa;
   --color-surface-container-high: #f1f3f5;
   
-  --color-on-surface: #111827; /* Dark text */
-  --color-on-surface-muted: #6b7280; /* Lighter text */
+  --color-on-surface: #111827;
+  --color-on-surface-muted: #6b7280;
+  --color-on-surface-light: #9ca3af;
 
-  --color-brand-dark: #1e2433; /* For footer and dark accents */
+  --color-brand-dark: #373a4b;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
 }
 
 @layer base {
@@ -24,10 +38,159 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  
   body {
     @apply font-sans text-on-surface bg-surface;
+  }
+  
+  /* Enhanced Typography Scale */
+  h1, .h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  
+  h2, .h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  
+  h3, .h3 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  
+  h4, .h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  
+  /* Smooth transitions for interactive elements */
+  a, button, .interactive {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Better focus states */
+  *:focus-visible {
+    outline: 2px solid var(--color-kw-red);
+    outline-offset: 2px;
+  }
+}
+
+/* Custom Ant Design overrides for KW branding */
+@layer components {
+  .ant-btn-primary {
+    background-color: var(--color-kw-red) !important;
+    border-color: var(--color-kw-red) !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .ant-btn-primary:hover {
+    background-color: var(--color-kw-red-dark) !important;
+    border-color: var(--color-kw-red-dark) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .ant-btn-primary:active {
+    transform: translateY(0);
+  }
+  
+  /* Card hover effects */
+  .ant-card-hoverable:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl) !important;
+  }
+  
+  /* Better input focus */
+  .ant-input:focus,
+  .ant-input-focused {
+    border-color: var(--color-kw-red) !important;
+    box-shadow: 0 0 0 2px rgba(180, 1, 1, 0.1) !important;
   }
 }
 
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+
+/* Clean Sidebar Menu Styles */
+.clean-sidebar-menu .ant-menu-item {
+  height: 44px !important;
+  line-height: 44px !important;
+  margin: 4px 0 !important;
+  border-radius: 8px !important;
+  padding-left: 16px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  color: #4b5563 !important;
+}
+
+.clean-sidebar-menu .ant-menu-item:hover {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+.clean-sidebar-menu .ant-menu-item-selected {
+  background: #fef2f2 !important;
+  color: #b40101 !important;
+  font-weight: 600 !important;
+}
+
+.clean-sidebar-menu .ant-menu-item-selected::after {
+  display: none !important;
+}
+
+.clean-sidebar-menu .ant-menu-item .anticon {
+  font-size: 16px !important;
+  margin-right: 12px !important;
+  color: #6b7280 !important;
+}
+
+.clean-sidebar-menu .ant-menu-item-selected .anticon {
+  color: #b40101 !important;
+}
+
+.clean-sidebar-menu .ant-menu-item:hover .anticon {
+  color: #111827 !important;
+}
+
+.clean-sidebar-menu .ant-menu-item-divider {
+  background: #e5e7eb !important;
+  margin: 12px 0 !important;
+}
+
+.clean-sidebar-menu .ant-badge-count {
+  background: #b40101 !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  box-shadow: 0 1px 4px rgba(180, 1, 1, 0.3) !important;
+}
+
+
+/* Remove gaps in Command Layout */
+.ant-layout {
+  background: transparent !important;
+}
+
+.ant-layout-sider {
+  background: #ffffff !important;
+}
+
+.ant-layout-header {
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  line-height: normal !important;
+}
+
+.ant-layout-content {
+  background: #f9fafb !important;
+}

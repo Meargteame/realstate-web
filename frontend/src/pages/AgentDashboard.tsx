@@ -86,49 +86,126 @@ export default function AgentDashboard() {
   ];
 
   return (
-    <div style={{ padding: '24px 32px', minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: '40px 48px', minHeight: 'calc(100vh - 64px)', background: '#fafafa' }}>
       {/* KPI Stat Cards */}
-      <Row gutter={[24, 24]}>
+      <Row gutter={[32, 32]}>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>Active Listings</Text>
-            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{activeListings.length}</Title>
-            <div style={{ height: '24px' }}><Badge status="processing" text={`${activeListings.length} total units`} /></div>
+          <AntCard 
+            bordered={false} 
+            style={{ 
+              borderRadius: 12, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+            }}
+            onMouseLeave={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+            }}
+          >
+            <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>Active Listings</Text>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: '#b40101' }}>{activeListings.length}</Title>
+            <div style={{ height: '24px' }}><Badge status="processing" text={`${activeListings.length} total units`} style={{ fontWeight: 600 }} /></div>
           </AntCard>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>Total Active Volume</Text>
-            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{formatCurrency(totalVolume)}</Title>
-            <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12 }}>Current Portfolio Value</Text></div>
+          <AntCard 
+            bordered={false} 
+            style={{ 
+              borderRadius: 12, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+            }}
+            onMouseLeave={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+            }}
+          >
+            <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>Total Active Volume</Text>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: '#373a4b' }}>{formatCurrency(totalVolume)}</Title>
+            <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Current Portfolio Value</Text></div>
           </AntCard>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <AntCard 
+            bordered={false} 
+            style={{ 
+              borderRadius: 12, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+            }}
+            onMouseLeave={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+            }}
+          >
             <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>New Leads</Text>
-              {newLeads > 0 && <Badge count={newLeads} offset={[4, -4]} />}
+              <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>New Leads</Text>
+              {newLeads > 0 && <Badge count={newLeads} offset={[4, -4]} style={{ backgroundColor: '#b40101' }} />}
             </Space>
-            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{newLeads}</Title>
-            <div style={{ height: '24px' }}><Text type={newLeads > 0 ? "danger" : "secondary"} style={{ fontSize: 12 }}>{newLeads > 0 ? "Needs attention" : "Everything current"}</Text></div>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: newLeads > 0 ? '#b40101' : '#373a4b' }}>{newLeads}</Title>
+            <div style={{ height: '24px' }}><Text type={newLeads > 0 ? "danger" : "secondary"} style={{ fontSize: 12, fontWeight: 600 }}>{newLeads > 0 ? "Needs attention" : "Everything current"}</Text></div>
           </AntCard>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <AntCard bordered={false} style={{ borderRadius: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', color: '#6b7280' }}>Sales Pipeline</Text>
-            <Title level={2} style={{ margin: '12px 0 4px', fontSize: '28px', fontWeight: 600 }}>{pipeline}</Title>
-            <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12 }}>Pending Transactions</Text></div>
+          <AntCard 
+            bordered={false} 
+            style={{ 
+              borderRadius: 12, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
+            }}
+            onMouseLeave={(e: any) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+            }}
+          >
+            <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>Sales Pipeline</Text>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: '#373a4b' }}>{pipeline}</Title>
+            <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Pending Transactions</Text></div>
           </AntCard>
         </Col>
       </Row>
 
-      <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
+      <Row gutter={[32, 32]} style={{ marginTop: '32px' }}>
         <Col xs={24} lg={16}>
           <AntCard 
-            title="Recent Lead Activity" 
-            extra={<Button type="link" onClick={() => navigate("/command/leads")}>View All</Button>}
+            title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Recent Lead Activity</span>}
+            extra={
+              <Button 
+                type="link" 
+                onClick={() => navigate("/command/leads")}
+                style={{ color: '#b40101', fontWeight: 700, fontSize: '13px' }}
+              >
+                View All →
+              </Button>
+            }
             bordered={false} 
-            style={{ borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.03)', height: '100%' }}
+            style={{ 
+              borderRadius: 12, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)', 
+              height: '100%',
+              overflow: 'hidden'
+            }}
             styles={{ body: { padding: 0 } }}
           >
             <Table 
@@ -137,15 +214,20 @@ export default function AgentDashboard() {
               rowKey="id" 
               pagination={false}
               locale={{ emptyText: "No leads yet." }}
+              style={{ fontSize: '14px' }}
             />
           </AntCard>
         </Col>
 
         <Col xs={24} lg={8}>
           <AntCard 
-            title="Your Active Listings" 
+            title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Your Active Listings</span>}
             bordered={false} 
-            style={{ borderRadius: 8, boxShadow: '0 1px 2px rgba(0,0,0,0.03)', height: '100%' }}
+            style={{ 
+              borderRadius: 12, 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)', 
+              height: '100%'
+            }}
           >
             <List
               itemLayout="horizontal"

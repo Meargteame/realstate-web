@@ -11,15 +11,11 @@ Deploy your KW Real Estate platform for client testing with minimal cost.
 
 ---
 
-## Step 1: Get Mapbox Token (2 minutes) - FREE
+## Step 1: ~~Get Mapbox Token~~ SKIP THIS! (Map is FREE!)
 
-1. Go to https://account.mapbox.com/
-2. Click "Sign up" (it's FREE!)
-3. After signup, go to https://account.mapbox.com/access-tokens/
-4. Copy your "Default public token" (starts with `pk.`)
-5. Save it - you'll need it in Step 4
+**Good news!** The map now uses OpenStreetMap (completely free, no signup needed).
 
-**Free tier includes:** 50,000 map loads/month (perfect for testing!)
+**You can skip this step entirely!** The map works out of the box with zero configuration.
 
 ---
 
@@ -108,15 +104,14 @@ npx prisma db seed  # Optional: adds sample data
 Click "Environment Variables" and add:
 
 ```bash
-# Your Mapbox token from Step 1
-VITE_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token_here
-
 # Your Railway backend URL from Step 2
 VITE_API_BASE_URL=https://your-app.up.railway.app/api
 
 # Environment
 VITE_NODE_ENV=production
 ```
+
+**Note:** No Mapbox token needed! Map uses free OpenStreetMap.
 
 ### 3.5 Deploy
 1. Click "Deploy"
@@ -147,16 +142,16 @@ Visit your Vercel URL: `https://your-app.vercel.app`
 ### 5.2 Test Checklist
 - [ ] Homepage loads
 - [ ] Properties page shows listings
-- [ ] Map displays with markers
+- [ ] Map displays with markers (FREE OpenStreetMap!)
 - [ ] Click on a property to see details
 - [ ] Try to sign up/login
 - [ ] Check agent dashboard (after login)
 
 ### 5.3 If Map Doesn't Show
 1. Open browser console (F12)
-2. Check for Mapbox errors
-3. Verify your Mapbox token is correct
-4. Make sure token is in Vercel environment variables
+2. Check for JavaScript errors
+3. Verify properties have latitude/longitude
+4. Clear browser cache and reload
 
 ---
 
@@ -210,10 +205,12 @@ Share the frontend URL with your client for testing!
 - ✅ Easy scaling
 - ⚠️ After free hours, $5/month
 
-### Mapbox (Maps)
-- ✅ 50,000 map loads/month
-- ✅ Unlimited users
+### OpenStreetMap (Maps)
+- ✅ Unlimited map loads
+- ✅ No signup required
+- ✅ No API key needed
 - ✅ All map features
+- ✅ 100% FREE forever!
 
 ---
 

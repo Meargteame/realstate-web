@@ -48,27 +48,27 @@ npm run dev
 
 Visit: http://localhost:3001
 
-### 2. Fix Map Feature (2 minutes)
-The map works but needs a real Mapbox token:
+### 2. ~~Fix Map Feature~~ Map Already Works! (FREE)
+The map now uses **OpenStreetMap** - completely free, no signup needed!
 
-1. Go to https://account.mapbox.com/ (FREE signup)
-2. Copy your token
-3. Add to `frontend/.env`:
-   ```
-   VITE_MAPBOX_ACCESS_TOKEN=pk.your_real_token_here
-   ```
-4. Restart frontend
+**No action required!** Just start the app and the map works.
 
-### 3. Deploy for Client Testing (30 minutes)
+```bash
+cd frontend
+npm run dev
+# Visit http://localhost:3001/properties - map works!
+```
+
+### 3. Deploy for Client Testing (25 minutes)
 ```bash
 # Read the quick guide
 cat QUICK_DEPLOY_GUIDE.md
 
 # Or just follow these steps:
-# 1. Get Mapbox token (above)
-# 2. Deploy to Railway (backend)
-# 3. Deploy to Vercel (frontend)
-# 4. Share URL with client!
+# 1. Deploy to Railway (backend)
+# 2. Deploy to Vercel (frontend)
+# 3. Share URL with client!
+# No map token needed - it's FREE!
 ```
 
 ---

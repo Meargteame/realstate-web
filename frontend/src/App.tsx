@@ -6,10 +6,15 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import CommandLayout from "./components/CommandLayout";
+import AdminLayout from "./components/AdminLayout";
 import Home from "./pages/Home";
 import AgentSearch from "./pages/AgentSearch";
 import AgentProfile from "./pages/AgentProfile";
 import AgentDashboard from "./pages/AgentDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminAgents from "./pages/AdminAgents";
+import AdminProperties from "./pages/AdminProperties";
 import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
 import SavedSearches from "./pages/SavedSearches";
@@ -69,6 +74,15 @@ export default function App() {
           <Route path="calendar" element={<Calendar />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="video/start" element={<StartVideoCall />} />
+          <Route path="settings" element={<AgentSettings />} />
+        </Route>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="agents" element={<AdminAgents />} />
+          <Route path="properties" element={<AdminProperties />} />
+          <Route path="blog" element={<Blog />} />
+          <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<AgentSettings />} />
         </Route>
         <Route path="/login" element={<Login />} />

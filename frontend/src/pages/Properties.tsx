@@ -274,11 +274,11 @@ export default function Properties() {
   ];
 
   const FilterPanel = () => (
-    <div style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <Title level={4} style={{ margin: 0 }}>Filters</Title>
+    <div style={{ padding: '32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <Title level={3} style={{ margin: 0, fontWeight: 900, fontSize: '24px' }}>Filters</Title>
         {activeFilterCount > 0 && (
-          <Button type="link" onClick={clearFilters} style={{ color: '#b40101' }}>
+          <Button type="link" onClick={clearFilters} style={{ color: '#b40101', fontWeight: 700, fontSize: '13px' }}>
             Clear All
           </Button>
         )}
@@ -434,9 +434,9 @@ export default function Properties() {
       <Content style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         {/* Top Filter Bar */}
         <div style={{ 
-          height: '80px', 
-          borderBottom: '1px solid #f0f0f0', 
-          padding: '0 32px', 
+          height: '88px', 
+          borderBottom: '2px solid #f0f0f0', 
+          padding: '0 40px', 
           background: 'white', 
           display: 'flex', 
           alignItems: 'center', 
@@ -444,10 +444,10 @@ export default function Properties() {
           zIndex: 10
         }}>
           <div>
-            <Title level={4} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase' }}>
+            <Title level={3} style={{ margin: 0, fontWeight: 900, textTransform: 'uppercase', fontSize: '24px', letterSpacing: '-0.5px' }}>
               {drawnArea ? "Search Area Results" : query ? `Search: ${query}` : "All Properties"}
             </Title>
-            <Text type="secondary" style={{ fontSize: '11px', fontWeight: 'bold' }}>
+            <Text type="secondary" style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px' }}>
               {filteredProperties.length} AVAILABLE LISTINGS
               {activeFilterCount > 0 && ` · ${activeFilterCount} FILTER${activeFilterCount > 1 ? 'S' : ''} ACTIVE`}
               {drawnArea && " · CUSTOM AREA"}
@@ -520,18 +520,29 @@ export default function Properties() {
         </div>
 
         {/* Results Area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '32px', background: '#f8f8f8' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '40px', background: '#fafafa' }}>
           {viewMode === 'grid' ? (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: showMap ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
-              gap: '24px' 
+              gridTemplateColumns: showMap ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(320px, 1fr))', 
+              gap: '32px' 
             }}>
               {filteredProperties.length > 0 ? (
                 filteredProperties.map(p => <div key={p.id}><PropertyCard property={p} /></div>)
               ) : (
-                !loading && <div style={{ gridColumn: '1/-1', padding: '100px 0' }}>
-                  <Empty description={<span>No properties found matching your filters. Try adjusting your search.</span>} />
+                !loading && <div style={{ gridColumn: '1/-1', padding: '120px 0', textAlign: 'center' }}>
+                  <Empty 
+                    description={
+                      <div style={{ marginTop: '24px' }}>
+                        <Text style={{ fontSize: '16px', fontWeight: 600, display: 'block', marginBottom: '8px' }}>
+                          No properties found
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: '14px' }}>
+                          Try adjusting your filters or search criteria
+                        </Text>
+                      </div>
+                    } 
+                  />
                 </div>
               )}
             </div>

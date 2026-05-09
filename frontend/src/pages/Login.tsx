@@ -43,10 +43,16 @@ export default function Login() {
         firstName: firstName,
         name: data.name,
         email: data.email,
-        role: data.role
+        role: data.role,
+        token: data.token
       }));
       
-      navigate("/command");
+      // Redirect based on role
+      if (data.role === 'admin') {
+        navigate("/admin");
+      } else {
+        navigate("/command");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to log in. Please try again.");
     } finally {

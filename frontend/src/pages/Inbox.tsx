@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Layout, List, Avatar, Typography, Input, Button, Space, Badge, Empty, Spin, message as antMessage } from "antd";
+import { Layout, Avatar, Typography, Input, Button, Space, Badge, Empty, Spin, message as antMessage } from "antd";
 import { useOutletContext, useLocation } from "react-router-dom";
 import { SearchOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
 
@@ -57,6 +57,15 @@ export default function Inbox() {
     try {
       const res = await fetch(`/api/messages/conversations/${agent.id}`);
       const data = await res.json();
+      
+      // Handle error responses (429, 500, etc.)
+      if (!res.ok || !Array.isArray(data)) {
+        console.error('Error fetching conversations:', data);
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
+      
       setConversations(data);
       
       // Check if we should auto-select a conversation based on leadId from navigation state
@@ -75,6 +84,7 @@ export default function Inbox() {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      setConversations([]);
       setLoading(false);
     }
   };
@@ -188,7 +198,7 @@ export default function Inbox() {
         
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center' }}>
-            <Spin />
+            <Spin size="large" />
           </div>
         ) : filteredConversations.length === 0 ? (
           <Empty 
@@ -196,10 +206,10 @@ export default function Inbox() {
             style={{ marginTop: 60 }}
           />
         ) : (
-          <List
-            dataSource={filteredConversations}
-            renderItem={(conversation) => (
+          <div>
+            {filteredConversations.map((conversation) => (
               <div 
+                key={conversation.id}
                 onClick={() => selectConversation(conversation)}
                 style={{ 
                   padding: '16px 20px', 
@@ -245,8 +255,8 @@ export default function Inbox() {
                   </div>
                 </div>
               </div>
-            )}
-          />
+            ))}
+          </div>
         )}
       </Sider>
 

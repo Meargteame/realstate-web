@@ -20,16 +20,16 @@ export default function Hero() {
   return (
     <section style={{ 
       position: 'relative', 
-      height: '80vh', 
-      minHeight: '600px',
+      height: '85vh', 
+      minHeight: '700px',
       width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      background: '#111'
+      background: 'linear-gradient(135deg, #1a1d2e 0%, #2a2d3a 100%)'
     }}>
-      {/* Background Image */}
+      {/* Background Image with Overlay */}
       <div 
         style={{ 
           position: 'absolute',
@@ -37,26 +37,68 @@ export default function Hero() {
           backgroundImage: 'url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.6
+          opacity: 0.4
         }} 
       />
+      
+      {/* Gradient Overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)'
+      }} />
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: '1000px', width: '100%', padding: '0 24px', textAlign: 'center', color: 'white' }}>
-        <Title style={{ color: 'white', fontSize: '64px', fontWeight: 900, marginBottom: '24px', letterSpacing: '-2px' }}>
-          Serve. Real estate. Refined.
+      <div style={{ 
+        position: 'relative', 
+        zIndex: 1, 
+        maxWidth: '1100px', 
+        width: '100%', 
+        padding: '0 32px', 
+        textAlign: 'center', 
+        color: 'white' 
+      }}>
+        {/* Main Headline */}
+        <Title 
+          style={{ 
+            color: 'white', 
+            fontSize: '72px', 
+            fontWeight: 900, 
+            marginBottom: '24px', 
+            letterSpacing: '-0.03em',
+            lineHeight: 1.1,
+            textShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          }}
+        >
+          Find Your Dream Home
         </Title>
-        <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '20px', display: 'block', marginBottom: '48px' }}>
-          Discover the difference of working with the world's largest real estate community.
+        
+        {/* Subheadline */}
+        <Text 
+          style={{ 
+            color: 'rgba(255,255,255,0.9)', 
+            fontSize: '22px', 
+            display: 'block', 
+            marginBottom: '56px',
+            fontWeight: 400,
+            lineHeight: 1.6,
+            maxWidth: '700px',
+            margin: '0 auto 56px'
+          }}
+        >
+          Discover exceptional properties with the world's largest real estate network
         </Text>
 
+        {/* Enhanced Search Card */}
         <Card 
           style={{ 
             borderRadius: '16px', 
-            boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+            boxShadow: '0 32px 64px rgba(0,0,0,0.3)',
             border: 'none',
-            padding: '8px'
+            padding: '12px',
+            background: 'rgba(255,255,255,0.98)',
+            backdropFilter: 'blur(10px)'
           }}
-          styles={{ body: { padding: '16px' } }}
+          styles={{ body: { padding: '20px' } }}
         >
           <Space.Compact style={{ width: '100%' }}>
             <Input 
@@ -65,12 +107,13 @@ export default function Hero() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onPressEnter={handleSearch}
-              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              prefix={<SearchOutlined style={{ color: '#b40101', fontSize: '20px' }} />}
               style={{ 
-                height: '64px', 
-                borderRadius: '8px 0 0 8px',
+                height: '72px', 
+                borderRadius: '12px 0 0 12px',
                 fontSize: '18px',
-                border: '1px solid #d9d9d9'
+                border: '2px solid #f0f0f0',
+                fontWeight: 500
               }} 
             />
             <Button 
@@ -78,12 +121,14 @@ export default function Hero() {
               size="large" 
               onClick={handleSearch}
               style={{ 
-                height: '64px', 
-                borderRadius: '0 8px 8px 0',
+                height: '72px', 
+                borderRadius: '0 12px 12px 0',
                 background: '#b40101',
                 borderColor: '#b40101',
-                width: '120px',
-                fontWeight: 'bold'
+                width: '140px',
+                fontWeight: 700,
+                fontSize: '16px',
+                letterSpacing: '0.05em'
               }}
             >
               SEARCH
@@ -91,12 +136,39 @@ export default function Hero() {
           </Space.Compact>
         </Card>
 
-        <div style={{ marginTop: '32px' }}>
-           <Space size="large">
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>Trending:</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }} onClick={() => navigate('/properties?q=Austin')}>Austin, TX</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }} onClick={() => navigate('/properties?q=Charlotte')}>Charlotte, NC</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', cursor: 'pointer' }} onClick={() => navigate('/properties?q=Miami')}>Miami, FL</Text>
+        {/* Trending Searches */}
+        <div style={{ marginTop: '40px' }}>
+           <Space size="large" wrap>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Trending:
+              </Text>
+              {['Austin, TX', 'Charlotte, NC', 'Miami, FL', 'Denver, CO'].map(city => (
+                <Text 
+                  key={city}
+                  style={{ 
+                    color: 'white', 
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    background: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(180,1,1,0.9)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                  onClick={() => navigate(`/properties?q=${city.split(',')[0]}`)}
+                >
+                  {city}
+                </Text>
+              ))}
            </Space>
         </div>
       </div>
