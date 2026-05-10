@@ -40,7 +40,7 @@ app.use(cors({
 }));
 
 // Explicit Preflight Handling for LiteSpeed
-app.options('*', cors());
+app.options(/.*/, cors());
 
 // =====================================================
 // SECURITY MIDDLEWARE (Applied After CORS)
