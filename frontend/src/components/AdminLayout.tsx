@@ -12,7 +12,10 @@ import {
   SearchOutlined,
   BellOutlined,
   FileTextOutlined,
-  FolderOutlined
+  FolderOutlined,
+  CalendarOutlined,
+  VideoCameraOutlined,
+  HeartOutlined
 } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
@@ -25,7 +28,7 @@ export default function AdminLayout() {
   const location = useLocation();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("kw_user");
+    const storedUser = localStorage.getItem("torra_user");
     if (!storedUser) {
       navigate("/login");
       return;
@@ -51,7 +54,7 @@ export default function AdminLayout() {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("kw_user");
+    localStorage.removeItem("torra_user");
     navigate("/login");
   };
 
@@ -70,7 +73,10 @@ export default function AdminLayout() {
     { key: '/admin/properties', icon: <HomeOutlined />, label: 'Properties Management' },
     { key: '/admin/blog', icon: <FileTextOutlined />, label: 'Blog Management' },
     { key: '/admin/documents', icon: <FolderOutlined />, label: 'Document Management' },
+    { key: '/admin/calendar', icon: <CalendarOutlined />, label: 'Calendar' },
+    { key: '/admin/video-calls', icon: <VideoCameraOutlined />, label: 'Video Calls' },
     { key: '/admin/analytics', icon: <BarChartOutlined />, label: 'Platform Analytics' },
+    { key: '/admin/system-health', icon: <HeartOutlined />, label: 'System Health' },
   ];
 
   const bottomMenuItems = [
@@ -103,23 +109,42 @@ export default function AdminLayout() {
           flexDirection: 'column',
           justifyContent: 'center'
         }}>
-          <div style={{ 
-            fontSize: '24px', 
-            fontWeight: 900, 
-            color: '#b40101',
-            letterSpacing: '-0.5px',
-            marginBottom: '2px'
-          }}>
-            ESTATE
-          </div>
-          <div style={{ 
-            fontSize: '11px', 
-            color: '#6b7280',
-            fontWeight: 600,
-            letterSpacing: '0.5px',
-            textTransform: 'uppercase'
-          }}>
-            Admin Panel
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ 
+              width: '36px',
+              height: '36px',
+              background: '#b40101',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 900,
+              letterSpacing: '-0.5px'
+            }}>
+              TR
+            </div>
+            <div>
+              <div style={{ 
+                fontSize: '18px', 
+                fontWeight: 900, 
+                color: '#b40101',
+                letterSpacing: '-0.5px',
+                lineHeight: 1
+              }}>
+                TORRA
+              </div>
+              <div style={{ 
+                fontSize: '10px', 
+                color: '#6b7280',
+                fontWeight: 600,
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase'
+              }}>
+                Admin Panel
+              </div>
+            </div>
           </div>
         </div>
 

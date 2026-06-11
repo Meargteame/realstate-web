@@ -111,7 +111,7 @@ async function testAuthentication() {
   
   // Test 3: Admin Login
   const adminLoginRes = await testEndpoint('POST', '/api/auth/login', {
-    email: 'admin@kw.com',
+    email: 'admin@torra.com',
     password: 'password123'
   });
   logTest('Auth', 'Admin Login', adminLoginRes.ok ? 'PASS' : 'FAIL',

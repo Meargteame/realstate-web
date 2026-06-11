@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer } from "antd";
-import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined } from "@ant-design/icons";
+import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined, StarFilled, MessageOutlined } from "@ant-design/icons";
 import { Link, useOutletContext, useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -70,7 +70,58 @@ export default function LeadsPage() {
     New: 'error', Contacted: 'processing', Qualified: 'warning', Closed: 'success', Lost: 'default'
   };
 
+  // Lead scoring based on status and recency
+  const getLeadScore = (lead: any) => {
+    let score = 0;
+    if (lead.status === 'Qualified') score += 40;
+    else if (lead.status === 'Contacted') score += 25;
+    else if (lead.status === 'New') score += 15;
+    else if (lead.status === 'Closed') score += 50;
+    if (lead.property) score += 20;
+    if (lead.phone) score += 10;
+    const daysSince = Math.floor((Date.now() - new Date(lead.date || lead.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSince <= 3) score += 20;
+    else if (daysSince <= 7) score += 10;
+    return Math.min(100, score);
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return '#10b981';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const quickResponses: Record<string, string> = {
+    'welcome': 'Hi {name}! Thank you for your interest. I\'d love to help you find your perfect property. When would be a good time to chat?',
+    'showing': 'Hi {name}! I\'d like to schedule a showing for the property you\'re interested in. Are you available this week?',
+    'followup': 'Hi {name}! Just following up on your recent inquiry. Have you had a chance to review the listings I sent?',
+    'preapproval': 'Hi {name}! Getting pre-approved will help us move quickly when we find the right property. I can connect you with a trusted lender.',
+  };
+
   const columns = [
+    {
+      title: 'SCORE', key: 'score', width: 80,
+      sorter: (a: any, b: any) => getLeadScore(a) - getLeadScore(b),
+      render: (record: any) => {
+        const score = getLeadScore(record);
+        return (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ 
+              width: 40, height: 40, borderRadius: '50%', 
+              background: `conic-gradient(${getScoreColor(score)} ${score * 3.6}deg, #e5e7eb 0deg)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto'
+            }}>
+              <div style={{ 
+                width: 32, height: 32, borderRadius: '50%', background: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 900, color: getScoreColor(score)
+              }}>{score}</div>
+            </div>
+          </div>
+        );
+      },
+    },
     {
       title: 'NAME', dataIndex: 'name', key: 'name',
       sorter: (a: any, b: any) => a.name.localeCompare(b.name),
@@ -148,8 +199,41 @@ export default function LeadsPage() {
     },
   ];
 
+  // Expandable row with notes and quick responses
+  const expandedRowRender = (record: any) => (
+    <div style={{ padding: '16px 24px' }}>
+      <div style={{ marginBottom: 16 }}>
+        <Title level={5} style={{ marginBottom: 8 }}>Quick Response Templates</Title>
+        <Space wrap>
+          {Object.entries(quickResponses).map(([key, template]) => (
+            <Button
+              key={key}
+              size="small"
+              icon={<MessageOutlined />}
+              onClick={() => {
+                const msg = template.replace('{name}', record.name.split(' ')[0]);
+                navigator.clipboard.writeText(msg);
+                message.success('Response copied to clipboard!');
+              }}
+            >
+              {key.charAt(0).toUpperCase() + key.slice(1)}
+            </Button>
+          ))}
+        </Space>
+      </div>
+      {record.message && (
+        <div>
+          <Title level={5} style={{ marginBottom: 8 }}>Original Inquiry</Title>
+          <div style={{ background: '#f8f9fa', padding: '12px 16px', borderRadius: 8, fontSize: 14 }}>
+            {record.message}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div style={{ padding: '24px 32px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: '16px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ marginBottom: '24px' }}>
         <Breadcrumb items={[{ title: <Link to="/command">Dashboard</Link> }, { title: 'Contacts / Leads' }]} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '16px' }}>
@@ -178,6 +262,18 @@ export default function LeadsPage() {
           dataSource={filteredLeads}
           loading={loading}
           rowKey="id"
+          expandable={{
+            expandedRowRender,
+            expandIcon: ({ expanded, onExpand, record }) => (
+              <Button 
+                type="text" size="small" 
+                onClick={(e) => onExpand(record, e)}
+                style={{ color: '#b40101' }}
+              >
+                {expanded ? '−' : '+'}
+              </Button>
+            ),
+          }}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} leads` }}
         />
       </div>

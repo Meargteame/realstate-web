@@ -1,7 +1,7 @@
 {
-  "name": "kw-realstate-web",
+  "name": "torra-realstate-web",
   "version": "1.0.0",
-  "description": "KW Real Estate Platform - Full Stack Application",
+  "description": "TORRA Commercial Real Estate Group - Full Stack Application",
   "scripts": {
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
@@ -13,7 +13,7 @@
   },
   "keywords": [
     "real-estate",
-    "keller-williams",
+    "torra",
     "property-management"
   ],
   "author": "Meareg",

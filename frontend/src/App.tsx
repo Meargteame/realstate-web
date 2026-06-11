@@ -41,6 +41,7 @@ import AffordabilityCalculator from "./pages/AffordabilityCalculator";
 import Analytics from "./pages/Analytics";
 import VideoCall from "./pages/VideoCall";
 import StartVideoCall from "./pages/StartVideoCall";
+import UserAccount from "./pages/UserAccount";
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="account" element={<UserAccount />} />
           <Route path="properties" element={<Properties />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
           <Route path="saved-searches" element={<SavedSearches />} />

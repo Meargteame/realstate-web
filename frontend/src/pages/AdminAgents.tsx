@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select } from "antd";
-import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, HomeOutlined, TeamOutlined } from "@ant-design/icons";
+import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic, Badge } from "antd";
+import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, HomeOutlined, TeamOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, CrownOutlined, RiseOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
 
-const { Title } = Typography;
-const { Option } = Select;
+const { Title, Text } = Typography;
+const AntSelect = Select as any;
+const AntOption = (Select as any).Option;
+const AntCard = Card as any;
 
 export default function AdminAgents() {
-  const [agents, setAgents] = useState([]);
+  const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [pagination, setPagination] = useState({
@@ -19,6 +21,12 @@ export default function AdminAgents() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  const pendingAgents = agents.filter((a: any) => a.status === 'pending');
+  const activeAgents = agents.filter((a: any) => a.status === 'active');
+  const totalListings = agents.reduce((sum: number, a: any) => sum + (a.stats?.totalListings || 0), 0);
+  const totalLeads = agents.reduce((sum: number, a: any) => sum + (a.stats?.totalLeads || 0), 0);
+  const leaderboard = [...agents].sort((a: any, b: any) => (b.stats?.totalListings || 0) + (b.stats?.totalLeads || 0) - (a.stats?.totalListings || 0) - (a.stats?.totalLeads || 0)).slice(0, 5);
+
   useEffect(() => {
     fetchAgents();
   }, [pagination.current, pagination.pageSize, searchText]);
@@ -26,7 +34,7 @@ export default function AdminAgents() {
   const fetchAgents = async () => {
     setLoading(true);
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -75,7 +83,7 @@ export default function AdminAgents() {
 
   const handleStatusChange = async (agentId: string, newStatus: string) => {
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -105,7 +113,7 @@ export default function AdminAgents() {
 
   const handleDeleteAgent = async (agentId: string) => {
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -196,15 +204,15 @@ export default function AdminAgents() {
           style={{ width: 120 }}
           size="small"
         >
-          <Option value="active">
+          <AntOption value="active">
             <Tag color="green">ACTIVE</Tag>
-          </Option>
-          <Option value="inactive">
+          </AntOption>
+          <AntOption value="inactive">
             <Tag color="red">INACTIVE</Tag>
-          </Option>
-          <Option value="pending">
+          </AntOption>
+          <AntOption value="pending">
             <Tag color="orange">PENDING</Tag>
-          </Option>
+          </AntOption>
         </Select>
       ),
     },
@@ -252,6 +260,71 @@ export default function AdminAgents() {
           Agents Management
         </Title>
       </div>
+
+      {/* Performance Metrics */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={12} sm={6}>
+          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Agents</Text>} value={agents.length} prefix={<TeamOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: 28 }} />
+          </AntCard>
+        </Col>
+        <Col xs={12} sm={6}>
+          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Active</Text>} value={activeAgents.length} prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />} valueStyle={{ color: '#10b981', fontWeight: 900, fontSize: 28 }} />
+          </AntCard>
+        </Col>
+        <Col xs={12} sm={6}>
+          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Listings</Text>} value={totalListings} prefix={<HomeOutlined style={{ color: '#373a4b' }} />} valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: 28 }} />
+          </AntCard>
+        </Col>
+        <Col xs={12} sm={6}>
+          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Leads</Text>} value={totalLeads} prefix={<RiseOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+          </AntCard>
+        </Col>
+      </Row>
+
+      {/* Pending Approvals Banner */}
+      {pendingAgents.length > 0 && (
+        <AntCard size="small" style={{ marginBottom: 24, background: 'linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%)', borderColor: '#f59e0b', borderRadius: 12 }}>
+          <div style={{ marginBottom: 12 }}>
+            <Badge count={pendingAgents.length} style={{ backgroundColor: '#f59e0b' }}>
+              <Text strong style={{ fontSize: 16 }}> Pending Approvals</Text>
+            </Badge>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pendingAgents.map((agent: any) => (
+              <div key={agent.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: 'white', borderRadius: 8 }}>
+                <Avatar src={agent.imageUrl} size={40} style={{ backgroundColor: '#b40101' }}>{agent.name?.charAt(0)}</Avatar>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{agent.name}</div>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>{agent.email}</div>
+                </div>
+                <Button type="primary" size="small" icon={<CheckCircleOutlined />} onClick={() => handleStatusChange(agent.id, 'active')} style={{ background: '#10b981', borderColor: '#10b981' }}>Approve</Button>
+                <Button danger size="small" icon={<CloseCircleOutlined />} onClick={() => handleStatusChange(agent.id, 'inactive')}>Reject</Button>
+              </div>
+            ))}
+          </div>
+        </AntCard>
+      )}
+
+      {/* Leaderboard */}
+      {leaderboard.length > 0 && (
+        <AntCard title={<span><TrophyOutlined style={{ color: '#f59e0b', marginRight: 8 }} />Top Performers</span>} variant="borderless" style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
+            {leaderboard.map((agent: any, idx: number) => (
+              <div key={agent.id} style={{ minWidth: 180, padding: 16, background: idx === 0 ? 'linear-gradient(135deg, #fffbeb, #fef3c7)' : '#fafafa', borderRadius: 10, textAlign: 'center', border: idx === 0 ? '2px solid #f59e0b' : '1px solid #e5e7eb', cursor: 'pointer' }} onClick={() => navigate(`/agents/${agent.id}`)}>
+                <div style={{ fontSize: 20, marginBottom: 4 }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}</div>
+                <Avatar src={agent.imageUrl} size={48} style={{ backgroundColor: '#b40101', marginBottom: 8 }}>{agent.name?.charAt(0)}</Avatar>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{agent.name}</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{agent.stats?.totalListings || 0} listings</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{agent.stats?.totalLeads || 0} leads</div>
+              </div>
+            ))}
+          </div>
+        </AntCard>
+      )}
 
       <Card 
         variant="borderless"

@@ -8,7 +8,7 @@ async function testAdminAPI() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'admin@kw.com',
+        email: 'admin@torra.com',
         password: 'password123'
       })
     });

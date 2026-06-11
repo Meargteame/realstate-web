@@ -68,7 +68,7 @@ export default function HomeValue() {
             What Is Your Home Worth?
           </Title>
           <Paragraph style={{ color: 'rgba(255,255,255,0.8)', fontSize: '22px', marginTop: '16px' }}>
-            Get a free, data-driven home valuation from a KW® certified local expert. No strings attached.
+            Get a free, data-driven home valuation from a TORRA certified local expert. No strings attached.
           </Paragraph>
         </div>
       </section>
@@ -80,7 +80,7 @@ export default function HomeValue() {
             {[
               { icon: <CheckCircleOutlined />, text: 'Free with No Obligation' },
               { icon: <RiseOutlined />, text: 'Powered by Real Market Data' },
-              { icon: <UserOutlined />, text: 'Verified KW® Agent Contact' },
+              { icon: <UserOutlined />, text: 'Verified TORRA Agent Contact' },
             ].map((item, i) => (
               <Col key={i} style={{ textAlign: 'center', color: 'white' }}>
                 <div style={{ fontSize: '24px', color: '#b40101', marginBottom: '8px' }}>{item.icon}</div>
@@ -98,7 +98,7 @@ export default function HomeValue() {
             <CheckCircleOutlined style={{ fontSize: '80px', color: '#b40101', display: 'block', marginBottom: '24px' }} />
             <Title level={2} style={{ fontWeight: 900 }}>Valuation Request Received!</Title>
             <Paragraph style={{ fontSize: '18px', color: '#555', maxWidth: '480px', margin: '0 auto 40px' }}>
-              A local KW® expert for <strong>{address}</strong> will contact you within 24 hours with your property's estimated market value.
+              A local TORRA expert for <strong>{address}</strong> will contact you within 24 hours with your property's estimated market value.
             </Paragraph>
             <Row justify="center" gutter={16}>
               <Col><Link to="/properties"><Button type="primary" size="large" style={{ background: '#b40101', borderColor: '#b40101', borderRadius: '24px', height: '48px', fontWeight: 'bold' }}>Browse Listings</Button></Link></Col>
@@ -156,7 +156,7 @@ export default function HomeValue() {
                     Step 2: Where Should We Send Your Report?
                   </Title>
                   <Text type="secondary" style={{ display: 'block', fontSize: '16px', marginBottom: '32px' }}>
-                    A KW® local specialist will review <strong>{address}</strong> and deliver your free valuation.
+                    A TORRA local specialist will review <strong>{address}</strong> and deliver your free valuation.
                   </Text>
 
                   <Form layout="vertical" form={form} onFinish={handleContactSubmit}>
@@ -202,7 +202,7 @@ export default function HomeValue() {
         {!submitted && (
           <div style={{ textAlign: 'center', marginTop: '40px' }}>
             <Text type="secondary" style={{ fontSize: '13px' }}>
-              🔒 Your information is 100% private. KW® never shares your data with third parties.
+              🔒 Your information is 100% private. TORRA never shares your data with third parties.
             </Text>
           </div>
         )}
@@ -215,7 +215,7 @@ export default function HomeValue() {
             Not Ready to Sell? We Can Still Help.
           </Title>
           <Paragraph style={{ color: '#9ca3af', fontSize: '18px', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px' }}>
-            Explore local listings, find a KW® agent, or calculate your mortgage payments.
+            Explore local listings, find a TORRA agent, or calculate your mortgage payments.
           </Paragraph>
           <Row justify="center" gutter={24}>
             <Col><Link to="/properties"><Button size="large" style={{ height: '56px', padding: '0 40px', borderRadius: '28px', fontWeight: 'bold' }}>Browse Listings</Button></Link></Col>

@@ -8,7 +8,7 @@ import {
   ArrowLeftOutlined, ShareAltOutlined, HeartOutlined, HeartFilled,
   EnvironmentOutlined, CheckCircleOutlined, UserOutlined,
   MessageOutlined, PhoneOutlined, MailOutlined,
-  ExpandOutlined
+  ExpandOutlined, DollarOutlined, CalculatorOutlined
 } from "@ant-design/icons";
 import PropertyChatModal from "../components/PropertyChatModal";
 import PropertyCard from "../components/PropertyCard";
@@ -27,7 +27,18 @@ export default function PropertyDetails() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [hasExistingChat, setHasExistingChat] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mortgageDown, setMortgageDown] = useState(20);
+  const [mortgageRate, setMortgageRate] = useState(6.5);
+  const [mortgageYears, setMortgageYears] = useState(30);
   const isMobile = useIsMobile();
+
+  const calcMonthlyPayment = (price: number) => {
+    const principal = price * (1 - mortgageDown / 100);
+    const monthlyRate = mortgageRate / 100 / 12;
+    const numPayments = mortgageYears * 12;
+    if (monthlyRate === 0) return principal / numPayments;
+    return (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+  };
 
   // Mock gallery images
   const galleryImages = [
@@ -535,6 +546,68 @@ export default function PropertyDetails() {
                     </div>
                   </Space>
                 )}
+              </Card>
+
+              {/* Mortgage Estimator */}
+              <Card 
+                style={{ 
+                  borderRadius: '16px',
+                  marginTop: '24px',
+                  border: '2px solid #b40101'
+                }}
+              >
+                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CalculatorOutlined style={{ color: '#b40101', fontSize: 20 }} />
+                    <Title level={5} style={{ margin: 0 }}>Est. Monthly Payment</Title>
+                  </div>
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, #b40101 0%, #8a0000 100%)', 
+                    borderRadius: 12, padding: '20px', textAlign: 'center' 
+                  }}>
+                    <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>Estimated Payment</Text>
+                    <div style={{ color: 'white', fontSize: 36, fontWeight: 900 }}>
+                      {property?.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(calcMonthlyPayment(property.price)) : 'N/A'}
+                      <span style={{ fontSize: 14, fontWeight: 400 }}>/mo</span>
+                    </div>
+                  </div>
+                  <div>
+                    <Text strong style={{ fontSize: 12 }}>Down Payment: {mortgageDown}%</Text>
+                    <input 
+                      type="range" min={5} max={50} value={mortgageDown}
+                      onChange={(e) => setMortgageDown(Number(e.target.value))}
+                      style={{ width: '100%', accentColor: '#b40101' }}
+                    />
+                  </div>
+                  <div>
+                    <Text strong style={{ fontSize: 12 }}>Interest Rate: {mortgageRate}%</Text>
+                    <input 
+                      type="range" min={1} max={12} step={0.1} value={mortgageRate}
+                      onChange={(e) => setMortgageRate(Number(e.target.value))}
+                      style={{ width: '100%', accentColor: '#b40101' }}
+                    />
+                  </div>
+                  <div>
+                    <Text strong style={{ fontSize: 12 }}>Loan Term: {mortgageYears} years</Text>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                      {[15, 20, 30].map(y => (
+                        <Button 
+                          key={y} size="small" 
+                          type={mortgageYears === y ? 'primary' : 'default'}
+                          onClick={() => setMortgageYears(y)}
+                          style={mortgageYears === y ? { background: '#b40101', borderColor: '#b40101' } : {}}
+                        >
+                          {y}yr
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <Link to="/mortgage-calculator">
+                    <Button block icon={<DollarOutlined />} style={{ borderColor: '#b40101', color: '#b40101' }}>
+                      Full Calculator
+                    </Button>
+                  </Link>
+                </Space>
               </Card>
             </div>
           </Col>

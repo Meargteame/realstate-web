@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select } from "antd";
-import { SearchOutlined, EyeOutlined, DeleteOutlined, HomeOutlined } from "@ant-design/icons";
+import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic } from "antd";
+import { SearchOutlined, EyeOutlined, DeleteOutlined, HomeOutlined, StarFilled, StarOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
-const { Title } = Typography;
-const { Option } = Select;
+const { Title, Text } = Typography;
+const AntSelect = Select as any;
+const AntOption = (Select as any).Option;
+const AntCard = Card as any;
 
 export default function AdminProperties() {
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<string>('');
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -20,6 +26,14 @@ export default function AdminProperties() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Status distribution data
+  const statusDistribution = [
+    { name: 'Active', value: properties.filter((p: any) => p.status === 'Active').length, color: '#10b981' },
+    { name: 'Pending', value: properties.filter((p: any) => p.status === 'Pending').length, color: '#f59e0b' },
+    { name: 'Sold', value: properties.filter((p: any) => p.status === 'Sold').length, color: '#3b82f6' },
+    { name: 'Inactive', value: properties.filter((p: any) => p.status === 'Inactive').length, color: '#ef4444' },
+  ].filter(s => s.value > 0);
+
   useEffect(() => {
     fetchProperties();
   }, [pagination.current, pagination.pageSize, searchText, statusFilter]);
@@ -27,7 +41,7 @@ export default function AdminProperties() {
   const fetchProperties = async () => {
     setLoading(true);
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -77,7 +91,7 @@ export default function AdminProperties() {
 
   const handleStatusChange = async (propertyId: string, newStatus: string) => {
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -107,7 +121,7 @@ export default function AdminProperties() {
 
   const handleDeleteProperty = async (propertyId: string) => {
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -131,6 +145,44 @@ export default function AdminProperties() {
       console.error('Error deleting property:', error);
       antMessage.error('Failed to delete property');
     }
+  };
+
+  const handleToggleFeatured = async (propertyId: string, featured: boolean) => {
+    try {
+      const userData = localStorage.getItem('torra_user');
+      if (!userData) return;
+      const token = JSON.parse(userData).token;
+      const res = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ featured: !featured })
+      });
+      if (res.ok) {
+        antMessage.success(featured ? 'Removed from featured' : 'Marked as featured');
+        fetchProperties();
+      }
+    } catch { antMessage.error('Failed to update featured status'); }
+  };
+
+  const handleBulkStatusChange = async () => {
+    if (!bulkStatus) return;
+    const userData = localStorage.getItem('torra_user');
+    if (!userData) return;
+    const token = JSON.parse(userData).token;
+    try {
+      await Promise.all(selectedRows.map((p: any) =>
+        fetch(`/api/admin/properties/${p.id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ status: bulkStatus })
+        })
+      ));
+      antMessage.success(`${selectedRows.length} properties updated to ${bulkStatus}`);
+      setSelectedRowKeys([]);
+      setSelectedRows([]);
+      setBulkStatus('');
+      fetchProperties();
+    } catch { antMessage.error('Failed to update some properties'); }
   };
 
   const columns = [
@@ -214,6 +266,19 @@ export default function AdminProperties() {
       ),
     },
     {
+      title: 'Featured',
+      key: 'featured',
+      width: 80,
+      render: (_: any, record: any) => (
+        <span
+          style={{ cursor: 'pointer', fontSize: 18, color: record.featured ? '#f59e0b' : '#d1d5db' }}
+          onClick={() => handleToggleFeatured(record.id, record.featured)}
+        >
+          {record.featured ? <StarFilled /> : <StarOutlined />}
+        </span>
+      ),
+    },
+    {
       title: 'Status',
       key: 'status',
       render: (_: any, record: any) => (
@@ -223,18 +288,18 @@ export default function AdminProperties() {
           style={{ width: 120 }}
           size="small"
         >
-          <Option value="Active">
+          <AntOption value="Active">
             <Tag color="green">ACTIVE</Tag>
-          </Option>
-          <Option value="Pending">
+          </AntOption>
+          <AntOption value="Pending">
             <Tag color="orange">PENDING</Tag>
-          </Option>
-          <Option value="Sold">
+          </AntOption>
+          <AntOption value="Sold">
             <Tag color="blue">SOLD</Tag>
-          </Option>
-          <Option value="Inactive">
+          </AntOption>
+          <AntOption value="Inactive">
             <Tag color="red">INACTIVE</Tag>
-          </Option>
+          </AntOption>
         </Select>
       ),
     },
@@ -282,6 +347,85 @@ export default function AdminProperties() {
         </Title>
       </div>
 
+      {/* Status Distribution */}
+      {statusDistribution.length > 0 && (
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={8}>
+            <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+              <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={4} dataKey="value">
+                    {statusDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
+                {statusDistribution.map((s) => (
+                  <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
+                    <span>{s.name}: <strong>{s.value}</strong></span>
+                  </div>
+                ))}
+              </div>
+            </AntCard>
+          </Col>
+          <Col xs={24} sm={16}>
+            <Row gutter={[12, 12]}>
+              <Col span={12}>
+                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Properties</Text>} value={properties.length} prefix={<HomeOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: 28 }} />
+                </AntCard>
+              </Col>
+              <Col span={12}>
+                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Featured</Text>} value={properties.filter((p: any) => p.featured).length} prefix={<StarFilled style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+                </AntCard>
+              </Col>
+              <Col span={12}>
+                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Avg Price</Text>} value={properties.length ? Math.round(properties.reduce((s: number, p: any) => s + (p.price || 0), 0) / properties.length) : 0} prefix="$" valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: 28 }} precision={0} />
+                </AntCard>
+              </Col>
+              <Col span={12}>
+                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Pending Review</Text>} value={properties.filter((p: any) => p.status === 'Pending').length} prefix={<CheckCircleOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+                </AntCard>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      )}
+
+      {/* Bulk Actions Toolbar */}
+      {selectedRowKeys.length > 0 && (
+        <AntCard size="small" style={{ marginBottom: 16, background: '#fff7ed', borderColor: '#f59e0b', borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Text strong>{selectedRowKeys.length} selected</Text>
+            <AntSelect value={bulkStatus || undefined} onChange={(v: string) => setBulkStatus(v)} placeholder="Set status to..." style={{ width: 160 }} allowClear>
+              <AntOption value="Active">Active</AntOption>
+              <AntOption value="Pending">Pending</AntOption>
+              <AntOption value="Sold">Sold</AntOption>
+              <AntOption value="Inactive">Inactive</AntOption>
+            </AntSelect>
+            <Button size="small" type="primary" onClick={handleBulkStatusChange} disabled={!bulkStatus} style={bulkStatus ? { background: '#b40101', borderColor: '#b40101' } : {}}>Apply</Button>
+            <Popconfirm title={`Delete ${selectedRowKeys.length} properties?`} onConfirm={async () => {
+              const userData = localStorage.getItem('torra_user');
+              if (!userData) return;
+              const token = JSON.parse(userData).token;
+              await Promise.all(selectedRows.map((p: any) => fetch(`/api/admin/properties/${p.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })));
+              antMessage.success('Properties deleted');
+              setSelectedRowKeys([]); setSelectedRows([]); fetchProperties();
+            }} okText="Yes" cancelText="No" okButtonProps={{ danger: true }}>
+              <Button size="small" danger icon={<DeleteOutlined />}>Delete</Button>
+            </Popconfirm>
+            <Button size="small" onClick={() => { setSelectedRowKeys([]); setSelectedRows([]); }}>Clear</Button>
+          </div>
+        </AntCard>
+      )}
+
       <Card 
         variant="borderless"
         style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
@@ -301,10 +445,10 @@ export default function AdminProperties() {
             style={{ width: isMobile ? '100%' : 150 }}
             allowClear
           >
-            <Option value="Active">Active</Option>
-            <Option value="Pending">Pending</Option>
-            <Option value="Sold">Sold</Option>
-            <Option value="Inactive">Inactive</Option>
+            <AntOption value="Active">Active</AntOption>
+            <AntOption value="Pending">Pending</AntOption>
+            <AntOption value="Sold">Sold</AntOption>
+            <AntOption value="Inactive">Inactive</AntOption>
           </Select>
         </Space>
         
@@ -408,6 +552,10 @@ export default function AdminProperties() {
             loading={loading}
             pagination={pagination}
             onChange={handleTableChange}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (keys: React.Key[], rows: any[]) => { setSelectedRowKeys(keys); setSelectedRows(rows); },
+            }}
           />
         )}
       </Card>

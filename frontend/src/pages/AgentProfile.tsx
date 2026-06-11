@@ -91,7 +91,7 @@ export default function AgentProfile() {
                       {agent.name}
                     </Title>
                     <Text strong style={{ fontSize: '20px', color: '#b40101', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', margin: '12px 0 24px' }}>
-                      {agent.brokerage || "Keller Williams® Premier Realty"}
+                      {agent.brokerage || "TORRA Commercial Real Estate"}
                     </Text>
                   </div>
                   <Space size="middle">
@@ -166,7 +166,7 @@ export default function AgentProfile() {
                 )}
                 
                 <Paragraph style={{ fontSize: '18px', lineHeight: 1.8, color: '#4b5563' }}>
-                  {agent.bio || `As a lead specialist at Keller Williams®, ${agent.name} is dedicated to providing an unparalleled real estate experience. With a deep understanding of market dynamics and a commitment to excellence, they ensure every client achieves their property goals with precision and care.`}
+                  {agent.bio || `As a lead specialist at TORRA Commercial Real Estate Group, ${agent.name} is dedicated to providing an unparalleled real estate experience. With a deep understanding of market dynamics and a commitment to excellence, they ensure every client achieves their property goals with precision and care.`}
                 </Paragraph>
                 
                 {/* Certifications */}

@@ -14,6 +14,11 @@ import {
   EnvironmentOutlined,
   DollarOutlined,
   ClockCircleOutlined,
+  TrophyOutlined,
+  HeartOutlined,
+  GlobalOutlined,
+  ThunderboltOutlined,
+  StarFilled,
 } from "@ant-design/icons";
 
 const { Title, Paragraph, Text } = Typography;
@@ -113,6 +118,64 @@ export default function Home() {
         </Row>
       </section>
 
+      {/* Why TORRA */}
+      <section style={{ padding: "96px 32px", background: "linear-gradient(to bottom, #ffffff 0%, #fafafa 100%)" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <Text strong style={{ color: "#b40101", fontSize: "13px", textTransform: "uppercase", letterSpacing: "2px", display: "block", marginBottom: "12px" }}>
+              Why Choose Us
+            </Text>
+            <Title level={2} style={{ fontSize: "44px", fontWeight: 900, margin: 0, letterSpacing: "-1px" }}>
+              Why TORRA?
+            </Title>
+          </div>
+          <Row gutter={[32, 32]}>
+            {[
+              { icon: <TrophyOutlined />, title: "Top 1% Agents", desc: "Work exclusively with vetted, top-performing agents who deliver results above market average." },
+              { icon: <HeartOutlined />, title: "Personalized Match", desc: "Our AI-powered matchmaking pairs you with the perfect agent based on your goals, budget, and timeline." },
+              { icon: <GlobalOutlined />, title: "Nationwide Network", desc: "Access properties and agents across 150+ cities with local expertise in every neighborhood." },
+              { icon: <ThunderboltOutlined />, title: "Lightning Fast", desc: "Close deals 30% faster with our streamlined digital process, from listing to closing." },
+            ].map((item, i) => (
+              <Col xs={24} sm={12} md={6} key={i}>
+                <div
+                  style={{
+                    background: "white",
+                    borderRadius: "16px",
+                    padding: "40px 24px",
+                    textAlign: "center",
+                    border: "1px solid #f0f0f0",
+                    transition: "all 0.3s",
+                    cursor: "default",
+                    height: "100%",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-8px)";
+                    e.currentTarget.style.boxShadow = "0 16px 40px rgba(180,1,1,0.12)";
+                    e.currentTarget.style.borderColor = "#b40101";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.borderColor = "#f0f0f0";
+                  }}
+                >
+                  <div style={{
+                    width: "72px", height: "72px", background: "rgba(180,1,1,0.08)",
+                    borderRadius: "50%", display: "flex", alignItems: "center",
+                    justifyContent: "center", margin: "0 auto 20px",
+                    color: "#b40101", fontSize: "30px"
+                  }}>
+                    {item.icon}
+                  </div>
+                  <Title level={4} style={{ fontWeight: 800, marginBottom: "12px" }}>{item.title}</Title>
+                  <Paragraph style={{ color: "#6b7280", margin: 0, lineHeight: 1.7 }}>{item.desc}</Paragraph>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </section>
+
       {/* Trending Cities */}
       <section style={{ background: "#f8f9fa", padding: "96px 32px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
@@ -168,6 +231,71 @@ export default function Home() {
 
       <ExpertSection />
 
+      {/* Testimonials */}
+      <section style={{ padding: "96px 32px", background: "#f8f9fa" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <Text strong style={{ color: "#b40101", fontSize: "13px", textTransform: "uppercase", letterSpacing: "2px", display: "block", marginBottom: "12px" }}>
+              Client Stories
+            </Text>
+            <Title level={2} style={{ fontSize: "44px", fontWeight: 900, margin: 0, letterSpacing: "-1px" }}>
+              What Our Clients Say
+            </Title>
+          </div>
+          <Row gutter={[32, 32]}>
+            {[
+              {
+                name: "Sarah & Michael Thompson",
+                role: "Home Buyers in Austin, TX",
+                text: "TORRA matched us with an incredible agent who found our dream home in just 2 weeks. The process was seamless and stress-free. We couldn't be happier!",
+                rating: 5,
+              },
+              {
+                name: "James Rodriguez",
+                role: "Property Investor in Miami, FL",
+                text: "As an investor, I need agents who understand the market. TORRA's platform connected me with a top-tier agent who helped me close 3 properties under market value.",
+                rating: 5,
+              },
+              {
+                name: "Emily Chen",
+                role: "First-Time Seller in Denver, CO",
+                text: "Selling my first home was daunting, but my TORRA agent guided me through every step. Sold above asking price in just 5 days. Absolutely phenomenal service!",
+                rating: 5,
+              },
+            ].map((review, i) => (
+              <Col xs={24} md={8} key={i}>
+                <div style={{
+                  background: "white",
+                  borderRadius: "16px",
+                  padding: "40px 32px",
+                  border: "1px solid #f0f0f0",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column" as const,
+                  position: "relative",
+                }}>
+                  <div style={{ color: "#b40101", fontSize: "48px", lineHeight: 1, marginBottom: "16px", fontFamily: "Georgia, serif", opacity: 0.3 }}>
+                    &ldquo;
+                  </div>
+                  <Paragraph style={{ fontSize: "15px", lineHeight: 1.8, color: "#374151", flex: 1, margin: 0 }}>
+                    {review.text}
+                  </Paragraph>
+                  <div style={{ display: "flex", gap: "2px", margin: "20px 0 12px" }}>
+                    {Array.from({ length: review.rating }).map((_, j) => (
+                      <StarFilled key={j} style={{ color: "#f59e0b", fontSize: "14px" }} />
+                    ))}
+                  </div>
+                  <div>
+                    <Text strong style={{ fontSize: "15px", display: "block" }}>{review.name}</Text>
+                    <Text type="secondary" style={{ fontSize: "13px" }}>{review.role}</Text>
+                  </div>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </section>
+
       {/* Top Agents */}
       <section style={{ padding: "96px 32px", maxWidth: "1400px", margin: "0 auto", background: "white" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "48px", flexWrap: "wrap", gap: "16px" }}>
@@ -215,7 +343,7 @@ export default function Home() {
                     />
                     <Title level={4} style={{ margin: 0, fontSize: "18px", fontWeight: 800 }}>{agent.name}</Title>
                     <Text type="secondary" style={{ fontSize: "13px" }}>
-                      {agent.brokerage || "Keller Williams®"}
+                      {agent.brokerage || "TORRA Commercial Real Estate"}
                     </Text>
                     <div style={{ marginTop: "16px", display: "flex", justifyContent: "center", gap: "24px" }}>
                       <div style={{ textAlign: "center" }}>
@@ -398,7 +526,7 @@ export default function Home() {
                   e.currentTarget.style.boxShadow = "0 8px 24px rgba(180,1,1,0.4)";
                 }}
               >
-                Become a Keller Williams® Agent
+                Become a TORRA Agent
               </Button>
             </Link>
           </div>
@@ -437,7 +565,7 @@ export default function Home() {
               fontWeight: 400,
             }}
           >
-            Discover the perfect home loan solution with Keller Home Loans.
+            Discover the perfect home loan solution with TORRA Home Loans.
           </Paragraph>
 
           <Row gutter={[32, 32]} justify="center">

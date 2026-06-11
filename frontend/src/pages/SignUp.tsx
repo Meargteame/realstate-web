@@ -4,6 +4,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { X, Eye, EyeOff, AlertCircle } from "lucide-react";
 import React, { useState } from "react";
 
+function getPasswordStrength(pwd: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pwd.length >= 6) score++;
+  if (pwd.length >= 10) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  if (score <= 1) return { score, label: 'Weak', color: '#ef4444' };
+  if (score <= 3) return { score, label: 'Good', color: '#f59e0b' };
+  return { score, label: 'Strong', color: '#10b981' };
+}
+
 export default function SignUp() {
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
@@ -52,7 +64,7 @@ export default function SignUp() {
 
       const safeName = data.name ? data.name : `${firstName.trim()} ${lastName.trim()}`;
 
-      localStorage.setItem("kw_user", JSON.stringify({
+      localStorage.setItem("torra_user", JSON.stringify({
         id: data.id,
         agentId: data.agentId,
         firstName: firstName.trim(),
@@ -77,12 +89,13 @@ export default function SignUp() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-transparent to-[#111827]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
         <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
-          <div className="text-[#B40101] text-[100px] font-serif font-black tracking-tighter mb-6 leading-none drop-shadow-2xl">kw</div>
+          <div className="text-[#B40101] text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
+          <div className="text-white/60 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>
           <h2 className="text-white text-[42px] font-bold mb-6 tracking-tight leading-[1.1] drop-shadow-lg">
             Join the largest<br/>real estate network.
           </h2>
           <p className="text-white/90 text-xl font-medium leading-relaxed drop-shadow-md">
-            Create your free Keller Williams account to unlock premium searches and expert matchmaking.
+            Create your free TORRA account to unlock premium searches and expert matchmaking.
           </p>
         </div>
       </div>
@@ -167,6 +180,22 @@ export default function SignUp() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </Button>
               </div>
+              {password && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className="h-1.5 flex-1 rounded-full transition-all"
+                        style={{ background: i <= getPasswordStrength(password).score ? getPasswordStrength(password).color : '#e5e7eb' }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs font-semibold pl-1" style={{ color: getPasswordStrength(password).color }}>
+                    {getPasswordStrength(password).label} password
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -179,7 +208,7 @@ export default function SignUp() {
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-[#111827] hover:bg-black text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.15)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>

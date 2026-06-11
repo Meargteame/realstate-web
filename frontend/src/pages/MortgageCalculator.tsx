@@ -46,7 +46,7 @@ export default function MortgageCalculator() {
 
       notification.success({
         message: 'Agent Match Requested',
-        description: "A KW® certified mortgage specialist will contact you within 24 hours.",
+        description: "A TORRA certified mortgage specialist will contact you within 24 hours.",
         duration: 6
       });
     } catch (error) {
@@ -71,7 +71,7 @@ export default function MortgageCalculator() {
             Mortgage Calculator
           </Title>
           <Paragraph style={{ color: '#9ca3af', fontSize: '20px', marginTop: '16px' }}>
-            Estimate your monthly payment and connect with a KW® certified home loan specialist.
+            Estimate your monthly payment and connect with a TORRA certified home loan specialist.
           </Paragraph>
         </div>
       </section>
@@ -187,7 +187,7 @@ export default function MortgageCalculator() {
                   Ready to Get Pre-Approved?
                 </Title>
                 <Text type="secondary" style={{ display: 'block', marginBottom: '24px' }}>
-                  A KW® certified loan specialist will find the best rate for you.
+                  A TORRA certified loan specialist will find the best rate for you.
                 </Text>
                 <Form layout="vertical" onFinish={onLeadSubmit}>
                   <Form.Item name="name" rules={[{ required: true }]}>

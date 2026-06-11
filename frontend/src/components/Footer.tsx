@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Twitter, Instagram, Linkedin } from "lucide-react";
+import { ArrowRight, Twitter, Instagram, Linkedin, Phone, MapPin } from "lucide-react";
+import TorraLogo from "./TorraLogo";
 
 export default function Footer() {
   return (
@@ -8,11 +9,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20 border-b border-white/10 pb-20">
           {/* Logo & Address */}
           <div>
-            <h2 className="text-3xl font-black tracking-tight mb-8 text-brand-red">kw®</h2>
-            <div className="text-[12px] text-gray-400 font-medium leading-relaxed uppercase tracking-wider mb-10">
-              <p className="mb-1">Global Headquarters</p>
-              <p className="mb-1">One Financial Center, Suite 4500</p>
-              <p>Singapore 018961</p>
+            <div className="mb-6">
+              <TorraLogo size={48} color="#b40101" compact showText />
+            </div>
+            <div className="text-[12px] text-gray-400 font-medium leading-relaxed uppercase tracking-wider mb-6">
+              <p className="mb-1 flex items-center gap-2"><MapPin className="w-3 h-3" /> Office</p>
+              <p className="mb-1">7945 FM 2757</p>
+              <p className="mb-1">Forney, TX 75126</p>
+              <p className="mt-3 flex items-center gap-2"><Phone className="w-3 h-3" /> (469) 345-6868</p>
+              <p className="mt-1 text-gray-500">Brokerage ID: 0751886</p>
             </div>
             <div className="flex gap-4">
               <Link 
@@ -134,8 +139,8 @@ export default function Footer() {
         </div>
 
         <div className="flex justify-between items-center text-[11px] text-gray-500 uppercase tracking-wider font-bold">
-          <p>© 2026 KELLER WILLIAMS REALTY. ALL RIGHTS RESERVED.</p>
-          <p className="text-gray-600">INDEPENDENTLY OWNED AND OPERATED</p>
+          <p>© 2026 TORRA COMMERCIAL REAL ESTATE GROUP. ALL RIGHTS RESERVED.</p>
+          <p className="text-gray-600">BROKERAGE ID: 0751886</p>
         </div>
       </div>
     </footer>

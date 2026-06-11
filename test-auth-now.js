@@ -43,9 +43,9 @@ async function test() {
   console.log('Response:', registerResult.body);
 
   // Test 2: Login with test account
-  console.log('\n2. Testing LOGIN with sarah.j@kw.com...');
+  console.log('\n2. Testing LOGIN with sarah.j@torra.com...');
   const loginResult = await makeRequest('POST', '/api/auth/login', {
-    email: 'sarah.j@kw.com',
+    email: 'sarah.j@torra.com',
     password: 'password123'
   });
   console.log('Status:', loginResult.status);

@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
-  connectionString: 'postgresql://meareg@localhost:5432/kw_realestate'
+  connectionString: 'postgresql://postgres:root@localhost:5432/torra_realestate'
 });
 
 async function fixWithSQL() {
@@ -37,7 +37,7 @@ async function fixWithSQL() {
       '(512) 555-9999',
       email,
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
-      'KW Real Estate',
+      'TORRA Commercial Real Estate',
       5.0,
       0,
       'DRE# 12345678',

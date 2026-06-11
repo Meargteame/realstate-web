@@ -120,10 +120,10 @@ const VideoCall: React.FC<VideoCallProps> = () => {
   const endCall = async () => {
     try {
       if (videoCallId) {
-        await fetch(`http://localhost:5000/api/video/calls/${videoCallId}/end`, {
+        await fetch(`/api/video/calls/${videoCallId}/end`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${JSON.parse(localStorage.getItem('torra_user') || '{}').token}`
           }
         });
       }

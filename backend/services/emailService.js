@@ -102,7 +102,7 @@ class EmailService {
       });
 
       const mailOptions = {
-        from: process.env.FROM_EMAIL || 'noreply@kw-realestate.com',
+        from: process.env.FROM_EMAIL || 'noreply@torra-realestate.com',
         to: user.email,
         subject: `New Properties Found: ${savedSearch.name}`,
         html: emailHtml,
@@ -167,7 +167,7 @@ class EmailService {
         <div style="max-width: 600px; margin: 0 auto; background-color: white;">
           <!-- Header -->
           <div style="background-color: #b40101; color: white; padding: 24px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">KW Real Estate</h1>
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">TORRA Commercial Real Estate</h1>
             <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">New Properties Alert</p>
           </div>
 
@@ -281,19 +281,19 @@ You're receiving this because you have email alerts enabled for "${savedSearch.n
 
     try {
       const mailOptions = {
-        from: process.env.FROM_EMAIL || 'noreply@kw-realestate.com',
+        from: process.env.FROM_EMAIL || 'noreply@torra-realestate.com',
         to: toEmail,
-        subject: 'KW Real Estate - Email Service Test',
+        subject: 'TORRA Real Estate - Email Service Test',
         html: `
           <h2>Email Service Test</h2>
-          <p>This is a test email to verify that the KW Real Estate email service is working correctly.</p>
+          <p>This is a test email to verify that the TORRA Real Estate email service is working correctly.</p>
           <p>If you received this email, the service is configured properly.</p>
           <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
         `,
         text: `
 Email Service Test
 
-This is a test email to verify that the KW Real Estate email service is working correctly.
+This is a test email to verify that the TORRA Real Estate email service is working correctly.
 If you received this email, the service is configured properly.
 
 Timestamp: ${new Date().toISOString()}

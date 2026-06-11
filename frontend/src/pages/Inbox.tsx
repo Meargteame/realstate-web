@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Layout, Avatar, Typography, Input, Button, Space, Badge, Empty, Spin, message as antMessage } from "antd";
 import { useOutletContext, useLocation } from "react-router-dom";
-import { SearchOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
+import { SearchOutlined, SendOutlined, UserOutlined, MessageOutlined } from "@ant-design/icons";
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -46,6 +46,20 @@ export default function Inbox() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const templates = [
+    { label: 'Greeting', text: 'Hi there! Thanks for reaching out. How can I help you today?' },
+    { label: 'Schedule', text: 'I\'d love to schedule a showing. Are you available this week?' },
+    { label: 'Follow Up', text: 'Just checking in! Any questions about the properties I sent?' },
+    { label: 'Pre-approval', text: 'Getting pre-approved will help us move fast. I can connect you with a lender!' },
+  ];
 
   // Fetch conversations
   useEffect(() => {
@@ -184,7 +198,15 @@ export default function Inbox() {
   return (
     <Layout style={{ height: 'calc(100vh - 80px)', background: 'white' }}>
       {/* Conversations List */}
-      <Sider width={350} theme="light" style={{ borderRight: '1px solid #f0f0f0', overflowY: 'auto' }}>
+      <Sider 
+        width={isMobile ? '100%' : 350} 
+        theme="light" 
+        style={{ 
+          borderRight: '1px solid #f0f0f0', 
+          overflowY: 'auto',
+          display: isMobile && selectedConversation ? 'none' : 'block'
+        }}
+      >
         <div style={{ padding: '24px', borderBottom: '1px solid #f0f0f0' }}>
           <Title level={4} style={{ margin: 0 }}>Messages</Title>
           <Input 
@@ -261,17 +283,29 @@ export default function Inbox() {
       </Sider>
 
       {/* Chat Area */}
-      <Content style={{ display: 'flex', flexDirection: 'column', background: 'white' }}>
+      <Content style={{ 
+        display: 'flex', flexDirection: 'column', background: 'white',
+        ...(isMobile && !selectedConversation ? { display: 'none' } : {})
+      }}>
         {selectedConversation ? (
           <>
             {/* Chat Header */}
             <div style={{ 
-              padding: '20px 32px', 
+              padding: isMobile ? '12px 16px' : '20px 32px', 
               borderBottom: '1px solid #f0f0f0',
               display: 'flex',
               alignItems: 'center',
-              gap: 16
+              gap: 12
             }}>
+              {isMobile && (
+                <Button 
+                  type="text" 
+                  onClick={() => setSelectedConversation(null)}
+                  style={{ padding: 4, color: '#111827' }}
+                >
+                  ← Back
+                </Button>
+              )}
               <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: '#111827' }}>
                 {selectedConversation.lead.name[0]}
               </Avatar>
@@ -287,7 +321,7 @@ export default function Inbox() {
             <div style={{ 
               flex: 1, 
               overflowY: 'auto', 
-              padding: '24px 32px',
+              padding: isMobile ? '16px' : '24px 32px',
               background: '#fafafa'
             }}>
               {messages.map((msg, index) => {
@@ -342,8 +376,27 @@ export default function Inbox() {
 
             {/* Message Input */}
             <div style={{ 
-              padding: '20px 32px', 
+              padding: '12px 32px 4px', 
               borderTop: '1px solid #f0f0f0',
+              background: 'white'
+            }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                <MessageOutlined style={{ color: '#8c8c8c', fontSize: 12, marginTop: 4 }} />
+                {templates.map((t) => (
+                  <Button 
+                    key={t.label}
+                    size="small" 
+                    type="dashed"
+                    onClick={() => setNewMessage(prev => prev + (prev ? '\n' : '') + t.text)}
+                    style={{ fontSize: 11, borderRadius: 12 }}
+                  >
+                    {t.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div style={{ 
+              padding: '0 32px 20px', 
               background: 'white'
             }}>
               <Space.Compact style={{ width: '100%' }}>

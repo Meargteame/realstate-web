@@ -18,6 +18,43 @@ exports.getAgents = async (req, res) => {
   }
 };
 
+// POST /api/agents - Create a new agent
+exports.createAgent = async (req, res) => {
+  try {
+    const { name, email, phone, brokerage, license, languages, imageUrl } = req.body;
+    
+    const agent = await prisma.agent.create({
+      data: {
+        name: name || 'New Agent',
+        email: email || 'agent@torra.com',
+        phone: phone || 'Not provided',
+        brokerage: brokerage || 'TORRA Commercial Real Estate Group',
+        license: license || 'Pending',
+        languages: languages || ['English'],
+        imageUrl: imageUrl || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'
+      },
+      include: { properties: true, leads: true }
+    });
+
+    // If this was triggered by a logged-in user, link agent to user
+    if (req.user && req.user.id) {
+      try {
+        await prisma.user.update({
+          where: { id: req.user.id },
+          data: { agentId: agent.id }
+        });
+      } catch (e) {
+        console.warn('Could not link agent to user:', e.message);
+      }
+    }
+
+    res.status(201).json(agent);
+  } catch (error) {
+    console.error('Create agent error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getAgentById = async (req, res) => {
   try {
     console.log('🔍 Fetching agent:', req.params.id);

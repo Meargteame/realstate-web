@@ -30,7 +30,7 @@ async function test() {
     path: '/api/auth/login',
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
-  }, { email: 'admin@kw.com', password: 'password123' });
+  }, { email: 'admin@torra.com', password: 'password123' });
 
   if (loginRes.status !== 200) {
     console.error('❌ Login failed:', loginRes);

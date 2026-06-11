@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Button, Space, Drawer, Typography, Badge } from "antd";
-import { GlobalOutlined, MenuOutlined, UserOutlined, SearchOutlined } from "@ant-design/icons";
+import { Layout, Menu, Button, Space, Drawer, Typography, Badge, Dropdown, Avatar } from "antd";
+import { GlobalOutlined, MenuOutlined, UserOutlined, SearchOutlined, HeartOutlined, CalendarOutlined, LogoutOutlined, DashboardOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
+import TorraLogo from "./TorraLogo";
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -10,6 +11,7 @@ const { Text } = Typography;
 export default function Header() {
   const [visible, setVisible] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -21,6 +23,40 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('torra_user');
+    if (stored) {
+      try {
+        setCurrentUser(JSON.parse(stored));
+      } catch { setCurrentUser(null); }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('torra_user');
+    setCurrentUser(null);
+    navigate('/');
+    window.location.reload();
+  };
+
+  const getUserMenuItems = () => {
+    const items: any[] = [
+      { key: 'account', icon: <UserOutlined />, label: 'My Account', onClick: () => navigate('/account') },
+      { key: 'saved', icon: <HeartOutlined />, label: 'Saved Properties', onClick: () => navigate('/saved-searches') },
+      { key: 'appointments', icon: <CalendarOutlined />, label: 'My Appointments', onClick: () => navigate('/account') },
+    ];
+    // Show dashboard link for agents/admins
+    if (currentUser?.role === 'agent' || currentUser?.agentId) {
+      items.push({ key: 'dashboard', icon: <DashboardOutlined />, label: 'Agent Dashboard', onClick: () => navigate('/command') });
+    }
+    if (currentUser?.role === 'admin') {
+      items.push({ key: 'admin', icon: <DashboardOutlined />, label: 'Admin Panel', onClick: () => navigate('/admin') });
+    }
+    items.push({ type: 'divider' });
+    items.push({ key: 'logout', icon: <LogoutOutlined />, label: 'Log Out', onClick: handleLogout, danger: true });
+    return items;
+  };
 
   const navItems = [
     { key: '/properties', label: <Link to="/properties">Search</Link> },
@@ -48,7 +84,7 @@ export default function Header() {
         }}>
           <Space size="large">
             <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 600 }}>
-              KELLER WILLIAMS REALTY
+              TORRA COMMERCIAL REAL ESTATE GROUP
             </Text>
           </Space>
           <Space size="large">
@@ -111,21 +147,11 @@ export default function Header() {
         borderBottom: isScrolled ? 'none' : '1px solid #f0f0f0'
       }}>
         {/* Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-          <span style={{ 
-            color: '#b40101', 
-            fontSize: isMobile ? '40px' : '56px', 
-            fontWeight: 900, 
-            fontFamily: 'Arial Black',
-            lineHeight: 1,
-            transition: 'transform 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            kw
-          </span>
-          <span style={{ color: '#b40101', fontSize: isMobile ? '10px' : '14px', marginTop: isMobile ? '8px' : '12px', fontWeight: 900 }}>®</span>
+        >
+          <TorraLogo size={isMobile ? 36 : 48} color="#b40101" compact showText />
         </Link>
 
         {/* Navigation - Desktop only */}
@@ -174,34 +200,58 @@ export default function Header() {
               }}
             />
           )}
-          <Button 
-            type="primary" 
-            size={isMobile ? "middle" : "large"}
-            onClick={() => navigate('/login')}
-            style={{ 
-              background: '#373a4b', 
-              borderColor: '#373a4b', 
-              fontWeight: 700,
-              height: isMobile ? '40px' : '52px',
-              padding: isMobile ? '0 16px' : '0 32px',
-              borderRadius: isMobile ? '20px' : '26px',
-              fontSize: isMobile ? '12px' : '14px',
-              letterSpacing: '0.05em',
-              boxShadow: '0 2px 8px rgba(55,58,75,0.2)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#2a2d3a';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(55,58,75,0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#373a4b';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(55,58,75,0.2)';
-            }}
-          >
-            LOG IN
-          </Button>
+          {currentUser ? (
+            <Dropdown menu={{ items: getUserMenuItems() }} placement="bottomRight" trigger={['click']}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Avatar 
+                  size={isMobile ? 36 : 44}
+                  src={currentUser.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'U')}&background=b40101&color=fff&size=128`}
+                  style={{ backgroundColor: '#b40101', flexShrink: 0 }}
+                >
+                  {(currentUser.firstName || currentUser.name || 'U').charAt(0).toUpperCase()}
+                </Avatar>
+                {!isMobile && (
+                  <div style={{ lineHeight: 1.2 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>
+                      {currentUser.firstName || currentUser.name?.split(' ')[0] || 'User'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'capitalize' }}>
+                      {currentUser.role === 'agent' ? 'Agent' : currentUser.role === 'admin' ? 'Admin' : 'Member'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Dropdown>
+          ) : (
+            <Button 
+              type="primary" 
+              size={isMobile ? "middle" : "large"}
+              onClick={() => navigate('/login')}
+              style={{ 
+                background: '#373a4b', 
+                borderColor: '#373a4b', 
+                fontWeight: 700,
+                height: isMobile ? '40px' : '52px',
+                padding: isMobile ? '0 16px' : '0 32px',
+                borderRadius: isMobile ? '20px' : '26px',
+                fontSize: isMobile ? '12px' : '14px',
+                letterSpacing: '0.05em',
+                boxShadow: '0 2px 8px rgba(55,58,75,0.2)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#2a2d3a';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(55,58,75,0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#373a4b';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(55,58,75,0.2)';
+              }}
+            >
+              LOG IN
+            </Button>
+          )}
           {isMobile && (
             <Button 
               type="text" 
@@ -219,7 +269,7 @@ export default function Header() {
         </Space>
 
         <Drawer
-          title={<span style={{ color: '#b40101', fontWeight: 900, fontSize: '32px' }}>kw®</span>}
+          title={<TorraLogo size={32} color="#b40101" compact showText />}
           placement="right"
           onClose={() => setVisible(false)}
           open={visible}

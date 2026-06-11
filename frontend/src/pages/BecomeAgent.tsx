@@ -26,7 +26,7 @@ export default function BecomeAgent() {
           name: fullName,
           email: values.email,
           phone: values.phone || '',
-          message: `Agent Recruitment Inquiry: ${fullName} is interested in becoming a Keller Williams agent. Phone: ${values.phone}`,
+          message: `Agent Recruitment Inquiry: ${fullName} is interested in becoming a TORRA agent. Phone: ${values.phone}`,
           type: 'agent_inquiry'
           // Note: Backend will auto-assign to first available agent if no agentId provided
         })
@@ -36,7 +36,7 @@ export default function BecomeAgent() {
 
       notification.success({
         message: 'Application Received!',
-        description: 'Thank you for your interest in joining Keller Williams. A recruiter will contact you within 24 hours.',
+        description: 'Thank you for your interest in joining TORRA Commercial Real Estate Group. A recruiter will contact you within 24 hours.',
         duration: 6
       });
       
@@ -46,7 +46,7 @@ export default function BecomeAgent() {
     } catch (error) {
       notification.error({
         message: 'Submission Error',
-        description: 'Something went wrong. Please try again or call us directly at (555) 123-4567.',
+        description: 'Something went wrong. Please try again or call us directly at (469) 345-6868.',
         duration: 4
       });
     } finally {
@@ -79,10 +79,10 @@ export default function BecomeAgent() {
           <Row gutter={[64, 64]} align="middle">
             <Col xs={24} md={14}>
               <Title style={{ color: 'white', fontSize: '72px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.9, marginBottom: '24px' }}>
-                Build Your Business With <span style={{ color: '#b40101' }}>Keller Williams</span>
+                Build Your Business With <span style={{ color: '#b40101' }}>TORRA</span>
               </Title>
               <Paragraph style={{ color: 'rgba(255,255,255,0.7)', fontSize: '24px', textTransform: 'uppercase', fontWeight: 'bold', borderLeft: '4px solid #b40101', paddingLeft: '24px', marginBottom: '48px' }}>
-                Join the world's largest real estate technology franchise by agent count.
+                Join a premier commercial real estate group driven by innovation and excellence.
               </Paragraph>
               <Space size="large">
                 <Button type="primary" size="large" onClick={scrollToForm} style={{ background: '#b40101', borderColor: '#b40101', height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px' }}>

@@ -79,7 +79,7 @@ export default function Blog() {
     <div style={{ background: '#f8f9fa', minHeight: '100vh', paddingBottom: '64px' }}>
       {/* Hero Section */}
       <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #b40101 0%, #8a0000 100%)',
         padding: isMobile ? '48px 16px' : '80px 32px',
         textAlign: 'center',
         color: 'white'

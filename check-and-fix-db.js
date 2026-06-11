@@ -46,8 +46,8 @@ async function checkAndFix() {
           email: 'hello.meareg@gmail.com',
           phone: '+1234567890',
           imageUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
-          brokerage: 'Keller Williams Premier Realty',
-          license: 'KW-2024-001',
+          brokerage: 'TORRA Commercial Real Estate Group',
+          license: 'TR-2024-001',
           languages: ['English']
         }
       });

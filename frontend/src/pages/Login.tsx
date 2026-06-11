@@ -11,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +38,7 @@ export default function Login() {
 
       const firstName = data.name ? data.name.split(' ')[0] : 'User';
 
-      localStorage.setItem("kw_user", JSON.stringify({
+      localStorage.setItem("torra_user", JSON.stringify({
         id: data.id,
         agentId: data.agentId,
         firstName: firstName,
@@ -50,8 +51,11 @@ export default function Login() {
       // Redirect based on role
       if (data.role === 'admin') {
         navigate("/admin");
-      } else {
+      } else if (data.role === 'agent' || data.agentId) {
         navigate("/command");
+      } else {
+        // Regular users go to their account page
+        navigate("/account");
       }
     } catch (err: any) {
       setError(err.message || "Failed to log in. Please try again.");
@@ -67,7 +71,8 @@ export default function Login() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-30"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#B40101] via-transparent to-[#B40101]/60 mix-blend-multiply border-r border-[#6B0000]"></div>
         <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
-          <div className="text-white text-[100px] font-serif font-black tracking-tighter mb-6 leading-none drop-shadow-2xl">kw</div>
+          <div className="text-white text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
+          <div className="text-white/80 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>
           <h2 className="text-white text-[42px] font-bold mb-6 tracking-tight leading-[1.1] drop-shadow-lg">
             Empowering Agents.<br/>Inspiring Buyers.
           </h2>
@@ -136,10 +141,23 @@ export default function Login() {
               </div>
             )}
 
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="remember-me"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-[#B40101] focus:ring-[#B40101] accent-[#B40101] cursor-pointer"
+              />
+              <label htmlFor="remember-me" className="text-sm font-semibold text-gray-600 cursor-pointer select-none">
+                Remember me for 30 days
+              </label>
+            </div>
+
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-[#111827] hover:bg-black text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.15)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
             >
               {loading ? "Authenticating..." : "Log In to Dashboard"}
             </Button>

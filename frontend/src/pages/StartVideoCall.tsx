@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Video, Calendar, User, Mail, Home } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 const StartVideoCall: React.FC = () => {
+  const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -14,8 +15,8 @@ const StartVideoCall: React.FC = () => {
     propertyId: ''
   });
 
-  const agentId = localStorage.getItem('agentId');
-  const token = localStorage.getItem('token');
+  const agentId = parentAgent?.id;
+  const token = parentAgent?.token;
 
   const handleStartCall = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ const StartVideoCall: React.FC = () => {
 
     try {
       // Create video call
-      const response = await fetch('http://localhost:5000/api/video/calls', {
+      const response = await fetch('/api/video/calls', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ const StartVideoCall: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/video/calls', {
+      const response = await fetch('/api/video/calls', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

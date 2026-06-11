@@ -4,7 +4,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
-  connectionString: 'postgresql://meareg@localhost:5432/kw_realestate'
+  connectionString: 'postgresql://postgres:root@localhost:5432/torra_realestate'
 });
 
 async function test() {
@@ -22,7 +22,7 @@ async function test() {
     ) VALUES (
       $1, 'Meareg', '(512) 555-9999', 'hello.meareg@gmail.com',
       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80',
-      'KW Real Estate', 5.0, 0, 'DRE# 12345678', ARRAY['English'], false,
+      'TORRA Commercial Real Estate', 5.0, 0, 'DRE# 12345678', ARRAY['English'], false,
       'Real estate professional', 'Austin', 'Residential', NOW(), NOW()
     )
     ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name

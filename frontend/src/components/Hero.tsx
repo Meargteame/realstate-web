@@ -85,7 +85,7 @@ export default function Hero() {
             margin: '0 auto 56px'
           }}
         >
-          Discover exceptional properties with the world's largest real estate network
+          Discover exceptional properties with TORRA Commercial Real Estate Group
         </Text>
 
         {/* Enhanced Search Card */}

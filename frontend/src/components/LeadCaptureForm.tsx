@@ -117,7 +117,7 @@ export function LeadCaptureForm({
           </Button>
           
           <p className="text-[11px] text-center text-gray-500 mt-4 leading-relaxed">
-            By clicking "{buttonText}", you agree to our Terms of Use and Privacy Policy, and consent to receive calls/texts from Keller Williams associates.
+            By clicking "{buttonText}", you agree to our Terms of Use and Privacy Policy, and consent to receive calls/texts from TORRA associates.
           </p>
         </form>
       )}

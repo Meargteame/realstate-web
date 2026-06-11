@@ -16,6 +16,12 @@ export default function NotFound() {
       padding: '40px'
     }}>
       <div style={{ textAlign: 'center', maxWidth: '600px' }}>
+        <div style={{
+          width: '64px', height: '64px', background: '#b40101',
+          borderRadius: '14px', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', color: 'white', fontSize: '28px',
+          fontWeight: 900, letterSpacing: '-0.5px', margin: '0 auto 24px'
+        }}>TR</div>
         <div style={{ 
           fontSize: '180px', 
           fontWeight: 900, 
@@ -53,8 +59,8 @@ export default function NotFound() {
               size="large" 
               icon={<HomeOutlined />}
               style={{ 
-                background: '#111827', 
-                borderColor: '#111827',
+                background: '#b40101', 
+                borderColor: '#b40101',
                 height: '56px',
                 padding: '0 32px',
                 fontWeight: 'bold',

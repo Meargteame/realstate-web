@@ -32,7 +32,7 @@ const results = {
 };
 
 // Initialize Prisma
-const connectionString = process.env.DATABASE_URL || 'postgresql://meareg@localhost:5432/kw_realestate';
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:root@localhost:5432/torra_realestate';
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });

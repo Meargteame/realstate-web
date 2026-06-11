@@ -54,7 +54,7 @@ const BookAppointment: React.FC = () => {
 
   const fetchAgent = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/agents/${agentId}`);
+      const response = await fetch(`/api/agents/${agentId}`);
       if (response.ok) {
         const data = await response.json();
         setAgent(data);
@@ -69,7 +69,7 @@ const BookAppointment: React.FC = () => {
   const fetchAvailableSlots = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/calendar/availability/${agentId}/slots?date=${selectedDate}&duration=60`
+        `/api/calendar/availability/${agentId}/slots?date=${selectedDate}&duration=60`
       );
       if (response.ok) {
         const data = await response.json();
@@ -91,7 +91,7 @@ const BookAppointment: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/calendar/bookings', {
+      const response = await fetch('/api/calendar/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

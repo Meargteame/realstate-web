@@ -42,7 +42,7 @@ async function testAuth() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'sarah.j@kw.com',
+        email: 'sarah.j@torra.com',
         password: 'password123'
       })
     });

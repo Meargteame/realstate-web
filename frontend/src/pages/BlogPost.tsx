@@ -10,6 +10,7 @@ export default function BlogPost() {
   const { slug } = useParams();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchPost();
@@ -18,7 +19,7 @@ export default function BlogPost() {
   useEffect(() => {
     // Update page title and meta tags for SEO
     if (post) {
-      document.title = `${post.title} | KW Real Estate Blog`;
+      document.title = `${post.title} | TORRA Real Estate Blog`;
       
       // Update meta description
       const metaDescription = document.querySelector('meta[name="description"]');
@@ -63,6 +64,16 @@ export default function BlogPost() {
       const response = await fetch(`/api/blog/${slug}`);
       const data = await response.json();
       setPost(data);
+      
+      // Fetch related posts
+      if (data.categories?.length > 0) {
+        try {
+          const catSlug = data.categories[0].slug;
+          const relRes = await fetch(`/api/blog?category=${catSlug}&limit=3`);
+          const relData = await relRes.json();
+          setRelatedPosts((relData.posts || []).filter((p: any) => p.id !== data.id).slice(0, 3));
+        } catch {}
+      }
     } catch (error) {
       console.error('Error fetching blog post:', error);
     } finally {
@@ -218,6 +229,36 @@ export default function BlogPost() {
             </>
           )}
         </Card>
+
+        {/* Related Posts */}
+        {relatedPosts.length > 0 && (
+          <div style={{ marginTop: 48 }}>
+            <Title level={3} style={{ fontWeight: 900, marginBottom: 24 }}>Related Articles</Title>
+            <Row gutter={[24, 24]}>
+              {relatedPosts.map((rp: any) => (
+                <Col xs={24} sm={8} key={rp.id}>
+                  <Link to={`/blog/${rp.slug}`} style={{ textDecoration: 'none' }}>
+                    <Card
+                      hoverable
+                      cover={
+                        <div style={{
+                          height: 160,
+                          background: `url(${rp.coverImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center'
+                        }} />
+                      }
+                      style={{ borderRadius: 12 }}
+                    >
+                      <Title level={5} style={{ margin: 0, minHeight: 48 }}>{rp.title}</Title>
+                      <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(rp.publishedAt)}</Text>
+                    </Card>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          </div>
+        )}
       </div>
     </div>
   );

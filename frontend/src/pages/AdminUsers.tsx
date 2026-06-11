@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm, Avatar } from "antd";
-import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
+import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm, Avatar, Tabs, Drawer, Timeline } from "antd";
+import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, HistoryOutlined, TeamOutlined, SafetyOutlined, CrownOutlined } from "@ant-design/icons";
 import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title } = Typography;
-const { Option } = Select;
+const AntSelect = Select as any;
+const AntOption = (Select as any).Option;
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -13,6 +14,12 @@ export default function AdminUsers() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [form] = Form.useForm();
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [bulkRole, setBulkRole] = useState<string>('');
+  const [showActivity, setShowActivity] = useState(false);
+  const [activityLog, setActivityLog] = useState<any[]>([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -22,12 +29,12 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.current, pagination.pageSize, searchText]);
+  }, [pagination.current, pagination.pageSize, searchText, activeTab]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -41,7 +48,8 @@ export default function AdminUsers() {
       const params = new URLSearchParams({
         page: pagination.current.toString(),
         limit: pagination.pageSize.toString(),
-        search: searchText
+        search: searchText,
+        ...(activeTab !== 'all' ? { role: activeTab } : {})
       });
 
       const res = await fetch(`/api/admin/users?${params}`, {
@@ -92,7 +100,7 @@ export default function AdminUsers() {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -121,7 +129,7 @@ export default function AdminUsers() {
   const handleModalOk = async () => {
     try {
       const values = await form.validateFields();
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -154,6 +162,55 @@ export default function AdminUsers() {
     } catch (error) {
       console.error('Error saving user:', error);
     }
+  };
+
+  const handleBulkDelete = async () => {
+    const userData = localStorage.getItem('torra_user');
+    if (!userData) return;
+    const token = JSON.parse(userData).token;
+    try {
+      await Promise.all(selectedRows.map((u: any) =>
+        fetch(`/api/admin/users/${u.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      ));
+      antMessage.success(`${selectedRows.length} users deleted`);
+      setSelectedRowKeys([]);
+      setSelectedRows([]);
+      fetchUsers();
+    } catch { antMessage.error('Failed to delete some users'); }
+  };
+
+  const handleBulkRoleChange = async () => {
+    if (!bulkRole) return;
+    const userData = localStorage.getItem('torra_user');
+    if (!userData) return;
+    const token = JSON.parse(userData).token;
+    try {
+      await Promise.all(selectedRows.map((u: any) =>
+        fetch(`/api/admin/users/${u.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ role: bulkRole })
+        })
+      ));
+      antMessage.success(`${selectedRows.length} users updated to ${bulkRole}`);
+      setSelectedRowKeys([]);
+      setSelectedRows([]);
+      setBulkRole('');
+      fetchUsers();
+    } catch { antMessage.error('Failed to update some users'); }
+  };
+
+  const fetchActivityLog = async () => {
+    setShowActivity(true);
+    // Mock activity log (replace with API when available)
+    setActivityLog([
+      { time: '2 min ago', user: 'John Doe', action: 'Logged in', type: 'auth' },
+      { time: '15 min ago', user: 'Sarah Smith', action: 'Updated profile', type: 'profile' },
+      { time: '1 hour ago', user: 'Mike Johnson', action: 'Created new listing', type: 'listing' },
+      { time: '2 hours ago', user: 'Admin', action: 'Approved agent: Lisa Ray', type: 'admin' },
+      { time: '3 hours ago', user: 'Emily Chen', action: 'Changed password', type: 'auth' },
+      { time: '5 hours ago', user: 'Admin', action: 'Deleted user: spam_account', type: 'admin' },
+    ]);
   };
 
   const columns = [
@@ -222,15 +279,50 @@ export default function AdminUsers() {
         <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
           Users Management
         </Title>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={handleAddUser}
-          style={{ background: '#b40101', borderColor: '#b40101', height: '40px', fontWeight: 600 }}
-        >
-          {isMobile ? "Add" : "Add User"}
-        </Button>
+        <Space>
+          <Button icon={<HistoryOutlined />} onClick={fetchActivityLog}>Activity Log</Button>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={handleAddUser}
+            style={{ background: '#b40101', borderColor: '#b40101', height: '40px', fontWeight: 600 }}
+          >
+            {isMobile ? "Add" : "Add User"}
+          </Button>
+        </Space>
       </div>
+
+      {/* Role Filter Tabs */}
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => { setActiveTab(key); setPagination(prev => ({ ...prev, current: 1 })); }}
+        style={{ marginBottom: 16 }}
+        items={[
+          { key: 'all', label: <span><TeamOutlined /> All Users</span> },
+          { key: 'user', label: <span><UserOutlined /> Users</span> },
+          { key: 'agent', label: <span><TeamOutlined /> Agents</span> },
+          { key: 'admin', label: <span><CrownOutlined /> Admins</span> },
+        ]}
+      />
+
+      {/* Bulk Actions Toolbar */}
+      {selectedRowKeys.length > 0 && (
+        <Card size="small" style={{ marginBottom: 16, background: '#fff7ed', borderColor: '#f59e0b', borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <Text strong>{selectedRowKeys.length} selected</Text>
+            <AntSelect value={bulkRole || undefined} onChange={(v: string) => setBulkRole(v)} placeholder="Change role to..." style={{ width: 160 }} allowClear>
+              <AntOption value="user">User</AntOption>
+              <AntOption value="agent">Agent</AntOption>
+              <AntOption value="admin">Admin</AntOption>
+            </AntSelect>
+            <Button size="small" type="primary" onClick={handleBulkRoleChange} disabled={!bulkRole}>Apply Role</Button>
+            <Popconfirm title={`Delete ${selectedRowKeys.length} users?`} onConfirm={handleBulkDelete} okText="Yes" cancelText="No" okButtonProps={{ danger: true }}>
+              <Button size="small" danger icon={<DeleteOutlined />}>Delete Selected</Button>
+            </Popconfirm>
+            <Button size="small" onClick={() => { setSelectedRowKeys([]); setSelectedRows([]); }}>Clear</Button>
+          </div>
+        </Card>
+      )}
 
       <Card 
         variant="borderless"
@@ -301,6 +393,10 @@ export default function AdminUsers() {
             loading={loading}
             pagination={pagination}
             onChange={handleTableChange}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (keys: React.Key[], rows: any[]) => { setSelectedRowKeys(keys); setSelectedRows(rows); },
+            }}
           />
         )}
       </Card>
@@ -349,14 +445,30 @@ export default function AdminUsers() {
             label="Role"
             rules={[{ required: true, message: 'Please select role' }]}
           >
-            <Select placeholder="Select role">
-              <Option value="user">User</Option>
-              <Option value="agent">Agent</Option>
-              <Option value="admin">Admin</Option>
-            </Select>
+            <AntSelect placeholder="Select role">
+              <AntOption value="user">User</AntOption>
+              <AntOption value="agent">Agent</AntOption>
+              <AntOption value="admin">Admin</AntOption>
+            </AntSelect>
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Activity Log Drawer */}
+      <Drawer title="Recent User Activity" placement="right" width={420} onClose={() => setShowActivity(false)} open={showActivity}>
+        <Timeline
+          items={activityLog.map((a: any) => ({
+            color: a.type === 'auth' ? '#b40101' : a.type === 'admin' ? '#373a4b' : a.type === 'listing' ? '#10b981' : '#6b7280',
+            children: (
+              <div>
+                <div style={{ fontWeight: 600 }}>{a.user}</div>
+                <div style={{ fontSize: 13 }}>{a.action}</div>
+                <div style={{ fontSize: 11, color: '#9ca3af' }}>{a.time}</div>
+              </div>
+            )
+          }))}
+        />
+      </Drawer>
     </div>
   );
 }

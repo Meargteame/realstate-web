@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const { Pool } = require('pg');
 const { PrismaPg } = require('@prisma/adapter-pg');
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://meareg@localhost:5432/kw_realestate';
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:root@localhost:5432/torra_realestate';
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
@@ -32,7 +32,7 @@ async function makeMeAgent() {
         email: user.email,
         phone: '',
         imageUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
-        brokerage: 'Keller Williams Premier Realty',
+        brokerage: 'TORRA Commercial Real Estate Group',
         license: 'Licensed Associate Broker',
         languages: ['English']
       }

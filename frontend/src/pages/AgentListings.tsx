@@ -14,6 +14,8 @@ export default function AgentListings() {
   const [submitting, setSubmitting] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [imageFileList, setImageFileList] = useState<any[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<string | null>(null);
   const [form] = Form.useForm();
 
   const AntSelect = Select as any;
@@ -141,6 +143,26 @@ export default function AgentListings() {
     }
   };
 
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkStatus || selectedRowKeys.length === 0) return;
+    try {
+      const updates = selectedRowKeys.map(id =>
+        fetch(`/api/properties/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: bulkStatus })
+        })
+      );
+      await Promise.all(updates);
+      setListings(prev => prev.map(p => selectedRowKeys.includes(p.id) ? { ...p, status: bulkStatus } : p));
+      message.success(`Updated ${selectedRowKeys.length} listing(s) to ${bulkStatus}`);
+      setSelectedRowKeys([]);
+      setBulkStatus(null);
+    } catch {
+      message.error('Failed to update some listings');
+    }
+  };
+
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
@@ -187,7 +209,7 @@ export default function AgentListings() {
   ];
 
   return (
-    <div style={{ padding: '24px 32px', minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: '16px', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
         <div>
           <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>My Listings</Title>
@@ -201,12 +223,29 @@ export default function AgentListings() {
         </Space>
       </div>
 
-      <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      {selectedRowKeys.length > 0 && (
+        <div style={{ background: '#f0f5ff', padding: '12px 24px', borderRadius: '8px 8px 0 0', display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Text strong>{selectedRowKeys.length} selected</Text>
+          <Select placeholder="Bulk Status" value={bulkStatus} onChange={setBulkStatus} style={{ width: 150 }}>
+            <AntOption value="Active">Active</AntOption>
+            <AntOption value="Pending">Pending</AntOption>
+            <AntOption value="Sold">Sold</AntOption>
+          </Select>
+          <Button type="primary" size="small" onClick={handleBulkStatusUpdate} disabled={!bulkStatus} style={{ background: '#b40101' }}>Apply</Button>
+          <Button size="small" onClick={() => setSelectedRowKeys([])}>Clear</Button>
+        </div>
+      )}
+
+      <div style={{ background: 'white', padding: '24px', borderRadius: selectedRowKeys.length > 0 ? '0 0 12px 12px' : '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
         <Table
           columns={columns}
           dataSource={listings.filter(l => l.address?.toLowerCase().includes(searchText.toLowerCase()))}
           loading={loading}
           rowKey="id"
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys),
+          }}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} listings` }}
         />
       </div>

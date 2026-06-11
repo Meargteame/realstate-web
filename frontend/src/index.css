@@ -389,14 +389,6 @@ body {
    RESPONSIVE NAVIGATION
    ============================================ */
 
-@media (max-width: 767px) {
-  .ant-layout-header {
-    padding: 0 16px;
-    height: 56px;
-    line-height: 56px;
-  }
-}
-
 /* ============================================
    PERFORMANCE OPTIMIZATIONS
    ============================================ */
@@ -489,11 +481,35 @@ html {
 }
 
 .ant-layout-header {
-  padding-left: 32px !important;
-  padding-right: 32px !important;
   line-height: normal !important;
+}
+
+@media (min-width: 768px) {
+  .ant-layout-header {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
 }
 
 .ant-layout-content {
   background: #f9fafb !important;
+}
+
+/* Force hide desktop sider on mobile */
+@media (max-width: 767px) {
+  .ant-layout-sider {
+    display: none !important;
+  }
+  .ant-layout-header {
+    padding: 0 12px !important;
+    height: 56px !important;
+    line-height: 56px !important;
+  }
+  /* Prevent content overflow on mobile */
+  .ant-table {
+    overflow-x: auto;
+  }
+  .ant-card {
+    border-radius: 8px !important;
+  }
 }

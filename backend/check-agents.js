@@ -3,7 +3,7 @@ const { PrismaPg } = require('@prisma/adapter-pg');
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: 'postgresql://meareg@localhost:5432/kw_realestate'
+  connectionString: 'postgresql://postgres:root@localhost:5432/torra_realestate'
 });
 
 const adapter = new PrismaPg(pool);

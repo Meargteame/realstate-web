@@ -258,7 +258,7 @@ export default function PropertyMap({
   // Get marker color based on price
   const getMarkerColor = (price: number) => {
     if (price >= 2000000) return '#8B0000'; // Dark red for luxury
-    if (price >= 1000000) return '#b40101'; // KW red for high-end
+    if (price >= 1000000) return '#b40101'; // TORRA red for high-end
     if (price >= 500000) return '#DC143C'; // Crimson for mid-range
     return '#FF6B6B'; // Light red for affordable
   };

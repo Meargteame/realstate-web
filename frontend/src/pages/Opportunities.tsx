@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Row, Col, Card, Tag, Typography, Button, Space, Progress, Badge, Modal, Form, Input, InputNumber, Select, message } from "antd";
-import { PlusOutlined, MoreOutlined, DollarOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, MoreOutlined, DollarOutlined, EditOutlined, DeleteOutlined, CalendarOutlined } from "@ant-design/icons";
 import { useOutletContext } from "react-router-dom";
 
 const { Title, Text } = Typography;
@@ -16,6 +16,7 @@ export default function Opportunities() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOpp, setEditingOpp] = useState<any>(null);
   const [form] = Form.useForm();
+  const [draggedDeal, setDraggedDeal] = useState<any>(null);
 
   useEffect(() => {
     if (!parentAgent) return;
@@ -114,6 +115,31 @@ export default function Opportunities() {
     }
   };
 
+  const handleDragStart = (deal: any) => {
+    setDraggedDeal(deal);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.currentTarget.style.background = '#fef2f2';
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.style.background = '#f9fafb';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault();
+    e.currentTarget.style.background = '#f9fafb';
+    if (draggedDeal && draggedDeal.status !== targetStatus) {
+      handleStatusChange(draggedDeal.id, targetStatus);
+    }
+    setDraggedDeal(null);
+  };
+
+  const totalPipeline = opportunities.reduce((sum, o) => sum + (o.price * (o.probability || 0) / 100), 0);
+  const expectedCommission = totalPipeline * 0.03;
+
   const statuses = ['Cultivate', 'Appointment', 'Active', 'Under Contract', 'Closed'];
   
   const pipeline = statuses.map(status => {
@@ -123,11 +149,19 @@ export default function Opportunities() {
   });
 
   return (
-    <div style={{ padding: '24px 32px', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: '16px', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
           <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>Opportunities</Title>
-          <Text type="secondary" style={{ fontSize: '14px' }}>Track your transaction pipeline from lead to close.</Text>
+          <Text type="secondary" style={{ fontSize: '14px' }}>
+            Track your transaction pipeline from lead to close.
+            {opportunities.length > 0 && (
+              <span style={{ marginLeft: 16, color: '#b40101', fontWeight: 600 }}>
+                Pipeline Value: ${totalPipeline >= 1000000 ? (totalPipeline / 1000000).toFixed(1) + 'M' : (totalPipeline / 1000).toFixed(0) + 'K'}
+                {' · '}Est. Commission: ${expectedCommission >= 1000000 ? (expectedCommission / 1000000).toFixed(1) + 'M' : (expectedCommission / 1000).toFixed(0) + 'K'}
+              </span>
+            )}
+          </Text>
         </div>
         <Space>
           <div style={{ background: '#f0f0f0', padding: '4px', borderRadius: '8px' }}>
@@ -168,11 +202,17 @@ export default function Opportunities() {
               </div>
             </div>
 
-            <div style={{ background: '#f9fafb', padding: '12px', borderRadius: '0 0 8px 8px', minHeight: '500px' }}>
+            <div style={{ background: '#f9fafb', padding: '12px', borderRadius: '0 0 8px 8px', minHeight: '500px' }}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, phase.status)}
+            >
                {phase.deals.map((deal, di) => (
                  <AntCard 
                    key={di} 
-                   style={{ marginBottom: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
+                   draggable
+                   onDragStart={() => handleDragStart(deal)}
+                   style={{ marginBottom: '12px', borderRadius: '6px', border: '1px solid #e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', cursor: 'grab' }}
                    styles={{ body: { padding: '16px' } }}
                  >
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
@@ -190,6 +230,19 @@ export default function Opportunities() {
                       <Text style={{ color: '#b40101', fontSize: '15px', fontWeight: 500 }}>
                         ${deal.price.toLocaleString()}
                       </Text>
+                      {deal.expectedCloseDate && (
+                        <div style={{ marginTop: 4 }}>
+                          <CalendarOutlined style={{ fontSize: 11, color: '#6b7280' }} />
+                          <Text type="secondary" style={{ fontSize: '11px', marginLeft: 4 }}>
+                            Close: {new Date(deal.expectedCloseDate).toLocaleDateString()}
+                          </Text>
+                        </div>
+                      )}
+                      {deal.probability && (
+                        <Text type="secondary" style={{ fontSize: '11px', display: 'block', marginTop: 2 }}>
+                          Est. Commission: ${Math.round(deal.price * (deal.probability || 0) / 100 * 0.03).toLocaleString()}
+                        </Text>
+                      )}
                    </div>
 
                    <div style={{ background: '#f9fafb', padding: '8px', borderRadius: '4px' }}>
@@ -249,6 +302,9 @@ export default function Opportunities() {
           </Form.Item>
           <Form.Item label="Probability (%)" name="probability" initialValue={20}>
             <InputNumber style={{ width: '100%' }} min={0} max={100} />
+          </Form.Item>
+          <Form.Item label="Expected Close Date" name="expectedCloseDate">
+            <Input type="date" />
           </Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
             <Button onClick={() => { setIsModalOpen(false); setEditingOpp(null); form.resetFields(); }}>

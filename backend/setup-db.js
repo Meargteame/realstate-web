@@ -41,8 +41,8 @@ async function setupDatabase() {
     console.error('\n💡 Troubleshooting:');
     console.error('   1. Check if PostgreSQL is running: pg_isready');
     console.error('   2. Verify DATABASE_URL in .env file');
-    console.error('   3. Ensure database exists: createdb kw_realestate');
-    console.error('   4. Check connection: psql postgresql://meareg@127.0.0.1:5432/kw_realestate\n');
+    console.error('   3. Ensure database exists: createdb torra_realestate');
+    console.error('   4. Check connection: psql postgresql://postgres:root@127.0.0.1:5432/torra_realestate\n');
     process.exit(1);
   }
 }

@@ -4,6 +4,7 @@ const agentController = require('../controllers/agentController');
 const leadController = require('../controllers/leadController');
 
 router.get('/', agentController.getAgents);
+router.post('/', agentController.createAgent);
 router.get('/:id', agentController.getAgentById);
 router.patch('/:id', agentController.updateAgent);
 router.get('/:agentId/leads', leadController.getLeadsByAgent);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Calendar as CalendarIcon, Clock, MapPin, Plus, X, Check, AlertCircle } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -29,6 +30,7 @@ interface BookingRequest {
 }
 
 const Calendar: React.FC = () => {
+  const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -37,13 +39,15 @@ const Calendar: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const agentId = localStorage.getItem('agentId');
-  const token = localStorage.getItem('token');
+  const agentId = parentAgent?.id;
+  const token = parentAgent?.token;
 
   useEffect(() => {
     if (agentId && token) {
       fetchEvents();
       fetchBookingRequests();
+    } else {
+      setLoading(false);
     }
   }, [agentId, token, currentDate]);
 
@@ -53,7 +57,7 @@ const Calendar: React.FC = () => {
       const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
       const response = await fetch(
-        `http://localhost:5000/api/calendar/events/agent/${agentId}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        `/api/calendar/events/agent/${agentId}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -75,7 +79,7 @@ const Calendar: React.FC = () => {
   const fetchBookingRequests = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/calendar/bookings/agent/${agentId}?status=pending`,
+        `/api/calendar/bookings/agent/${agentId}?status=pending`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -94,7 +98,7 @@ const Calendar: React.FC = () => {
 
   const handleCreateEvent = async (eventData: any) => {
     try {
-      const response = await fetch('http://localhost:5000/api/calendar/events', {
+      const response = await fetch('/api/calendar/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +122,7 @@ const Calendar: React.FC = () => {
   const handleConfirmBooking = async (bookingId: string, startTime: string, endTime: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/calendar/bookings/${bookingId}/confirm`,
+        `/api/calendar/bookings/${bookingId}/confirm`,
         {
           method: 'POST',
           headers: {
@@ -141,7 +145,7 @@ const Calendar: React.FC = () => {
   const handleRejectBooking = async (bookingId: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/calendar/bookings/${bookingId}/reject`,
+        `/api/calendar/bookings/${bookingId}/reject`,
         {
           method: 'POST',
           headers: {
@@ -210,6 +214,18 @@ const Calendar: React.FC = () => {
     personal: 'bg-gray-100 text-gray-800 border-gray-300'
   };
 
+  const getWeekDays = () => {
+    const start = new Date(currentDate);
+    start.setDate(start.getDate() - start.getDay());
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  };
+
+  const getHoursInDay = () => Array.from({ length: 24 }, (_, i) => i);
+
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -229,14 +245,14 @@ const Calendar: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 md:mb-8 gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Calendar</h1>
-          <p className="text-gray-600 mt-1">Manage your appointments and showings</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Calendar</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your appointments and showings</p>
         </div>
-        <Button onClick={() => setShowEventModal(true)} className="bg-red-600 hover:bg-red-700">
+        <Button onClick={() => setShowEventModal(true)} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           New Event
         </Button>
@@ -297,98 +313,189 @@ const Calendar: React.FC = () => {
         </Card>
       )}
 
-      {/* Calendar Navigation */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      {/* View Toggle + Calendar Navigation */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Button
             variant="outline"
-            onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+            size="sm"
+            onClick={() => {
+              if (view === 'month') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+              else if (view === 'week') { const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d); }
+              else { const d = new Date(currentDate); d.setDate(d.getDate() - 1); setCurrentDate(d); }
+            }}
           >
-            Previous
+            Prev
           </Button>
-          <h2 className="text-xl font-semibold">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          <h2 className="text-base sm:text-xl font-semibold whitespace-nowrap">
+            {view === 'month' && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+            {view === 'week' && (() => { const wk = getWeekDays(); return `${monthNames[wk[0].getMonth()]} ${wk[0].getDate()} - ${wk[6].getDate()}`; })()}
+            {view === 'day' && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
           </h2>
           <Button
             variant="outline"
-            onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+            size="sm"
+            onClick={() => {
+              if (view === 'month') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+              else if (view === 'week') { const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d); }
+              else { const d = new Date(currentDate); d.setDate(d.getDate() + 1); setCurrentDate(d); }
+            }}
           >
             Next
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setCurrentDate(new Date())}
-          >
-            Today
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
+        </div>
+        <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
+          {(['month', 'week', 'day'] as const).map(v => (
+            <Button
+              key={v}
+              variant={view === v ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setView(v)}
+              className={`flex-1 sm:flex-none ${view === v ? 'bg-red-600 hover:bg-red-700 text-white' : 'text-gray-600'}`}
+            >
+              {v.charAt(0).toUpperCase() + v.slice(1)}
+            </Button>
+          ))}
         </div>
       </div>
 
       {/* Calendar Grid */}
-      <Card className="p-6">
-        {/* Day headers */}
-        <div className="grid grid-cols-7 gap-2 mb-2">
-          {dayNames.map(day => (
-            <div key={day} className="text-center font-semibold text-gray-700 py-2">
-              {day}
+      <Card className="p-2 sm:p-4 md:p-6 overflow-x-auto">
+        {view === 'month' && (
+          <>
+            {/* Day headers */}
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
+              {dayNames.map(day => (
+                <div key={day} className="text-center font-semibold text-gray-700 py-1 sm:py-2 text-xs sm:text-sm">
+                  {day}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-2">
-          {getDaysInMonth().map((date, index) => {
-            const dayEvents = getEventsForDay(date);
-            const isToday = date && 
-              date.getDate() === new Date().getDate() &&
-              date.getMonth() === new Date().getMonth() &&
-              date.getFullYear() === new Date().getFullYear();
+            {/* Calendar days */}
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+              {getDaysInMonth().map((date, index) => {
+                const dayEvents = getEventsForDay(date);
+                const isToday = date && 
+                  date.getDate() === new Date().getDate() &&
+                  date.getMonth() === new Date().getMonth() &&
+                  date.getFullYear() === new Date().getFullYear();
 
-            return (
-              <div
-                key={index}
-                className={`min-h-[120px] p-2 border rounded-lg ${
-                  date ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
-                } ${isToday ? 'border-red-500 border-2' : 'border-gray-200'}`}
-              >
-                {date && (
-                  <>
-                    <div className={`text-sm font-medium mb-2 ${isToday ? 'text-red-600' : 'text-gray-700'}`}>
-                      {date.getDate()}
-                    </div>
-                    <div className="space-y-1">
-                      {dayEvents.slice(0, 3).map(event => (
-                        <div
-                          key={event.id}
-                          onClick={() => setSelectedEvent(event)}
-                          className={`text-xs p-1 rounded border cursor-pointer ${
-                            eventTypeColors[event.eventType] || eventTypeColors.personal
-                          }`}
-                        >
-                          <div className="font-medium truncate">{event.title}</div>
-                          {!event.allDay && (
-                            <div className="text-xs opacity-75">{formatTime(event.startTime)}</div>
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[60px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-2 border rounded-lg ${
+                      date ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
+                    } ${isToday ? 'border-red-500 border-2' : 'border-gray-200'}`}
+                  >
+                    {date && (
+                      <>
+                        <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${isToday ? 'text-red-600' : 'text-gray-700'}`}>
+                          {date.getDate()}
+                        </div>
+                        <div className="space-y-0.5 sm:space-y-1">
+                          {dayEvents.slice(0, 2).map(event => (
+                            <div
+                              key={event.id}
+                              onClick={() => setSelectedEvent(event)}
+                              className={`text-[10px] sm:text-xs p-0.5 sm:p-1 rounded border cursor-pointer truncate ${
+                                eventTypeColors[event.eventType] || eventTypeColors.personal
+                              }`}
+                            >
+                              <div className="font-medium truncate">{event.title}</div>
+                              {!event.allDay && (
+                                <div className="text-[9px] sm:text-xs opacity-75 hidden sm:block">{formatTime(event.startTime)}</div>
+                              )}
+                            </div>
+                          ))}
+                          {dayEvents.length > 2 && (
+                            <div className="text-[10px] sm:text-xs text-gray-500 pl-1">
+                              +{dayEvents.length - 2} more
+                            </div>
                           )}
                         </div>
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-xs text-gray-500 pl-1">
-                          +{dayEvents.length - 3} more
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {view === 'week' && (
+          <>
+            <div className="grid grid-cols-8 gap-0">
+              <div className="border-r border-gray-200 pr-2"></div>
+              {getWeekDays().map((day, di) => {
+                const isToday = day.getDate() === new Date().getDate() && day.getMonth() === new Date().getMonth();
+                return (
+                  <div key={di} className={`text-center py-2 border-r border-gray-200 ${isToday ? 'text-red-600 font-bold' : 'text-gray-700 font-semibold'}`}>
+                    <div className="text-xs">{dayNames[di]}</div>
+                    <div className="text-lg">{day.getDate()}</div>
+                  </div>
+                );
+              })}
+              {getHoursInDay().map(hour => (
+                <React.Fragment key={hour}>
+                  <div className="text-xs text-gray-400 text-right pr-2 py-3 border-t border-gray-100">
+                    {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                  </div>
+                  {getWeekDays().map((day, di) => {
+                    const hourEvents = events.filter(e => {
+                      const ed = new Date(e.startTime);
+                      return ed.getDate() === day.getDate() && ed.getMonth() === day.getMonth() && ed.getFullYear() === day.getFullYear() && ed.getHours() === hour;
+                    });
+                    return (
+                      <div key={di} className="border-t border-r border-gray-100 p-1 min-h-[48px]">
+                        {hourEvents.map(ev => (
+                          <div key={ev.id} onClick={() => setSelectedEvent(ev)}
+                            className={`text-xs p-1 rounded cursor-pointer ${eventTypeColors[ev.eventType] || 'bg-gray-100'}`}>
+                            <div className="font-medium truncate">{ev.title}</div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </>
+        )}
+
+        {view === 'day' && (
+          <div className="grid grid-cols-[80px_1fr] gap-0">
+            {getHoursInDay().map(hour => {
+              const hourEvents = events.filter(e => {
+                const ed = new Date(e.startTime);
+                return ed.getDate() === currentDate.getDate() && ed.getMonth() === currentDate.getMonth() && ed.getFullYear() === currentDate.getFullYear() && ed.getHours() === hour;
+              });
+              return (
+                <React.Fragment key={hour}>
+                  <div className="text-xs text-gray-400 text-right pr-3 py-4 border-t border-gray-100">
+                    {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                  </div>
+                  <div className="border-t border-gray-100 p-2 min-h-[60px]">
+                    {hourEvents.map(ev => (
+                      <div key={ev.id} onClick={() => setSelectedEvent(ev)}
+                        className={`p-2 mb-1 rounded border cursor-pointer ${eventTypeColors[ev.eventType] || 'bg-gray-100'}`}>
+                        <div className="font-medium">{ev.title}</div>
+                        <div className="text-xs opacity-75">{formatTime(ev.startTime)} - {formatTime(ev.endTime)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       {/* Event Details Modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-lg w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+          <Card className="max-w-lg w-full p-4 sm:p-6">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-xl font-bold">{selectedEvent.title}</h3>
               <button onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-gray-600">

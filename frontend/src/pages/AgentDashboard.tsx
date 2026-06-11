@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
-import { Card, Row, Col, Typography, Badge, Avatar, Button, Table, Tag, List, Space } from "antd";
+import { Card, Row, Col, Typography, Badge, Avatar, Button, Table, Tag, List, Space, Progress } from "antd";
 import {
   InboxOutlined,
   HomeOutlined,
-  ArrowRightOutlined
+  ArrowRightOutlined,
+  CalendarOutlined,
+  TrophyOutlined,
+  ArrowUpOutlined,
+  ClockCircleOutlined
 } from "@ant-design/icons";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const { Title, Text } = Typography;
 
@@ -15,6 +20,8 @@ export default function AgentDashboard() {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const [appointments, setAppointments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!parentAgent) return;
@@ -27,11 +34,43 @@ export default function AgentDashboard() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    // Fetch upcoming appointments
+    const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
+    fetch(`/api/calendar/bookings/agent/${parentAgent.id}?status=confirmed`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setAppointments(Array.isArray(data) ? data.filter((a: any) => a.status === 'confirmed' || a.status === 'pending').slice(0, 5) : []);
+      })
+      .catch(() => {});
   }, [parentAgent]);
 
   const totalVolume = activeListings.reduce((sum: number, p: any) => sum + (p.price || 0), 0);
   const newLeads = leads.filter((l: any) => l.status === 'New').length;
   const pipeline = leads.filter((l: any) => l.status === 'Contacted').length;
+  const closedLeads = leads.filter((l: any) => l.status === 'Closed').length;
+  const conversionRate = leads.length > 0 ? Math.round((closedLeads / leads.length) * 100) : 0;
+
+  // Chart data
+  const leadsChartData = (() => {
+    const months: Record<string, number> = {};
+    leads.forEach((l: any) => {
+      const d = new Date(l.createdAt || Date.now());
+      const key = `${d.toLocaleString('default', { month: 'short' })}`;
+      months[key] = (months[key] || 0) + 1;
+    });
+    return Object.entries(months).map(([name, count]) => ({ name, leads: count }));
+  })();
+
+  const statusData = [
+    { name: 'New', value: leads.filter((l: any) => l.status === 'New').length, color: '#b40101' },
+    { name: 'Contacted', value: leads.filter((l: any) => l.status === 'Contacted').length, color: '#373a4b' },
+    { name: 'Qualified', value: leads.filter((l: any) => l.status === 'Qualified').length, color: '#667eea' },
+    { name: 'Closed', value: leads.filter((l: any) => l.status === 'Closed').length, color: '#10b981' },
+    { name: 'Lost', value: leads.filter((l: any) => l.status === 'Lost').length, color: '#9ca3af' },
+  ].filter(d => d.value > 0);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
@@ -86,9 +125,9 @@ export default function AgentDashboard() {
   ];
 
   return (
-    <div style={{ padding: '40px 48px', minHeight: 'calc(100vh - 64px)', background: '#fafafa' }}>
+    <div style={{ padding: '20px 16px', minHeight: 'calc(100vh - 64px)', background: '#fafafa' }}>
       {/* KPI Stat Cards */}
-      <Row gutter={[32, 32]}>
+      <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <AntCard 
             bordered={false} 
@@ -186,7 +225,102 @@ export default function AgentDashboard() {
         </Col>
       </Row>
 
-      <Row gutter={[32, 32]} style={{ marginTop: '32px' }}>
+      {/* Charts Row */}
+      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+        <Col xs={24} lg={14}>
+          <AntCard
+            title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Lead Trend</span>}
+            bordered={false}
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+          >
+            <div style={{ width: '100%', height: 240 }}>
+              <ResponsiveContainer>
+                <LineChart data={leadsChartData.length > 0 ? leadsChartData : [{ name: 'No Data', leads: 0 }]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" fontSize={12} />
+                  <YAxis fontSize={12} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="leads" stroke="#b40101" strokeWidth={3} dot={{ r: 5, fill: '#b40101' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </AntCard>
+        </Col>
+        <Col xs={24} lg={10}>
+          <AntCard
+            title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Lead Distribution</span>}
+            bordered={false}
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: 180, height: 180 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70}>
+                      {statusData.map((entry, idx) => (
+                        <Cell key={idx} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div style={{ flex: 1, paddingLeft: 16 }}>
+                {statusData.map((s, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: s.color }} />
+                    <Text style={{ fontSize: 13, flex: 1 }}>{s.name}</Text>
+                    <Text strong style={{ fontSize: 14 }}>{s.value}</Text>
+                  </div>
+                ))}
+                <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 8, marginTop: 4 }}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>Conversion Rate: </Text>
+                  <Text strong style={{ color: conversionRate >= 20 ? '#10b981' : '#b40101', fontSize: 14 }}>{conversionRate}%</Text>
+                </div>
+              </div>
+            </div>
+          </AntCard>
+        </Col>
+      </Row>
+
+      {/* Performance Goals */}
+      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
+        <Col xs={24} md={8}>
+          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+            <TrophyOutlined style={{ fontSize: 32, color: '#b40101', marginBottom: 12 }} />
+            <Title level={5} style={{ marginBottom: 16 }}>Monthly Listings Goal</Title>
+            <Progress 
+              percent={Math.min(100, Math.round((activeListings.length / 10) * 100))} 
+              strokeColor="#b40101" 
+              format={(pct) => `${activeListings.length}/10`}
+            />
+          </AntCard>
+        </Col>
+        <Col xs={24} md={8}>
+          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+            <InboxOutlined style={{ fontSize: 32, color: '#373a4b', marginBottom: 12 }} />
+            <Title level={5} style={{ marginBottom: 16 }}>Monthly Leads Goal</Title>
+            <Progress 
+              percent={Math.min(100, Math.round((leads.length / 25) * 100))} 
+              strokeColor="#373a4b" 
+              format={(pct) => `${leads.length}/25`}
+            />
+          </AntCard>
+        </Col>
+        <Col xs={24} md={8}>
+          <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'center' }}>
+            <ClockCircleOutlined style={{ fontSize: 32, color: '#667eea', marginBottom: 12 }} />
+            <Title level={5} style={{ marginBottom: 16 }}>Response Rate</Title>
+            <Progress 
+              percent={leads.length > 0 ? Math.round(((leads.length - newLeads) / leads.length) * 100) : 0}
+              strokeColor="#667eea"
+              format={(pct) => `${pct}%`}
+            />
+          </AntCard>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
         <Col xs={24} lg={16}>
           <AntCard 
             title={<span style={{ fontSize: '18px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Recent Lead Activity</span>}
@@ -253,6 +387,37 @@ export default function AgentDashboard() {
                 </List.Item>
               )}
             />
+          </AntCard>
+
+          {/* Upcoming Appointments */}
+          <AntCard
+            title={
+              <span style={{ fontSize: '16px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>
+                <CalendarOutlined /> Upcoming
+              </span>
+            }
+            bordered={false}
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', marginTop: 24 }}
+            styles={{ body: { padding: appointments.length === 0 ? '24px' : '8px 24px' } }}
+          >
+            {appointments.length === 0 ? (
+              <Text type="secondary" style={{ fontSize: 13 }}>No upcoming appointments</Text>
+            ) : (
+              appointments.map((apt: any, i: number) => (
+                <div key={i} style={{ padding: '12px 0', borderBottom: i < appointments.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                  <Text strong style={{ fontSize: 13, display: 'block' }}>{apt.title || apt.clientName || 'Appointment'}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {new Date(apt.date || apt.createdAt).toLocaleDateString()} at {new Date(apt.date || apt.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </div>
+              ))
+            )}
+            <Button 
+              type="link" block style={{ color: '#b40101', fontWeight: 700, marginTop: 8 }}
+              onClick={() => navigate('/command/calendar')}
+            >
+              View Calendar
+            </Button>
           </AntCard>
         </Col>
       </Row>

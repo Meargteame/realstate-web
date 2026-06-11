@@ -6,14 +6,18 @@ import {
   HomeOutlined,
   DollarOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
-  EyeOutlined,
   FileTextOutlined,
-  RiseOutlined,
-  FallOutlined
+  BarChartOutlined,
+  PlusOutlined,
+  DatabaseOutlined,
+  ApiOutlined,
+  CloudOutlined,
+  ThunderboltOutlined,
+  ReloadOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { Line, Column } from '@ant-design/plots';
+import { LineChart, Line as RLine, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
@@ -38,13 +42,37 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Mock revenue & user growth data (replace with API when available)
+  const revenueData = [
+    { month: 'Jan', revenue: 42000 }, { month: 'Feb', revenue: 53000 },
+    { month: 'Mar', revenue: 61000 }, { month: 'Apr', revenue: 58000 },
+    { month: 'May', revenue: 72000 }, { month: 'Jun', revenue: 85000 },
+    { month: 'Jul', revenue: 91000 }, { month: 'Aug', revenue: 78000 },
+    { month: 'Sep', revenue: 96000 }, { month: 'Oct', revenue: 105000 },
+    { month: 'Nov', revenue: 112000 }, { month: 'Dec', revenue: 128000 },
+  ];
+  const userGrowthData = [
+    { month: 'Jan', users: 120 }, { month: 'Feb', users: 165 },
+    { month: 'Mar', users: 210 }, { month: 'Apr', users: 280 },
+    { month: 'May', users: 345 }, { month: 'Jun', users: 420 },
+    { month: 'Jul', users: 510 }, { month: 'Aug', users: 580 },
+    { month: 'Sep', users: 670 }, { month: 'Oct', users: 745 },
+    { month: 'Nov', users: 830 }, { month: 'Dec', users: 940 },
+  ];
+  const systemHealth = [
+    { name: 'Database', status: 'healthy', uptime: '99.98%', icon: <DatabaseOutlined />, latency: '12ms' },
+    { name: 'API Server', status: 'healthy', uptime: '99.95%', icon: <ApiOutlined />, latency: '45ms' },
+    { name: 'File Storage', status: 'healthy', uptime: '99.99%', icon: <CloudOutlined />, latency: '8ms' },
+    { name: 'Email Service', status: 'warning', uptime: '98.20%', icon: <FileTextOutlined />, latency: '120ms' },
+  ];
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
     try {
-      const userData = localStorage.getItem('kw_user');
+      const userData = localStorage.getItem('torra_user');
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -340,6 +368,94 @@ export default function AdminDashboard() {
               valueStyle={{ color: '#373a4b', fontSize: isMobile ? '24px' : '28px', fontWeight: 700 }}
               precision={0}
             />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Revenue & User Growth Charts */}
+      <Row gutter={[16, 16]} style={{ marginBottom: isMobile ? '24px' : '32px' }}>
+        <Col xs={24} lg={12}>
+          <Card
+            title={<span style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Revenue Trend</span>}
+            variant="borderless"
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+          >
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#b40101" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#b40101" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v / 1000}K`} />
+                <Tooltip formatter={(v: any) => [`$${Number(v).toLocaleString()}`, 'Revenue']} />
+                <Area type="monotone" dataKey="revenue" stroke="#b40101" strokeWidth={3} fill="url(#revGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card
+            title={<span style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>User Growth</span>}
+            variant="borderless"
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+          >
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={userGrowthData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(v: any) => [v, 'Users']} />
+                <RLine type="monotone" dataKey="users" stroke="#373a4b" strokeWidth={3} dot={{ fill: '#373a4b', r: 4 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* System Health & Quick Actions */}
+      <Row gutter={[16, 16]} style={{ marginBottom: isMobile ? '24px' : '32px' }}>
+        <Col xs={24} lg={14}>
+          <Card
+            title={<span style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>System Health</span>}
+            extra={<Button type="link" icon={<ReloadOutlined />} style={{ color: '#b40101', fontWeight: 700, fontSize: 13 }}>Refresh</Button>}
+            variant="borderless"
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%' }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {systemHealth.map((s) => (
+                <div key={s.name} style={{ padding: '16px', background: '#fafafa', borderRadius: 10, border: `1px solid ${s.status === 'healthy' ? '#d1fae5' : '#fde68a'}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 20, color: s.status === 'healthy' ? '#10b981' : '#f59e0b' }}>{s.icon}</span>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</span>
+                    <Tag color={s.status === 'healthy' ? 'green' : 'orange'} style={{ marginLeft: 'auto' }}>{s.status.toUpperCase()}</Tag>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6b7280' }}>
+                    <span>Uptime: <strong style={{ color: '#111827' }}>{s.uptime}</strong></span>
+                    <span>Latency: <strong style={{ color: '#111827' }}>{s.latency}</strong></span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} lg={10}>
+          <Card
+            title={<span style={{ fontSize: 16, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.3px' }}>Quick Actions</span>}
+            variant="borderless"
+            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%' }}
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <Button icon={<PlusOutlined />} onClick={() => navigate('/admin/users')} style={{ height: 64, borderRadius: 8, fontWeight: 600, justifyContent: 'flex-start' }}>Add User</Button>
+              <Button icon={<TeamOutlined />} onClick={() => navigate('/admin/agents')} style={{ height: 64, borderRadius: 8, fontWeight: 600, justifyContent: 'flex-start' }}>Add Agent</Button>
+              <Button icon={<HomeOutlined />} onClick={() => navigate('/admin/properties')} style={{ height: 64, borderRadius: 8, fontWeight: 600, justifyContent: 'flex-start' }}>Add Property</Button>
+              <Button icon={<BarChartOutlined />} onClick={() => navigate('/admin/analytics')} style={{ height: 64, borderRadius: 8, fontWeight: 600, justifyContent: 'flex-start' }}>Analytics</Button>
+              <Button icon={<FileTextOutlined />} onClick={() => navigate('/admin/blog')} style={{ height: 64, borderRadius: 8, fontWeight: 600, justifyContent: 'flex-start' }}>New Post</Button>
+              <Button icon={<ThunderboltOutlined />} style={{ height: 64, borderRadius: 8, fontWeight: 600, justifyContent: 'flex-start', background: '#b40101', color: 'white', borderColor: '#b40101' }}>Broadcast</Button>
+            </div>
           </Card>
         </Col>
       </Row>

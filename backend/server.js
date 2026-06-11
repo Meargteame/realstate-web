@@ -112,6 +112,7 @@ const calendarRoutes = require('./routes/calendarRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const documentRoutes = require('./routes/documentRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
@@ -134,6 +135,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/video', videoRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/users', userRoutes);
 
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS
@@ -202,7 +204,7 @@ async function startServer() {
     const server = app.listen(PORT, () => {
       console.log('');
       console.log('🚀 ============================================');
-      console.log(`🚀 KW Real Estate Backend - ENTERPRISE MODE`);
+      console.log(`🚀 TORRA Real Estate Backend - ENTERPRISE MODE`);
       console.log('🚀 ============================================');
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🚀 Environment: ${process.env.NODE_ENV || 'development'}`);

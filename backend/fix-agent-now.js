@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
-  connectionString: 'postgresql://meareg@localhost:5432/kw_realestate'
+  connectionString: 'postgresql://postgres:root@localhost:5432/torra_realestate'
 });
 
 async function fixAgent() {

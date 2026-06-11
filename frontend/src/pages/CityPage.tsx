@@ -159,7 +159,7 @@ export default function CityPage() {
                 What Is Your {displayName} Home Worth?
               </Title>
               <Paragraph style={{ color: '#9ca3af', fontSize: '18px', lineHeight: 1.8 }}>
-                Get an instant, data-driven valuation from a KW® local expert. No obligations, no cost.
+                Get an instant, data-driven valuation from a TORRA local expert. No obligations, no cost.
               </Paragraph>
             </Col>
             <Col xs={24} md={12}>

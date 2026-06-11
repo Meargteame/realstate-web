@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import { Card, Row, Col, Statistic, Typography, Space, Table, Tag, Progress } from "antd";
 import {
   DollarOutlined,
@@ -8,42 +9,49 @@ import {
   FallOutlined,
   TrophyOutlined,
   ClockCircleOutlined,
-  LineChartOutlined
+  LineChartOutlined,
+  DownloadOutlined,
+  CalendarOutlined
 } from "@ant-design/icons";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const { Title, Text } = Typography;
 
-const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'];
+const COLORS = ['#b40101', '#373a4b', '#667eea', '#43e97b', '#f59e0b'];
 
 export default function Analytics() {
+  const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [analytics, setAnalytics] = useState<any>(null);
   const [leadAnalytics, setLeadAnalytics] = useState<any>(null);
   const [propertyAnalytics, setPropertyAnalytics] = useState<any>(null);
   const [salesReports, setSalesReports] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<'30d' | '90d' | '12m'>('30d');
 
-  // Get agentId from localStorage or context
-  const agentId = localStorage.getItem('agentId') || 'f2d2c702-3702-4717-9f44-7e5a860f81bf';
+  const agentId = parentAgent?.id;
+  const token = parentAgent?.token;
 
   useEffect(() => {
-    fetchAnalytics();
-  }, []);
+    if (agentId) fetchAnalytics();
+    else setLoading(false);
+  }, [agentId]);
 
   const fetchAnalytics = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
       const [agentRes, leadRes, propRes, salesRes] = await Promise.all([
-        fetch(`/api/analytics/agent/${agentId}`),
-        fetch(`/api/analytics/leads/${agentId}`),
-        fetch(`/api/analytics/properties/${agentId}`),
-        fetch(`/api/analytics/sales/${agentId}`)
+        fetch(`/api/analytics/agent/${agentId}`, { headers }),
+        fetch(`/api/analytics/leads/${agentId}`, { headers }),
+        fetch(`/api/analytics/properties/${agentId}`, { headers }),
+        fetch(`/api/analytics/sales/${agentId}`, { headers })
       ]);
 
       const [agentData, leadData, propData, salesData] = await Promise.all([
-        agentRes.json(),
-        leadRes.json(),
-        propRes.json(),
-        salesRes.json()
+        agentRes.ok ? agentRes.json() : Promise.resolve({ summary: { totalListings: 0, activeListings: 0, totalLeads: 0, newLeads: 0, closedLeads: 0, conversionRate: 0, avgResponseTime: 0, totalOpportunities: 0 }, charts: { leadSources: [] }, propertyPerformance: [] }),
+        leadRes.ok ? leadRes.json() : Promise.resolve({ total: 0, conversionRate: 0, avgTimeToClose: 0, statusBreakdown: {} }),
+        propRes.ok ? propRes.json() : Promise.resolve({ priceRanges: {}, averages: { price: 0, viewCount: 0, leadCount: 0, daysOnMarket: 0 } }),
+        salesRes.ok ? salesRes.json() : Promise.resolve({ totalVolume: 0, totalDeals: 0, avgDealSize: 0, estimatedCommission: 0, salesByMonth: [] })
       ]);
 
       setAnalytics(agentData);
@@ -57,9 +65,29 @@ export default function Analytics() {
     }
   };
 
+  const handleExportReport = async () => {
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(`/api/analytics/export/${agentId}?range=${dateRange}`, { headers });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      console.error('Failed to export report');
+    }
+  };
+
   if (loading) {
     return (
-      <div style={{ padding: '200px', textAlign: 'center' }}>
+      <div style={{ padding: '80px 20px', textAlign: 'center' }}>
         <Text>Loading analytics...</Text>
       </div>
     );
@@ -109,14 +137,56 @@ export default function Analytics() {
   ];
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '32px' }}>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '16px' }}>
       <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ marginBottom: 32 }}>
-          <Title level={2} style={{ margin: 0 }}>
-            <LineChartOutlined /> Analytics Dashboard
-          </Title>
-          <Text type="secondary">Performance metrics and insights</Text>
+        <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <Title level={3} style={{ margin: 0, fontSize: '20px' }}>
+              <LineChartOutlined /> Analytics Dashboard
+            </Title>
+            <Text type="secondary">Performance metrics and insights</Text>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <div style={{ background: '#f0f0f0', padding: '4px', borderRadius: '8px', display: 'flex' }}>
+              {(['30d', '90d', '12m'] as const).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setDateRange(r)}
+                  style={{
+                    padding: '6px 12px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    background: dateRange === r ? '#b40101' : 'transparent',
+                    color: dateRange === r ? 'white' : '#374151',
+                  }}
+                >
+                  {r === '30d' ? '30 Days' : r === '90d' ? '90 Days' : '12 Months'}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleExportReport}
+              style={{
+                padding: '8px 14px',
+                border: '1px solid #d9d9d9',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: 600,
+                background: 'white',
+                color: '#374151',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <DownloadOutlined /> Export
+            </button>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -127,7 +197,7 @@ export default function Analytics() {
                 title="Total Listings"
                 value={analytics?.summary.totalListings || 0}
                 prefix={<HomeOutlined />}
-                valueStyle={{ color: '#667eea' }}
+                valueStyle={{ color: '#b40101' }}
               />
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {analytics?.summary.activeListings || 0} active
@@ -140,7 +210,7 @@ export default function Analytics() {
                 title="Total Leads"
                 value={analytics?.summary.totalLeads || 0}
                 prefix={<UserOutlined />}
-                valueStyle={{ color: '#764ba2' }}
+                valueStyle={{ color: '#373a4b' }}
               />
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {analytics?.summary.newLeads || 0} new this month
@@ -154,7 +224,7 @@ export default function Analytics() {
                 value={analytics?.summary.conversionRate || 0}
                 suffix="%"
                 prefix={<RiseOutlined />}
-                valueStyle={{ color: '#43e97b' }}
+                valueStyle={{ color: '#10b981' }}
               />
               <Text type="secondary" style={{ fontSize: 12 }}>
                 {analytics?.summary.closedLeads || 0} closed deals
@@ -167,7 +237,7 @@ export default function Analytics() {
                 title="Sales Volume"
                 value={salesReports?.totalVolume || 0}
                 prefix="$"
-                valueStyle={{ color: '#f093fb' }}
+                valueStyle={{ color: '#b40101' }}
                 formatter={(value) => `${(value / 1000000).toFixed(1)}M`}
               />
               <Text type="secondary" style={{ fontSize: 12 }}>
@@ -188,7 +258,7 @@ export default function Analytics() {
                   <YAxis />
                   <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
                   <Legend />
-                  <Line type="monotone" dataKey="volume" stroke="#667eea" strokeWidth={2} name="Sales Volume" />
+                  <Line type="monotone" dataKey="volume" stroke="#b40101" strokeWidth={3} name="Sales Volume" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>

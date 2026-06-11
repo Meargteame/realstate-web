@@ -42,7 +42,7 @@ export default function AgentCard({ agent }: { agent: any }) {
              <Title level={4} style={{ margin: 0, fontSize: '18px', fontWeight: 900 }}>{agent.name}</Title>
            </Link>
            <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-             Licensed Agent • {agent.location || 'KW PREMIER'}
+             Licensed Agent • {agent.location || 'TORRA'}
            </Text>
         </div>
 

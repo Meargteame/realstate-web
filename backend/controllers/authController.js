@@ -130,6 +130,34 @@ exports.login = async (req, res) => {
         return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
       }
 
+      // Auto-create agent profile if user doesn't have one
+      let agentId = user.agentId;
+      if (!agentId) {
+        try {
+          console.log('🏢 Auto-creating agent profile for user:', user.id);
+          const agent = await prisma.agent.create({
+            data: {
+              name: user.name || user.email.split('@')[0],
+              email: user.email,
+              phone: 'Not provided',
+              imageUrl: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
+              brokerage: 'TORRA Commercial Real Estate Group',
+              license: 'Pending',
+              languages: ['English']
+            }
+          });
+          // Link agent to user
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { agentId: agent.id }
+          });
+          agentId = agent.id;
+          console.log('✅ Agent profile created:', agentId);
+        } catch (err) {
+          console.error('⚠️ Failed to auto-create agent profile:', err.message);
+        }
+      }
+
       // Generate JWT token
       const token = jwt.sign(
         { 
@@ -147,7 +175,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        agentId: user.agentId,
+        agentId: agentId,
         token
       });
     }

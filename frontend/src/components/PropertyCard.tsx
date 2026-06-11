@@ -202,7 +202,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 />
               )}
               <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500 }}>
-                {property.agent?.name || 'KW® Expert'}
+                {property.agent?.name || 'TORRA Expert'}
               </Text>
             </div>
             <ArrowRightOutlined 
