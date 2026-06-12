@@ -35,7 +35,7 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
 
   const handleSave = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem('torra_user') || '{}');
       const response = await fetch('/api/properties/compare', {
         method: 'POST',
         headers: {

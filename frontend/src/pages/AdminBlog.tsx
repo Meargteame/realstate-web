@@ -29,7 +29,7 @@ export default function AdminBlog() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const response = await fetch('/api/blog?limit=100', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -92,7 +92,7 @@ export default function AdminBlog() {
 
   const handleDelete = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const response = await fetch(`/api/blog/${id}`, {
         method: 'DELETE',
         headers: {
@@ -113,12 +113,12 @@ export default function AdminBlog() {
 
   const handleSubmit = async (values: any) => {
     try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const torraUser = JSON.parse(localStorage.getItem('torra_user') || '{}');
+      const token = torraUser.token;
       
       const payload = {
         ...values,
-        authorId: user.agentId || user.id
+        authorId: torraUser.agentId || torraUser.id
       };
 
       const url = editingPost ? `/api/blog/${editingPost.id}` : '/api/blog';

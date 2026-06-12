@@ -1,8 +1,29 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Twitter, Instagram, Linkedin, Phone, MapPin } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Twitter, Instagram, Linkedin, Phone, MapPin, Check } from "lucide-react";
 import TorraLogo from "./TorraLogo";
 
 export default function Footer() {
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    const email = newsletterEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+    // No newsletter backend yet — record intent locally and confirm to the user.
+    try {
+      const existing = JSON.parse(localStorage.getItem("torra_newsletter") || "[]");
+      if (!existing.includes(email)) {
+        existing.push(email);
+        localStorage.setItem("torra_newsletter", JSON.stringify(existing));
+      }
+    } catch {
+      localStorage.setItem("torra_newsletter", JSON.stringify([email]));
+    }
+    setSubscribed(true);
+    setNewsletterEmail("");
+  };
   return (
     <footer className="bg-brand-dark text-white pt-24 pb-12 px-8 flex-shrink-0">
       <div className="max-w-[1400px] mx-auto">
@@ -20,24 +41,33 @@ export default function Footer() {
               <p className="mt-1 text-gray-500">Brokerage ID: 0751886</p>
             </div>
             <div className="flex gap-4">
-              <Link 
-                to="#" 
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Twitter"
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300"
               >
                 <Twitter className="w-4 h-4 text-gray-300" />
-              </Link>
-              <Link 
-                to="#" 
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300"
               >
                 <Instagram className="w-4 h-4 text-gray-300" />
-              </Link>
-              <Link 
-                to="#" 
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300"
               >
                 <Linkedin className="w-4 h-4 text-gray-300" />
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -125,16 +155,25 @@ export default function Footer() {
             <p className="text-[12px] text-gray-400 font-medium uppercase tracking-wider mb-8 leading-relaxed">
               Subscribe to curated insights and exclusive listings
             </p>
-            <div className="relative border-b-2 border-gray-600 pb-3 flex items-center hover:border-brand-red transition-colors duration-300 group">
-              <input 
-                type="email" 
-                placeholder="YOUR EMAIL" 
-                className="bg-transparent border-none outline-none text-[13px] text-white w-full uppercase placeholder:text-gray-600 tracking-wider font-semibold"
-              />
-              <button className="text-gray-400 group-hover:text-brand-red transition-colors duration-300">
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
+            {subscribed ? (
+              <div className="flex items-center gap-2 text-[13px] text-brand-red font-bold uppercase tracking-wider py-3">
+                <Check className="w-5 h-5" /> You're subscribed
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="relative border-b-2 border-gray-600 pb-3 flex items-center hover:border-brand-red transition-colors duration-300 group">
+                <input
+                  type="email"
+                  placeholder="YOUR EMAIL"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  required
+                  className="bg-transparent border-none outline-none text-[13px] text-white w-full uppercase placeholder:text-gray-600 tracking-wider font-semibold"
+                />
+                <button type="submit" aria-label="Subscribe" className="text-gray-400 group-hover:text-brand-red transition-colors duration-300">
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </form>
+            )}
           </div>
         </div>
 

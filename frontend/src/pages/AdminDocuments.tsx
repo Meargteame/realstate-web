@@ -23,7 +23,7 @@ export default function AdminDocuments() {
   const fetchDocuments = async () => {
     setLoading(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem('torra_user') || '{}');
       const response = await fetch(`/api/documents?userId=${user.id}`);
       const data = await response.json();
       setDocuments(data);
@@ -46,7 +46,7 @@ export default function AdminDocuments() {
 
   const handleUpload = async (values: any) => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem('torra_user') || '{}');
       
       // In production, you would upload the file to a storage service first
       // For now, we'll use a placeholder URL
@@ -82,7 +82,7 @@ export default function AdminDocuments() {
 
   const handleDownload = async (id: string, fileName: string) => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem('torra_user') || '{}');
       const response = await fetch(`/api/documents/${id}/download?userId=${user.id}`);
       const data = await response.json();
       
@@ -100,7 +100,7 @@ export default function AdminDocuments() {
 
   const handleDelete = async (id: string) => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const user = JSON.parse(localStorage.getItem('torra_user') || '{}');
       const response = await fetch(`/api/documents/${id}?userId=${user.id}`, {
         method: 'DELETE'
       });

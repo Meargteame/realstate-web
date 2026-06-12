@@ -215,7 +215,7 @@ export default function SignUp() {
           </form>
 
           <p className="text-xs text-gray-500 text-center font-medium mt-8 leading-relaxed">
-            By creating an account, you agree to our <Link to="#" className="text-gray-900 underline underline-offset-2 hover:text-[#B40101]">Terms of Use</Link> and <Link to="#" className="text-gray-900 underline underline-offset-2 hover:text-[#B40101]">Privacy Policy</Link>.
+            By creating an account, you agree to our <Link to="/terms" className="text-gray-900 underline underline-offset-2 hover:text-[#B40101]">Terms of Use</Link> and <Link to="/privacy" className="text-gray-900 underline underline-offset-2 hover:text-[#B40101]">Privacy Policy</Link>.
           </p>
 
           <div className="relative my-8">

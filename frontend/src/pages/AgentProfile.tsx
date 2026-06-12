@@ -70,7 +70,7 @@ export default function AgentProfile() {
       {/* Profile Header Block */}
       <div style={{ background: 'white', borderBottom: '1px solid #d9d9d9', padding: '64px 64px 48px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <Breadcrumb items={[{ title: <a href="/">Home</a> }, { title: <a href="/agents">Agents</a> }, { title: agent.name }]} style={{ marginBottom: '32px' }} />
+          <Breadcrumb items={[{ title: <Link to="/">Home</Link> }, { title: <Link to="/agents">Agents</Link> }, { title: agent.name }]} style={{ marginBottom: '32px' }} />
           
           <Row gutter={[48, 48]} align="middle">
             <Col xs={24} md={6}>

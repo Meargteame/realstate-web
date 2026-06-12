@@ -1,6 +1,8 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const emailService = require('../services/emailService');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -216,8 +218,7 @@ exports.getCurrentUser = async (req, res) => {
         email: true,
         role: true,
         agentId: true,
-        createdAt: true,
-        updatedAt: true
+        createdAt: true
       }
     });
 
@@ -229,5 +230,113 @@ exports.getCurrentUser = async (req, res) => {
   } catch (error) {
     console.error('[Get Current User Error]:', error);
     res.status(500).json({ error: 'Failed to fetch user data' });
+  }
+};
+
+// POST /api/auth/forgot-password
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const emailLower = email.toLowerCase().trim();
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: emailLower, mode: 'insensitive' } }
+    });
+
+    // Always respond with success to avoid leaking which emails are registered.
+    const genericResponse = {
+      message: 'If an account exists for that email, a password reset link has been sent.'
+    };
+
+    if (!user) {
+      console.log('🔑 Password reset requested for non-existent email:', emailLower);
+      return res.json(genericResponse);
+    }
+
+    // Generate a raw token for the link and store only its hash.
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetToken: tokenHash, resetTokenExpiry: expiry }
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+
+    const emailResult = await emailService.sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      resetUrl
+    });
+
+    // In development, expose the link/preview so the flow is testable without email delivery.
+    if (process.env.NODE_ENV === 'development') {
+      return res.json({
+        ...genericResponse,
+        devResetUrl: resetUrl,
+        emailPreviewUrl: emailResult.previewUrl || null
+      });
+    }
+
+    return res.json(genericResponse);
+  } catch (error) {
+    console.error('[Forgot Password Error]:', error);
+    res.status(500).json({ error: 'Failed to process password reset request.' });
+  }
+};
+
+// POST /api/auth/reset-password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, token, password } = req.body;
+
+    if (!email || !token || !password) {
+      return res.status(400).json({ error: 'Email, token, and new password are required.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    const emailLower = email.toLowerCase().trim();
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: emailLower, mode: 'insensitive' } }
+    });
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    if (
+      !user ||
+      !user.resetToken ||
+      user.resetToken !== tokenHash ||
+      !user.resetTokenExpiry ||
+      user.resetTokenExpiry < new Date()
+    ) {
+      return res.status(400).json({ error: 'This password reset link is invalid or has expired.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      }
+    });
+
+    console.log('✅ Password reset successful for:', user.email);
+    return res.json({ message: 'Your password has been reset. You can now log in.' });
+  } catch (error) {
+    console.error('[Reset Password Error]:', error);
+    res.status(500).json({ error: 'Failed to reset password.' });
   }
 };

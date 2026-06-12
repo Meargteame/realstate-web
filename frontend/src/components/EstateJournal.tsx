@@ -21,7 +21,7 @@ export default function EstateJournal() {
             <span className="bg-primary text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider mb-4 rounded-sm">Masterclass</span>
             <h3 className="text-white text-3xl md:text-4xl font-bold leading-tight mb-4 max-w-sm drop-shadow-xl">Architecture as an Asset Class.</h3>
             <p className="text-gray-300 text-sm mb-6 max-w-sm leading-relaxed">How Pritzker Prize-winning designs add tangible long-term value to luxury portfolios.</p>
-            <Link to="#" className="text-white text-[13px] font-bold uppercase tracking-wider flex items-center gap-2 hover:gap-3 transition-all">
+            <Link to="/blog" className="text-white text-[13px] font-bold uppercase tracking-wider flex items-center gap-2 hover:gap-3 transition-all">
               Read Article <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -39,7 +39,7 @@ export default function EstateJournal() {
             <div className="absolute inset-0 p-8 flex flex-col justify-center">
               <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider mb-3 w-max rounded-sm">Investment</span>
               <h3 className="text-white text-2xl md:text-3xl font-bold leading-tight mb-4 drop-shadow-lg max-w-md">The Future of <br/>Tokenized Estates</h3>
-              <Link to="#" className="text-white text-[12px] font-bold flex items-center gap-2 hover:underline decoration-white/50 underline-offset-4">
+              <Link to="/blog" className="text-white text-[12px] font-bold flex items-center gap-2 hover:underline decoration-white/50 underline-offset-4">
                 Discover More <ArrowRight className="w-3.5 h-3.5 rotate-[-45deg]" />
               </Link>
             </div>
@@ -57,7 +57,7 @@ export default function EstateJournal() {
                 <h3 className="text-xl font-bold leading-tight mb-3">Privacy Standards in the Digital Age</h3>
                 <p className="text-xs text-white/80 leading-relaxed font-medium">How we protect high-net-worth identity throughout the transaction process.</p>
               </div>
-              <Link to="#" className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 text-white/90 hover:text-white mt-4">
+              <Link to="/blog" className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 text-white/90 hover:text-white mt-4">
                 Guide <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

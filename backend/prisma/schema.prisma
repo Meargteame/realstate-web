@@ -12,6 +12,8 @@ model User {
   email        String        @unique
   password     String
   role         String        @default("user")
+  resetToken       String?
+  resetTokenExpiry DateTime?
   agentId      String?       @unique
   agent        Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
   favorites    Favorite[]

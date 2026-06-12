@@ -6,7 +6,7 @@ export default function MobileNav() {
 
   const navItems = [
     { label: 'Search', icon: Search, path: '/properties' },
-    { label: 'Saved', icon: Heart, path: '/saved' },
+    { label: 'Saved', icon: Heart, path: '/saved-searches' },
     { label: 'Agents', icon: Users, path: '/agents' },
     { label: 'Menu', icon: User, path: '/login' }
   ];

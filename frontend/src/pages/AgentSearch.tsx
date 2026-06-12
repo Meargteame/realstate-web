@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Input, Button, Space, Typography, Select, Breadcrumb, Empty, notification } from "antd";
 import { SearchOutlined, GlobalOutlined, StarOutlined } from "@ant-design/icons";
 import AgentCard from "@/components/AgentCard";
@@ -106,7 +107,7 @@ export default function AgentSearch() {
       {/* Content Area */}
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '64px' }}>
         <div style={{ marginBottom: '40px' }}>
-          <Breadcrumb items={[{ title: <a href="/">Home</a> }, { title: 'Agents' }]} />
+          <Breadcrumb items={[{ title: <Link to="/">Home</Link> }, { title: 'Agents' }]} />
           <Title level={1} style={{ margin: '16px 0 8px', fontWeight: 900 }}>All Agents</Title>
           <Text type="secondary" strong>
             {filteredAgents.length} Result{filteredAgents.length !== 1 ? 's' : ''}

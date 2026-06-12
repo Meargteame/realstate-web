@@ -44,7 +44,7 @@ export default function ExpertSection() {
               style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #f0f0f0' }}
             >
               <Title level={4} style={{ fontSize: '18px', height: '54px', overflow: 'hidden' }}>{vid.title}</Title>
-              <Link to="#" style={{ color: '#b40101', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '13px' }}>
+              <Link to="/blog" style={{ color: '#b40101', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '13px' }}>
                 Read More <RightOutlined style={{ fontSize: '10px' }} />
               </Link>
             </AntCard>
@@ -62,7 +62,7 @@ export default function ExpertSection() {
             >
               <Text type="secondary" style={{ fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>Read Time: {art.readTime}</Text>
               <Title level={4} style={{ fontSize: '18px', marginTop: '8px', height: '54px', overflow: 'hidden' }}>{art.title}</Title>
-              <Link to="#" style={{ color: '#b40101', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '13px' }}>
+              <Link to="/blog" style={{ color: '#b40101', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '13px' }}>
                 Read More <RightOutlined style={{ fontSize: '10px' }} />
               </Link>
             </AntCard>
@@ -71,21 +71,23 @@ export default function ExpertSection() {
       </Row>
 
       <div style={{ textAlign: 'center' }}>
-        <Button 
-          type="default" 
-          size="large"
-          style={{ 
-            borderColor: '#111', 
-            color: '#111', 
-            fontWeight: 'bold', 
-            height: '56px', 
-            padding: '0 40px',
-            textTransform: 'uppercase',
-            letterSpacing: '1px'
-          }}
-        >
-          Explore More Articles
-        </Button>
+        <Link to="/blog">
+          <Button
+            type="default"
+            size="large"
+            style={{
+              borderColor: '#111',
+              color: '#111',
+              fontWeight: 'bold',
+              height: '56px',
+              padding: '0 40px',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}
+          >
+            Explore More Articles
+          </Button>
+        </Link>
       </div>
     </section>
   );

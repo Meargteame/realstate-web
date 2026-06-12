@@ -14,7 +14,7 @@ class EmailService {
     try {
       // Check for SendGrid configuration first
       if (process.env.SENDGRID_API_KEY) {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           service: 'SendGrid',
           auth: {
             user: 'apikey',
@@ -28,7 +28,7 @@ class EmailService {
 
       // Fallback to SMTP configuration
       if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST,
           port: parseInt(process.env.SMTP_PORT) || 587,
           secure: process.env.SMTP_SECURE === 'true',
@@ -65,7 +65,7 @@ class EmailService {
     try {
       const testAccount = await nodemailer.createTestAccount();
       
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
         secure: false,
@@ -310,6 +310,71 @@ Timestamp: ${new Date().toISOString()}
 
     } catch (error) {
       console.error('Test email error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Send a password reset email with a secure reset link
+   */
+  async sendPasswordResetEmail({ to, name, resetUrl }) {
+    if (!this.isConfigured) {
+      console.log('⚠️  Email service not configured - password reset email not sent.');
+      console.log(`🔗 Password reset link for ${to}: ${resetUrl}`);
+      // Surface the link in dev so the flow remains testable without email.
+      return { success: false, error: 'Email service not configured', resetUrl };
+    }
+
+    try {
+      const mailOptions = {
+        from: process.env.FROM_EMAIL || 'noreply@torra-realestate.com',
+        to,
+        subject: 'Reset your TORRA password',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f8f8f8;">
+            <div style="max-width:600px;margin:0 auto;background:#fff;">
+              <div style="background:#b40101;color:#fff;padding:24px;text-align:center;">
+                <h1 style="margin:0;font-size:22px;">TORRA Commercial Real Estate</h1>
+              </div>
+              <div style="padding:32px 24px;">
+                <h2 style="color:#333;margin:0 0 16px;">Hi ${name || 'there'},</h2>
+                <p style="color:#666;line-height:1.5;margin:0 0 20px;">
+                  We received a request to reset your password. Click the button below to choose a new one.
+                  This link will expire in 1 hour.
+                </p>
+                <div style="text-align:center;margin:32px 0;">
+                  <a href="${resetUrl}" style="background:#b40101;color:#fff;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">
+                    Reset Password
+                  </a>
+                </div>
+                <p style="color:#999;font-size:13px;line-height:1.5;margin:0;">
+                  If you didn't request this, you can safely ignore this email. The link below will expire automatically.
+                </p>
+                <p style="color:#999;font-size:12px;word-break:break-all;margin:16px 0 0;">${resetUrl}</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `Hi ${name || 'there'},\n\nWe received a request to reset your password. Visit the link below to choose a new one (expires in 1 hour):\n\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.`
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 Preview URL:', nodemailer.getTestMessageUrl(result));
+      }
+
+      console.log(`✅ Password reset email sent to ${to}`);
+      return {
+        success: true,
+        messageId: result.messageId,
+        previewUrl: process.env.NODE_ENV === 'development' ? nodemailer.getTestMessageUrl(result) : null
+      };
+    } catch (error) {
+      console.error('❌ Send password reset email error:', error);
       return { success: false, error: error.message };
     }
   }

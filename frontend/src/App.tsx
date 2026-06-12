@@ -23,6 +23,10 @@ import SavedSearches from "./pages/SavedSearches";
 import OpenHouses from "./pages/OpenHouses";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import BecomeAgent from "./pages/BecomeAgent";
 import LeadsPage from "./pages/LeadsPage";
 import AgentListings from "./pages/AgentListings";
@@ -61,6 +65,8 @@ export default function App() {
           <Route path="blog" element={<Blog />} />
           <Route path="blog/:slug" element={<BlogPost />} />
           <Route path="affordability-calculator" element={<AffordabilityCalculator />} />
+          <Route path="terms" element={<Terms />} />
+          <Route path="privacy" element={<Privacy />} />
           {/* SEO City Landing Template — generates thousands of pages from one component */}
           <Route path="homes/:city" element={<CityPage />} />
           {/* Lead Capture Micro-apps */}
@@ -92,6 +98,8 @@ export default function App() {
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/video-call/:videoCallId" element={<VideoCall />} />
       </Routes>
     </Router>

@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, TrendingUp, Building2, FileText, Mountain } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "./ui/button";
 
 const marketData = [
@@ -49,6 +50,17 @@ const marketData = [
 ];
 
 export default function MarketWatch() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollByCards = (direction: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    // Scroll by roughly one card width (first child) including the gap.
+    const firstCard = container.firstElementChild as HTMLElement | null;
+    const amount = firstCard ? firstCard.offsetWidth + 24 : container.clientWidth * 0.8;
+    container.scrollBy({ left: direction * amount, behavior: "smooth" });
+  };
+
   return (
     <section className="py-20 px-6 max-w-[1400px] mx-auto w-full bg-surface-container">
       <div className="flex justify-between items-end mb-10">
@@ -57,18 +69,21 @@ export default function MarketWatch() {
           <h2 className="text-4xl md:text-5xl font-black text-on-surface tracking-tight">Market Watch</h2>
         </div>
         <div className="hidden md:flex gap-4">
-          <Button variant="outline" size="icon" className="rounded-full border-gray-300 w-12 h-12 text-gray-500 hover:text-black">
+          <Button onClick={() => scrollByCards(-1)} aria-label="Scroll left" variant="outline" size="icon" className="rounded-full border-gray-300 w-12 h-12 text-gray-500 hover:text-black">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Button variant="outline" size="icon" className="rounded-full border-gray-300 w-12 h-12 text-gray-500 hover:text-black">
+          <Button onClick={() => scrollByCards(1)} aria-label="Scroll right" variant="outline" size="icon" className="rounded-full border-gray-300 w-12 h-12 text-gray-500 hover:text-black">
             <ArrowRight className="w-5 h-5" />
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div
+        ref={scrollRef}
+        className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {marketData.map((item, idx) => (
-          <div key={idx} className="bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-transparent hover:border-gray-100 transition-all">
+          <div key={idx} className="snap-start shrink-0 w-[85%] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] bg-white rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-transparent hover:border-gray-100 transition-all">
             <div className="flex justify-between items-start mb-6">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.iconBg}`}>
                 <item.Icon className={`w-6 h-6 ${item.iconColor}`} />
