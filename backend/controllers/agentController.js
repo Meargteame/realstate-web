@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const bcrypt = require('bcryptjs');
 
 exports.getAgents = async (req, res) => {
   const { q } = req.query;
@@ -12,7 +13,13 @@ exports.getAgents = async (req, res) => {
     } : {};
 
     const agents = await prisma.agent.findMany({ where });
-    res.json(agents);
+
+    // Convert BigInt fields to Number for JSON serialization
+    const serialized = JSON.parse(JSON.stringify(agents, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
+    res.json(serialized);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -103,8 +110,73 @@ exports.updateAgent = async (req, res) => {
       where: { id },
       data
     });
-    
-    res.json(agent);
+
+    // Convert BigInt fields to Number for JSON serialization
+    const serialized = JSON.parse(JSON.stringify(agent, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
+    res.json(serialized);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// PATCH /api/agents/:id/office-hours - Update an agent's office hours
+exports.updateOfficeHours = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { officeHours } = req.body;
+
+    if (officeHours === undefined) {
+      return res.status(400).json({ error: 'officeHours is required.' });
+    }
+
+    const agent = await prisma.agent.update({
+      where: { id },
+      data: { officeHours }
+    });
+
+    res.json({ officeHours: agent.officeHours });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// PATCH /api/agents/:id/password - Change the password of the user linked to this agent
+exports.changePassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password are required.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+    }
+
+    // Find the user account linked to this agent profile.
+    const user = await prisma.user.findFirst({ where: { agentId: id } });
+    if (!user) {
+      return res.status(404).json({ error: 'No user account is linked to this agent.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    });
+
+    res.json({ message: 'Password updated successfully.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

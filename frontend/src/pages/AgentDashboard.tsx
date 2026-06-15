@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
-import { Card, Row, Col, Typography, Badge, Avatar, Button, Table, Tag, List, Space, Progress } from "antd";
+import { Card, Row, Col, Typography, Badge, Avatar, Button, Table, Tag, List, Space, Progress, message } from "antd";
 import {
   InboxOutlined,
   HomeOutlined,
@@ -26,14 +26,21 @@ export default function AgentDashboard() {
   useEffect(() => {
     if (!parentAgent) return;
     
-    fetch(`/api/agents/${parentAgent.id}`)
-      .then(res => res.json())
-      .then(fullAgent => {
-        setActiveListings(fullAgent.properties || []);
-        setLeads(fullAgent.leads || []);
+    // Fetch this agent's properties and leads via dedicated endpoints
+    // (avoids pulling the full agent object with all nested relations).
+    Promise.all([
+      fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`).then(r => r.json()),
+      fetch(`/api/agents/${parentAgent.id}/leads?limit=100`).then(r => r.json())
+    ])
+      .then(([propsData, leadsData]) => {
+        setActiveListings(Array.isArray(propsData) ? propsData : (propsData.data || []));
+        setLeads(Array.isArray(leadsData?.leads) ? leadsData.leads : (Array.isArray(leadsData) ? leadsData : []));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        message.error('Could not load dashboard data. Please refresh to try again.');
+      });
 
     // Fetch upcoming appointments
     const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
@@ -53,8 +60,9 @@ export default function AgentDashboard() {
   const closedLeads = leads.filter((l: any) => l.status === 'Closed').length;
   const conversionRate = leads.length > 0 ? Math.round((closedLeads / leads.length) * 100) : 0;
 
-  // Chart data
-  const leadsChartData = (() => {
+  // Chart data — memoised so these only recompute when leads actually change,
+  // not on every unrelated re-render.
+  const leadsChartData = useMemo(() => {
     const months: Record<string, number> = {};
     leads.forEach((l: any) => {
       const d = new Date(l.createdAt || Date.now());
@@ -62,15 +70,15 @@ export default function AgentDashboard() {
       months[key] = (months[key] || 0) + 1;
     });
     return Object.entries(months).map(([name, count]) => ({ name, leads: count }));
-  })();
+  }, [leads]);
 
-  const statusData = [
+  const statusData = useMemo(() => [
     { name: 'New', value: leads.filter((l: any) => l.status === 'New').length, color: '#b40101' },
     { name: 'Contacted', value: leads.filter((l: any) => l.status === 'Contacted').length, color: '#373a4b' },
     { name: 'Qualified', value: leads.filter((l: any) => l.status === 'Qualified').length, color: '#667eea' },
     { name: 'Closed', value: leads.filter((l: any) => l.status === 'Closed').length, color: '#10b981' },
     { name: 'Lost', value: leads.filter((l: any) => l.status === 'Lost').length, color: '#9ca3af' },
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [leads]);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Card, Row, Col, Statistic, Typography, Space, Table, Tag, Progress } from "antd";
+import { Card, Row, Col, Statistic, Typography, Space, Table, Tag, Progress, Skeleton, message } from "antd";
 import {
   DollarOutlined,
   HomeOutlined,
@@ -16,6 +16,7 @@ import {
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const { Title, Text } = Typography;
+const AntCard = Card as any;
 
 const COLORS = ['#b40101', '#373a4b', '#667eea', '#43e97b', '#f59e0b'];
 
@@ -37,29 +38,38 @@ export default function Analytics() {
   }, [agentId]);
 
   const fetchAnalytics = async () => {
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    // Each section loads independently — one failure (network or 500) falls
+    // back to safe defaults instead of blanking the whole page.
+    const load = async (url: string, fallback: any) => {
+      try {
+        const res = await fetch(url, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return { data: await res.json(), ok: true };
+      } catch {
+        return { data: fallback, ok: false };
+      }
+    };
+
     try {
-      const headers: Record<string, string> = {};
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-      const [agentRes, leadRes, propRes, salesRes] = await Promise.all([
-        fetch(`/api/analytics/agent/${agentId}`, { headers }),
-        fetch(`/api/analytics/leads/${agentId}`, { headers }),
-        fetch(`/api/analytics/properties/${agentId}`, { headers }),
-        fetch(`/api/analytics/sales/${agentId}`, { headers })
+      const [agent, lead, prop, sales] = await Promise.all([
+        load(`/api/analytics/agent/${agentId}`, { summary: { totalListings: 0, activeListings: 0, totalLeads: 0, newLeads: 0, closedLeads: 0, conversionRate: 0, avgResponseTime: 0, totalOpportunities: 0 }, charts: { leadSources: [] }, propertyPerformance: [] }),
+        load(`/api/analytics/leads/${agentId}`, { total: 0, conversionRate: 0, avgTimeToClose: 0, statusBreakdown: {} }),
+        load(`/api/analytics/properties/${agentId}`, { priceRanges: {}, averages: { price: 0, viewCount: 0, leadCount: 0, daysOnMarket: 0 } }),
+        load(`/api/analytics/sales/${agentId}`, { totalVolume: 0, totalDeals: 0, avgDealSize: 0, estimatedCommission: 0, salesByMonth: [] })
       ]);
 
-      const [agentData, leadData, propData, salesData] = await Promise.all([
-        agentRes.ok ? agentRes.json() : Promise.resolve({ summary: { totalListings: 0, activeListings: 0, totalLeads: 0, newLeads: 0, closedLeads: 0, conversionRate: 0, avgResponseTime: 0, totalOpportunities: 0 }, charts: { leadSources: [] }, propertyPerformance: [] }),
-        leadRes.ok ? leadRes.json() : Promise.resolve({ total: 0, conversionRate: 0, avgTimeToClose: 0, statusBreakdown: {} }),
-        propRes.ok ? propRes.json() : Promise.resolve({ priceRanges: {}, averages: { price: 0, viewCount: 0, leadCount: 0, daysOnMarket: 0 } }),
-        salesRes.ok ? salesRes.json() : Promise.resolve({ totalVolume: 0, totalDeals: 0, avgDealSize: 0, estimatedCommission: 0, salesByMonth: [] })
-      ]);
+      setAnalytics(agent.data);
+      setLeadAnalytics(lead.data);
+      setPropertyAnalytics(prop.data);
+      setSalesReports(sales.data);
 
-      setAnalytics(agentData);
-      setLeadAnalytics(leadData);
-      setPropertyAnalytics(propData);
-      setSalesReports(salesData);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
+      const failed = [agent, lead, prop, sales].filter(r => !r.ok).length;
+      if (failed > 0) {
+        message.warning(`${failed} of 4 analytics sections could not be loaded. Showing partial data.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,8 +97,15 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div style={{ padding: '80px 20px', textAlign: 'center' }}>
-        <Text>Loading analytics...</Text>
+      <div style={{ padding: '24px' }}>
+        <Row gutter={[16, 16]}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Col xs={12} md={6} key={i}>
+              <AntCard><Skeleton active paragraph={{ rows: 1 }} /></AntCard>
+            </Col>
+          ))}
+        </Row>
+        <AntCard style={{ marginTop: 16 }}><Skeleton active paragraph={{ rows: 6 }} /></AntCard>
       </div>
     );
   }
@@ -287,6 +304,35 @@ export default function Analytics() {
             </Card>
           </Col>
         </Row>
+
+        {/* Conversion Funnel (real lead-stage progression) */}
+        {Array.isArray(leadAnalytics?.funnel) && leadAnalytics.funnel.length > 0 && (
+          <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+            <Col xs={24}>
+              <AntCard title="Conversion Funnel">
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  {leadAnalytics.funnel.map((stage: any, i: number) => {
+                    const top = leadAnalytics.funnel[0]?.count || 0;
+                    const pct = top > 0 ? Math.round((stage.count / top) * 100) : 0;
+                    const prev = i > 0 ? leadAnalytics.funnel[i - 1].count : stage.count;
+                    const stepPct = prev > 0 ? Math.round((stage.count / prev) * 100) : 0;
+                    return (
+                      <div key={stage.stage}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <Text strong>{stage.stage}</Text>
+                          <Text type="secondary">
+                            {stage.count} {i > 0 && `(${stepPct}% from prev)`}
+                          </Text>
+                        </div>
+                        <Progress percent={pct} strokeColor={COLORS[i % COLORS.length]} showInfo={false} />
+                      </div>
+                    );
+                  })}
+                </Space>
+              </AntCard>
+            </Col>
+          </Row>
+        )}
 
         {/* Charts Row 2 */}
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>

@@ -17,11 +17,21 @@ export default function Opportunities() {
   const [editingOpp, setEditingOpp] = useState<any>(null);
   const [form] = Form.useForm();
   const [draggedDeal, setDraggedDeal] = useState<any>(null);
+  const [leads, setLeads] = useState<any[]>([]);
 
   useEffect(() => {
     if (!parentAgent) return;
     fetchOpportunities();
   }, [parentAgent, activeSegment]);
+
+  // Load this agent's leads once so opportunities can be linked to their source lead.
+  useEffect(() => {
+    if (!parentAgent) return;
+    fetch(`/api/agents/${parentAgent.id}/leads?limit=100`)
+      .then(res => res.json())
+      .then(data => setLeads(Array.isArray(data?.leads) ? data.leads : (Array.isArray(data) ? data : [])))
+      .catch(() => setLeads([]));
+  }, [parentAgent]);
 
   const fetchOpportunities = async () => {
     try {
@@ -53,7 +63,13 @@ export default function Opportunities() {
 
   const handleEdit = (opp: any) => {
     setEditingOpp(opp);
-    form.setFieldsValue(opp);
+    form.setFieldsValue({
+      ...opp,
+      // <input type="date"> needs YYYY-MM-DD, not an ISO timestamp.
+      expectedCloseDate: opp.expectedCloseDate
+        ? new Date(opp.expectedCloseDate).toISOString().split('T')[0]
+        : undefined
+    });
     setIsModalOpen(true);
   };
 
@@ -103,14 +119,20 @@ export default function Opportunities() {
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    // Optimistic: move the card immediately, revert on failure.
+    const previous = opportunities.find(o => o.id === id)?.status;
+    if (previous === newStatus) return;
+    setOpportunities(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
     try {
-      await fetch(`/api/opportunities/${id}`, {
+      const res = await fetch(`/api/opportunities/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      fetchOpportunities();
+      if (!res.ok) throw new Error('Failed to update');
+      message.success(`Moved to ${newStatus}`);
     } catch {
+      setOpportunities(prev => prev.map(o => o.id === id ? { ...o, status: previous } : o));
       message.error('Failed to update status');
     }
   };
@@ -281,18 +303,36 @@ export default function Opportunities() {
         width={500}
       >
         <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 20 }}>
-          <Form.Item label="Client Name" name="name" rules={[{ required: true }]}>
+          <Form.Item
+            label="Client Name"
+            name="name"
+            rules={[
+              { required: true, message: 'Client name is required' },
+              { min: 2, message: 'Name must be at least 2 characters' }
+            ]}
+          >
             <Input placeholder="e.g. Sarah Miller" />
           </Form.Item>
-          <Form.Item label="Deal Type" name="dealType" rules={[{ required: true }]}>
+          <Form.Item
+            label="Deal Type"
+            name="dealType"
+            rules={[{ required: true, message: 'Please describe the deal type' }]}
+          >
             <Input placeholder="e.g. Luxury Listing, Investment Property" />
           </Form.Item>
-          <Form.Item label="Price ($)" name="price" rules={[{ required: true }]}>
-            <InputNumber 
-              style={{ width: '100%' }} 
-              min={1000} 
-              placeholder="950000" 
-              formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} 
+          <Form.Item
+            label="Price ($)"
+            name="price"
+            rules={[
+              { required: true, message: 'Price is required' },
+              { type: 'number', min: 1000, message: 'Price must be at least $1,000' }
+            ]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              min={1000}
+              placeholder="950000"
+              formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
             />
           </Form.Item>
           <Form.Item label="Status" name="status" initialValue="Cultivate">
@@ -305,6 +345,23 @@ export default function Opportunities() {
           </Form.Item>
           <Form.Item label="Expected Close Date" name="expectedCloseDate">
             <Input type="date" />
+          </Form.Item>
+          <Form.Item label="Linked Lead (optional)" name="leadId">
+            <AntSelect
+              allowClear
+              showSearch
+              placeholder="Link this deal to the originating lead"
+              optionFilterProp="children"
+            >
+              {leads.map(l => (
+                <AntOption key={l.id} value={l.id}>
+                  {l.name}{l.email ? ` — ${l.email}` : ''}
+                </AntOption>
+              ))}
+            </AntSelect>
+          </Form.Item>
+          <Form.Item label="Notes" name="notes">
+            <Input.TextArea rows={3} placeholder="Deal context, next steps, client preferences..." />
           </Form.Item>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
             <Button onClick={() => { setIsModalOpen(false); setEditingOpp(null); form.resetFields(); }}>

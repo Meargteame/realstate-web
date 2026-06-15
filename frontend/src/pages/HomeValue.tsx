@@ -34,7 +34,8 @@ export default function HomeValue() {
           ...values,
           phone: values.phone || '',
           message: `Home Valuation Request for: ${address}${values.timeline ? ` - Timeline: ${values.timeline}` : ''}`,
-          type: 'valuation_request'
+          type: 'valuation_request',
+          source: 'home_value_tool'
         })
       });
 

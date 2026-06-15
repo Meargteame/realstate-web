@@ -23,13 +23,18 @@ export default function AgentListings() {
 
   useEffect(() => {
     if (!parentAgent) return;
-    fetch(`/api/agents/${parentAgent.id}`)
+    // Fetch only this agent's properties instead of the whole agent object.
+    fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`)
       .then(res => res.json())
       .then(data => {
-        setListings(data.properties || []);
+        // Endpoint returns an array (or a paginated envelope if page is passed).
+        setListings(Array.isArray(data) ? data : (data.data || []));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        message.error('Could not load your listings. Please refresh to try again.');
+      });
   }, [parentAgent]);
 
   const handleDelete = (id: string) => {

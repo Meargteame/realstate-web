@@ -3,25 +3,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const { JWT_SECRET } = require('../config/jwt');
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
-  console.log('🔥 REGISTER ENDPOINT HIT!');
-  console.log('📦 Request body:', req.body);
-  
   try {
     const { firstName, lastName, email, password, role } = req.body;
 
     // Validate Required Fields
     if (!firstName || !lastName || !email || !password) {
-      console.log('❌ Validation failed: missing fields');
       return res.status(400).json({ error: 'First name, last name, email, and password are required.' });
     }
 
     const emailLower = email.toLowerCase().trim();
-    console.log('📧 Creating account for:', emailLower);
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({ 
@@ -29,20 +23,17 @@ exports.register = async (req, res) => {
     });
 
     if (existingUser) {
-      console.log('❌ User already exists');
       return res.status(400).json({ error: 'An account with this email already exists. Please log in.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const userRole = role === 'agent' ? 'agent' : 'user'; 
-    console.log('👤 Creating user with role:', userRole);
-    
+    const userRole = role === 'agent' ? 'agent' : 'user';
+
     let agentId = null;
 
     // Use Prisma transaction to ensure both user and agent are created together cleanly
     const result = await prisma.$transaction(async (tx) => {
       if (userRole === 'agent') {
-        console.log('🏢 Creating agent profile...');
         const agent = await tx.agent.create({
           data: {
             name: `${firstName.trim()} ${lastName.trim()}`,
@@ -55,10 +46,8 @@ exports.register = async (req, res) => {
           }
         });
         agentId = agent.id;
-        console.log('✅ Agent created:', agent.id);
       }
 
-      console.log('👤 Creating user record...');
       const user = await tx.user.create({
         data: {
           name: `${firstName.trim()} ${lastName.trim()}`,
@@ -68,7 +57,6 @@ exports.register = async (req, res) => {
           agentId: agentId
         }
       });
-      console.log('✅ User created:', user.id);
 
       return user;
     });
@@ -104,30 +92,25 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('🔐 Login attempt for:', email);
-
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
     const emailLower = email.toLowerCase().trim();
-    console.log('📧 Searching for email:', emailLower);
 
     // Find in Users table (case-insensitive search)
-    const user = await prisma.user.findFirst({ 
-      where: { 
+    const user = await prisma.user.findFirst({
+      where: {
         email: {
           equals: emailLower,
           mode: 'insensitive'
         }
-      } 
+      }
     });
 
     if (user) {
-      console.log('✅ User found:', user.email);
       const isMatch = await bcrypt.compare(password, user.password);
-      console.log('🔑 Password match:', isMatch);
-      
+
       if (!isMatch) {
         return res.status(401).json({ error: 'Invalid credentials. Please check your email and password.' });
       }
@@ -136,7 +119,6 @@ exports.login = async (req, res) => {
       let agentId = user.agentId;
       if (!agentId) {
         try {
-          console.log('🏢 Auto-creating agent profile for user:', user.id);
           const agent = await prisma.agent.create({
             data: {
               name: user.name || user.email.split('@')[0],

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Hero from "@/components/Hero";
 import ExpertSection from "@/components/ExpertSection";
+import EstateJournal from "@/components/EstateJournal";
 import PropertyCard from "@/components/PropertyCard";
 import { Button, Typography, Row, Col, Statistic, Space, Card } from "antd";
 import { Link, useNavigate } from "react-router-dom";
@@ -23,17 +24,21 @@ import {
 
 const { Title, Paragraph, Text } = Typography;
 
-const trendingCities = [
-  { name: "Austin, TX", image: "https://images.unsplash.com/photo-1531218150217-54595bc2b934?auto=format&fit=crop&w=600&q=80", count: "1,240" },
-  { name: "Miami, FL", image: "https://images.unsplash.com/photo-1535498730771-e735b998cd64?auto=format&fit=crop&w=600&q=80", count: "890" },
-  { name: "Denver, CO", image: "https://images.unsplash.com/photo-1546154288-3e3f1d2234d1?auto=format&fit=crop&w=600&q=80", count: "510" },
-  { name: "Charlotte, NC", image: "https://images.unsplash.com/photo-1575917649705-5b59aaa12e6b?auto=format&fit=crop&w=600&q=80", count: "680" },
+// Fallback imagery for cities returned by the API without a sample photo,
+// and to keep the section visually full before any listings exist.
+const CITY_FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1531218150217-54595bc2b934?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1535498730771-e735b998cd64?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1546154288-3e3f1d2234d1?auto=format&fit=crop&w=600&q=80",
+  "https://images.unsplash.com/photo-1575917649705-5b59aaa12e6b?auto=format&fit=crop&w=600&q=80",
 ];
 
 export default function Home() {
   const navigate = useNavigate();
   const [featuredProperties, setFeaturedProperties] = useState<any[]>([]);
   const [topAgents, setTopAgents] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [trendingCities, setTrendingCities] = useState<any[]>([]);
 
   useEffect(() => {
     fetch("/api/properties?limit=6")
@@ -45,7 +50,41 @@ export default function Home() {
       .then((r) => r.json())
       .then((data) => setTopAgents(Array.isArray(data) ? data.slice(0, 4) : []))
       .catch(() => setTopAgents([]));
+
+    // Real platform stats for the stats bar.
+    fetch("/api/stats")
+      .then((r) => r.json())
+      .then((data) => setStats(data && !data.error ? data : null))
+      .catch(() => setStats(null));
+
+    // Real trending cities (by active listing count).
+    fetch("/api/stats/trending-cities?limit=4")
+      .then((r) => r.json())
+      .then((data) => setTrendingCities(Array.isArray(data) ? data : []))
+      .catch(() => setTrendingCities([]));
   }, []);
+
+  // Build the stats-bar items from real data, formatted for display.
+  const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k+` : `${n}`);
+  const statItems = [
+    { label: "Active Listings", value: stats ? fmt(stats.activeListings) : "—", icon: <HomeOutlined /> },
+    { label: "Cities Served", value: stats ? `${stats.citiesServed}` : "—", icon: <EnvironmentOutlined /> },
+    { label: "Expert Agents", value: stats ? fmt(stats.totalAgents) : "—", icon: <UserOutlined /> },
+    { label: "Avg. Days on Market", value: stats && stats.avgDaysOnMarket ? `${stats.avgDaysOnMarket}` : "—", icon: <ClockCircleOutlined /> },
+  ];
+
+  // Trending cities from the API, with image fallbacks. If the DB has no
+  // listings yet, fall back to a few showcase cities so the section isn't empty.
+  const FALLBACK_CITIES = [
+    { name: "Austin, TX", city: "Austin", count: 0 },
+    { name: "Miami, FL", city: "Miami", count: 0 },
+    { name: "Denver, CO", city: "Denver", count: 0 },
+    { name: "Charlotte, NC", city: "Charlotte", count: 0 },
+  ];
+  const displayCities = (trendingCities.length > 0 ? trendingCities : FALLBACK_CITIES).map((c: any, i: number) => ({
+    ...c,
+    image: c.imageUrl || CITY_FALLBACK_IMAGES[i % CITY_FALLBACK_IMAGES.length],
+  }));
 
   return (
     <div style={{ background: "white" }}>
@@ -55,12 +94,7 @@ export default function Home() {
       <section style={{ background: "#111827", padding: "48px 32px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           <Row gutter={[48, 24]} justify="center">
-            {[
-              { label: "Active Listings", value: "3,420+", icon: <HomeOutlined /> },
-              { label: "Cities Served", value: "150+", icon: <EnvironmentOutlined /> },
-              { label: "Expert Agents", value: "12,000+", icon: <UserOutlined /> },
-              { label: "Avg. Days on Market", value: "18", icon: <ClockCircleOutlined /> },
-            ].map((stat, i) => (
+            {statItems.map((stat, i) => (
               <Col xs={12} md={6} key={i} style={{ textAlign: "center" }}>
                 <div style={{ color: "#b40101", fontSize: "28px", marginBottom: "8px" }}>{stat.icon}</div>
                 <div style={{ color: "white", fontSize: "28px", fontWeight: 900 }}>{stat.value}</div>
@@ -189,7 +223,7 @@ export default function Home() {
           </div>
 
           <Row gutter={[24, 24]}>
-            {trendingCities.map((city) => (
+            {displayCities.map((city) => (
               <Col xs={24} sm={12} lg={6} key={city.name}>
                 <div
                   onClick={() => navigate(`/properties?q=${city.name.split(",")[0]}`)}
@@ -219,7 +253,7 @@ export default function Home() {
                       {city.name}
                     </Title>
                     <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: "14px", fontWeight: 500 }}>
-                      {city.count} listings
+                      {city.count > 0 ? `${city.count.toLocaleString()} listings` : "Explore market"}
                     </Text>
                   </div>
                 </div>
@@ -230,6 +264,9 @@ export default function Home() {
       </section>
 
       <ExpertSection />
+
+      {/* The Estate Journal — connected to /api/blog */}
+      <EstateJournal />
 
       {/* Testimonials */}
       <section style={{ padding: "96px 32px", background: "#f8f9fa" }}>

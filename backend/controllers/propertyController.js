@@ -29,7 +29,9 @@ exports.getProperties = async (req, res) => {
     maxDaysOnMarket,
     city,
     state,
-    zip
+    zip,
+    agentId,
+    status
   } = req.query;
   
   try {
@@ -67,6 +69,10 @@ exports.getProperties = async (req, res) => {
     if (city) where.AND.push({ city: { contains: city, mode: 'insensitive' } });
     if (state) where.AND.push({ state: { contains: state, mode: 'insensitive' } });
     if (zip) where.AND.push({ zip });
+
+    // Ownership / status filters
+    if (agentId) where.AND.push({ agentId });
+    if (status) where.AND.push({ status });
     
     // Price range
     if (minPrice) where.AND.push({ price: { gte: parseInt(minPrice) } });
@@ -115,33 +121,57 @@ exports.getProperties = async (req, res) => {
     
     // If no filters, remove AND clause
     const finalWhere = where.AND.length > 0 ? where : {};
-    
-    const properties = await prisma.property.findMany({
-      where: finalWhere,
-      include: { agent: true },
-      orderBy: [
-        { listedAt: 'desc' }
-      ]
-    });
-    
+
+    // Pagination (opt-in & backward-compatible):
+    //  - ?limit=N        -> caps the number of rows (take)
+    //  - ?page=N&limit=M -> returns an envelope { data, total, page, limit, totalPages }
+    //  - neither         -> returns a plain array (legacy behaviour)
+    const rawLimit = parseInt(req.query.limit, 10);
+    const rawPage = parseInt(req.query.page, 10);
+    const paginated = Number.isFinite(rawPage) && rawPage > 0;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : (paginated ? 20 : undefined);
+    const page = paginated ? rawPage : 1;
+    const skip = paginated ? (page - 1) * limit : undefined;
+
+    const [properties, total] = await Promise.all([
+      prisma.property.findMany({
+        where: finalWhere,
+        include: { agent: true },
+        orderBy: [{ listedAt: 'desc' }],
+        ...(limit !== undefined ? { take: limit } : {}),
+        ...(skip !== undefined ? { skip } : {})
+      }),
+      paginated ? prisma.property.count({ where: finalWhere }) : Promise.resolve(null)
+    ]);
+
     console.log('✅ Found properties:', properties.length);
-    
+
     // Convert BigInt to Number for JSON serialization
     const propertiesData = JSON.parse(JSON.stringify(properties, (key, value) =>
       typeof value === 'bigint' ? Number(value) : value
     ));
-    
-    // Cache for 5 minutes (hot data)
-    await cacheService.set(cacheKey, propertiesData, 300);
-    
+
+    const payload = paginated
+      ? {
+          data: propertiesData,
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      : propertiesData;
+
+    // Cache (5 minutes, hot data)
+    await cacheService.set(cacheKey, payload, 300);
+
     // Track business metric
-    businessMetrics.track('property.search', { 
-      query: q, 
+    businessMetrics.track('property.search', {
+      query: q,
       results: properties.length,
-      filters: Object.keys(req.query).length 
+      filters: Object.keys(req.query).length
     });
-    
-    res.json(propertiesData);
+
+    res.json(payload);
   } catch (error) {
     console.error('❌ Error fetching properties:', error);
     res.status(500).json({ error: error.message });
@@ -581,6 +611,58 @@ exports.deleteComparison = async (req, res) => {
     res.json({ message: 'Comparison deleted successfully' });
   } catch (error) {
     console.error('❌ Error deleting comparison:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/properties/saved?userId=... - Properties a user has favorited/saved
+exports.getSavedProperties = async (req, res) => {
+  try {
+    const userId = req.query.userId || (req.user && req.user.id);
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required.' });
+    }
+
+    const favorites = await prisma.favorite.findMany({
+      where: { userId },
+      include: { property: { include: { agent: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const properties = favorites
+      .map((f) => f.property)
+      .filter(Boolean);
+
+    // Convert BigInt to Number for JSON serialization
+    const data = JSON.parse(JSON.stringify(properties, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
+    res.json(data);
+  } catch (error) {
+    console.error('❌ Error fetching saved properties:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST /api/properties/:id/share - Track a share event and increment counter
+exports.trackShare = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { platform } = req.body || {};
+
+    const property = await prisma.property.update({
+      where: { id },
+      data: { shareCount: { increment: 1 } },
+      select: { id: true, shareCount: true }
+    });
+
+    res.json({ shareCount: property.shareCount, platform: platform || 'unknown' });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    console.error('❌ Error tracking share:', error);
     res.status(500).json({ error: error.message });
   }
 };

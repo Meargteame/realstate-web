@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Tag, Typography, Space, Button } from "antd";
-import { HomeOutlined, EnvironmentOutlined, ArrowRightOutlined, HeartOutlined } from "@ant-design/icons";
+import { HomeOutlined, EnvironmentOutlined, ArrowRightOutlined, HeartOutlined, ClockCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
 const { Title, Text, Paragraph } = Typography;
@@ -44,15 +44,25 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             <img
               alt={property.address}
               src={property.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"}
-              style={{ 
-                width: '100%', 
-                height: '100%', 
+              loading="lazy"
+              style={{
+                width: '100%',
+                height: '100%',
                 objectFit: 'cover',
                 transition: 'transform 0.3s ease'
               }}
               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             />
+
+            {/* "New" / "Reduced" marketing badge based on real data */}
+            {typeof property.daysOnMarket === 'number' && property.daysOnMarket <= 7 && (
+              <div style={{ position: 'absolute', top: 16, left: 16, marginTop: 40 }}>
+                <Tag color="#10b981" style={{ fontWeight: 700, borderRadius: 6, border: 'none', padding: '4px 10px', fontSize: 11, textTransform: 'uppercase' }}>
+                  New
+                </Tag>
+              </div>
+            )}
             
             {/* Favorite Button */}
             <div 
@@ -178,6 +188,29 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </Text>
           </Space>
 
+          {/* Key features (from real property.features data) */}
+          {Array.isArray(property.features) && property.features.length > 0 && (
+            <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {property.features.slice(0, 3).map((f: string) => (
+                <Tag key={f} style={{ borderRadius: 6, fontSize: 11, color: '#374151', background: '#f9fafb', border: '1px solid #f0f0f0' }}>
+                  {f}
+                </Tag>
+              ))}
+            </div>
+          )}
+
+          {/* Engagement / freshness metrics */}
+          {(typeof property.daysOnMarket === 'number' || typeof property.viewCount === 'number') && (
+            <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 12, color: '#6b7280' }}>
+              {typeof property.daysOnMarket === 'number' && (
+                <span><ClockCircleOutlined style={{ marginRight: 4 }} />{property.daysOnMarket}d on market</span>
+              )}
+              {typeof property.viewCount === 'number' && property.viewCount > 0 && (
+                <span><EyeOutlined style={{ marginRight: 4 }} />{property.viewCount.toLocaleString()} views</span>
+              )}
+            </div>
+          )}
+
           {/* Agent Info */}
           <div 
             style={{ 
@@ -190,15 +223,16 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {property.agent?.imageUrl && (
-                <img 
-                  src={property.agent.imageUrl} 
-                  style={{ 
-                    width: 32, 
-                    height: 32, 
-                    borderRadius: '50%', 
+                <img
+                  src={property.agent.imageUrl}
+                  loading="lazy"
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
                     objectFit: 'cover',
                     border: '2px solid #f3f4f6'
-                  }} 
+                  }}
                 />
               )}
               <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500 }}>

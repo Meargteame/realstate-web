@@ -32,7 +32,7 @@ export default function CityPage() {
 
   const cityKey = city?.toLowerCase() || "default";
   const displayName = city?.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ') || "Your City";
-  const market = CITY_MARKET_DATA[cityKey] || CITY_MARKET_DATA.default;
+  const staticMarket = CITY_MARKET_DATA[cityKey] || CITY_MARKET_DATA.default;
 
   useEffect(() => {
     fetch(`/api/properties?q=${city}`)
@@ -40,6 +40,22 @@ export default function CityPage() {
       .then(d => { setProperties(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [city]);
+
+  // Derive market stats from real listings where available; fall back to the
+  // static reference table so the page still reads well before data exists.
+  const market = (() => {
+    if (properties.length === 0) return staticMarket;
+    const prices = properties.map((p: any) => p.price).filter((n: any) => typeof n === 'number').sort((a: number, b: number) => a - b);
+    const median = prices.length ? prices[Math.floor(prices.length / 2)] : staticMarket.medianPrice;
+    const doms = properties.map((p: any) => p.daysOnMarket).filter((n: any) => typeof n === 'number');
+    const avgDom = doms.length ? Math.round(doms.reduce((s: number, n: number) => s + n, 0) / doms.length) : staticMarket.avgDom;
+    return {
+      medianPrice: median,
+      priceChange: staticMarket.priceChange, // trend needs historical data; keep reference value
+      avgDom,
+      totalListings: properties.length
+    };
+  })();
 
   const onValuationSubmit = async (values: any) => {
     try {
@@ -50,7 +66,8 @@ export default function CityPage() {
           ...values,
           phone: values.phone || '',
           message: `Home Valuation Request from ${displayName} city page - Address: ${values.address}`,
-          type: 'valuation_request'
+          type: 'valuation_request',
+          source: 'city_page'
         })
       });
 

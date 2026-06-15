@@ -143,14 +143,22 @@ const Calendar: React.FC = () => {
   };
 
   const handleRejectBooking = async (bookingId: string) => {
+    // Optional reason — included in the rejection email to the lead.
+    const rejectionReason = window.prompt(
+      'Optional: add a reason for declining (the requester will see this). Leave blank to skip.'
+    );
+    // prompt returns null if the agent cancels the dialog entirely.
+    if (rejectionReason === null) return;
     try {
       const response = await fetch(
         `/api/calendar/bookings/${bookingId}/reject`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ rejectionReason: rejectionReason.trim() || undefined })
         }
       );
 
@@ -359,6 +367,14 @@ const Calendar: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Empty hint when the calendar has no events at all */}
+      {!loading && events.length === 0 && (
+        <div className="flex flex-col items-center justify-center text-center py-6 mb-2 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+          <CalendarIcon className="w-8 h-8 text-gray-300 mb-2" />
+          <p className="text-gray-500 text-sm m-0">No events scheduled yet. Confirmed bookings and appointments will appear here.</p>
+        </div>
+      )}
 
       {/* Calendar Grid */}
       <Card className="p-2 sm:p-4 md:p-6 overflow-x-auto">

@@ -157,15 +157,16 @@ export default function Header() {
         {/* Navigation - Desktop only */}
         {!isMobile && (
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <Menu 
-              mode="horizontal" 
-              selectedKeys={[location.pathname]} 
+            <Menu
+              mode="horizontal"
+              selectedKeys={[location.pathname]}
               items={navItems}
-              style={{ 
-                border: 'none', 
-                fontSize: '14px', 
-                fontWeight: 700, 
-                minWidth: '500px',
+              disabledOverflow
+              style={{
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: 700,
+                minWidth: '640px',
                 justifyContent: 'center',
                 background: 'transparent',
                 letterSpacing: '0.02em'

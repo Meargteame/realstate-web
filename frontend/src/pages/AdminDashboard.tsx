@@ -16,7 +16,6 @@ import {
   ReloadOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { Line, Column } from '@ant-design/plots';
 import { LineChart, Line as RLine, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useIsMobile } from "../hooks/useBreakpoint";
 
@@ -42,29 +41,10 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Mock revenue & user growth data (replace with API when available)
-  const revenueData = [
-    { month: 'Jan', revenue: 42000 }, { month: 'Feb', revenue: 53000 },
-    { month: 'Mar', revenue: 61000 }, { month: 'Apr', revenue: 58000 },
-    { month: 'May', revenue: 72000 }, { month: 'Jun', revenue: 85000 },
-    { month: 'Jul', revenue: 91000 }, { month: 'Aug', revenue: 78000 },
-    { month: 'Sep', revenue: 96000 }, { month: 'Oct', revenue: 105000 },
-    { month: 'Nov', revenue: 112000 }, { month: 'Dec', revenue: 128000 },
-  ];
-  const userGrowthData = [
-    { month: 'Jan', users: 120 }, { month: 'Feb', users: 165 },
-    { month: 'Mar', users: 210 }, { month: 'Apr', users: 280 },
-    { month: 'May', users: 345 }, { month: 'Jun', users: 420 },
-    { month: 'Jul', users: 510 }, { month: 'Aug', users: 580 },
-    { month: 'Sep', users: 670 }, { month: 'Oct', users: 745 },
-    { month: 'Nov', users: 830 }, { month: 'Dec', users: 940 },
-  ];
-  const systemHealth = [
-    { name: 'Database', status: 'healthy', uptime: '99.98%', icon: <DatabaseOutlined />, latency: '12ms' },
-    { name: 'API Server', status: 'healthy', uptime: '99.95%', icon: <ApiOutlined />, latency: '45ms' },
-    { name: 'File Storage', status: 'healthy', uptime: '99.99%', icon: <CloudOutlined />, latency: '8ms' },
-    { name: 'Email Service', status: 'warning', uptime: '98.20%', icon: <FileTextOutlined />, latency: '120ms' },
-  ];
+  // Real trend data from /api/admin/trends (populated in fetchDashboardData)
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
+  const [systemHealth, setSystemHealth] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -86,6 +66,18 @@ export default function AdminDashboard() {
       const headers = {
         'Authorization': `Bearer ${token}`
       };
+
+      // Fetch real revenue / user-growth / system-health trends
+      fetch('/api/admin/trends', { headers })
+        .then(r => (r.ok ? r.json() : null))
+        .then(trends => {
+          if (trends) {
+            setRevenueData(trends.revenueByMonth || []);
+            setUserGrowthData(trends.userGrowthByMonth || []);
+            setSystemHealth(trends.systemHealth || []);
+          }
+        })
+        .catch(() => {});
 
       // Fetch platform stats
       const statsRes = await fetch('/api/admin/stats', { headers });
@@ -426,19 +418,29 @@ export default function AdminDashboard() {
             style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', height: '100%' }}
           >
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {systemHealth.map((s) => (
-                <div key={s.name} style={{ padding: '16px', background: '#fafafa', borderRadius: 10, border: `1px solid ${s.status === 'healthy' ? '#d1fae5' : '#fde68a'}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 20, color: s.status === 'healthy' ? '#10b981' : '#f59e0b' }}>{s.icon}</span>
-                    <span style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</span>
-                    <Tag color={s.status === 'healthy' ? 'green' : 'orange'} style={{ marginLeft: 'auto' }}>{s.status.toUpperCase()}</Tag>
+              {systemHealth.length === 0 && (
+                <Text type="secondary" style={{ gridColumn: '1/-1' }}>No health data available.</Text>
+              )}
+              {systemHealth.map((s) => {
+                const iconByName: Record<string, React.ReactNode> = {
+                  'Database': <DatabaseOutlined />,
+                  'API Server': <ApiOutlined />,
+                  'Cache (Redis)': <CloudOutlined />,
+                };
+                return (
+                  <div key={s.name} style={{ padding: '16px', background: '#fafafa', borderRadius: 10, border: `1px solid ${s.status === 'healthy' ? '#d1fae5' : '#fde68a'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 20, color: s.status === 'healthy' ? '#10b981' : '#f59e0b' }}>{iconByName[s.name] || <ApiOutlined />}</span>
+                      <span style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</span>
+                      <Tag color={s.status === 'healthy' ? 'green' : 'orange'} style={{ marginLeft: 'auto' }}>{(s.status || '').toUpperCase()}</Tag>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6b7280' }}>
+                      <span>Uptime: <strong style={{ color: '#111827' }}>{s.uptime}</strong></span>
+                      <span><strong style={{ color: '#111827' }}>{s.detail}</strong></span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6b7280' }}>
-                    <span>Uptime: <strong style={{ color: '#111827' }}>{s.uptime}</strong></span>
-                    <span>Latency: <strong style={{ color: '#111827' }}>{s.latency}</strong></span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         </Col>

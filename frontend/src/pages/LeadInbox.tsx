@@ -30,16 +30,46 @@ export default function LeadInbox() {
 
   const handleToggleFavorite = async () => {
     if (!selectedLead) return;
+    const target = selectedLead;
+    const optimistic = { ...target, isFavorite: !target.isFavorite };
+    // Optimistic: flip immediately.
+    setLeads(prev => prev.map(l => l.id === target.id ? optimistic : l));
+    setSelectedLead(optimistic);
     try {
-      const res = await fetch(`/api/leads/${selectedLead.id}/favorite`, {
+      const res = await fetch(`/api/leads/${target.id}/favorite`, {
         method: 'PATCH'
       });
       if (!res.ok) throw new Error('Failed to toggle favorite');
       const updated = await res.json();
       setLeads(prev => prev.map(l => l.id === updated.id ? updated : l));
-      setSelectedLead(updated);
+      setSelectedLead(prev => (prev && prev.id === updated.id ? updated : prev));
     } catch {
+      // Revert
+      setLeads(prev => prev.map(l => l.id === target.id ? target : l));
+      setSelectedLead(prev => (prev && prev.id === target.id ? target : prev));
       message.error('Failed to update favorite');
+    }
+  };
+
+  const handleSetFollowUp = async (value: string) => {
+    if (!selectedLead) return;
+    const nextFollowUpDate = value || null;
+    const previous = selectedLead.nextFollowUpDate;
+    // Optimistic update
+    setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, nextFollowUpDate } : l));
+    setSelectedLead((prev: any) => prev ? { ...prev, nextFollowUpDate } : prev);
+    try {
+      const res = await fetch(`/api/leads/${selectedLead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nextFollowUpDate })
+      });
+      if (!res.ok) throw new Error('failed');
+      message.success(nextFollowUpDate ? 'Follow-up date set' : 'Follow-up cleared');
+    } catch {
+      setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, nextFollowUpDate: previous } : l));
+      setSelectedLead((prev: any) => prev ? { ...prev, nextFollowUpDate: previous } : prev);
+      message.error('Failed to update follow-up date');
     }
   };
 
@@ -147,6 +177,16 @@ export default function LeadInbox() {
                   <Text type="secondary">{new Date(selectedLead.createdAt).toLocaleString()}</Text>
                 </div>
                 <Text style={{ fontSize: 16, lineHeight: 1.6 }}>{selectedLead.message}</Text>
+                {(selectedLead.source || (Array.isArray(selectedLead.tags) && selectedLead.tags.length > 0)) && (
+                  <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                    {selectedLead.source && (
+                      <Tag color="blue">Source: {selectedLead.source}</Tag>
+                    )}
+                    {Array.isArray(selectedLead.tags) && selectedLead.tags.map((t: string) => (
+                      <Tag key={t}>{t}</Tag>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {selectedLead.property && (
@@ -162,6 +202,19 @@ export default function LeadInbox() {
                    </div>
                 </div>
               )}
+
+              <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <Text strong>Next follow-up:</Text>
+                <input
+                  type="date"
+                  value={selectedLead.nextFollowUpDate ? new Date(selectedLead.nextFollowUpDate).toISOString().split('T')[0] : ''}
+                  onChange={(e) => handleSetFollowUp(e.target.value)}
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #d9d9d9' }}
+                />
+                {selectedLead.nextFollowUpDate && (
+                  <Button size="small" onClick={() => handleSetFollowUp('')}>Clear</Button>
+                )}
+              </div>
             </div>
 
             <div style={{ padding: '24px 40px', borderTop: '1px solid #f0f0f0' }}>

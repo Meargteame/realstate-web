@@ -45,6 +45,7 @@ model Agent {
   videoUrl      String?       // YouTube/Vimeo embed URL
   certifications String[]     @default([]) // Professional certifications
   socialMedia   Json?         // { facebook, instagram, linkedin, twitter }
+  officeHours   Json?         // { monday: {open,close,closed}, ... }
   
   // Performance Metrics
   totalSales    Int           @default(0)
@@ -126,6 +127,7 @@ model Property {
   // Performance & Analytics Fields
   viewCount    Int           @default(0)
   leadCount    Int           @default(0)
+  shareCount   Int           @default(0)
   lastViewed   DateTime?
   listedAt     DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -175,14 +177,20 @@ model Lead {
   notes         String?
   lastContacted DateTime?
   createdAt     DateTime  @default(now())
-  
+
+  // Lead intelligence
+  source            String?   // website, referral, phone, social, ad, zillow, etc.
+  tags              String[]  @default([]) // quick categorisation: urgent, vip, cold, ...
+  nextFollowUpDate  DateTime? // scheduled next contact
+
   agent      Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
   agentId    String
-  
+
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   propertyId String?
-  
-  documents  Document[]
+
+  documents     Document[]
+  opportunities Opportunity[]
 }
 
 model Opportunity {
@@ -195,9 +203,17 @@ model Opportunity {
   probability Int      @default(20)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
+  // Deal detail
+  expectedCloseDate DateTime?
+  notes             String?
+
   agent       Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
   agentId     String
+
+  // Link back to the lead this deal originated from (nullable for legacy data)
+  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  leadId      String?
 }
 
 model Favorite {
@@ -506,9 +522,12 @@ model BookingRequest {
   message          String?
   status           String   @default("pending") // pending, confirmed, rejected, cancelled
   confirmedEventId String?  // Link to CalendarEvent if confirmed
+  serviceType      String?  // showing, appraisal, inspection, consultation
+  timezone         String?  // IANA tz of the requester, e.g. America/New_York
+  rejectionReason  String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
+
   @@index([agentId, status])
   @@index([status])
   @@map("BookingRequest")

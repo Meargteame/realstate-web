@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const emailService = require('../services/emailService');
 
 // Helper to serialize BigInt
 const serializeBigInt = (obj) => {
@@ -6,6 +7,11 @@ const serializeBigInt = (obj) => {
     typeof value === 'bigint' ? value.toString() : value
   ));
 };
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const formatDateLabel = (date) =>
+  new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
 // =====================================================
 // CALENDAR EVENTS
@@ -395,14 +401,43 @@ exports.createBookingRequest = async (req, res) => {
       requestedDate,
       requestedTime,
       duration,
-      message
+      message,
+      serviceType,
+      timezone
     } = req.body;
 
     // Validation
     if (!agentId || !leadName || !leadEmail || !requestedDate || !requestedTime) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: agentId, leadName, leadEmail, requestedDate, requestedTime' 
+      return res.status(400).json({
+        error: 'Missing required fields: agentId, leadName, leadEmail, requestedDate, requestedTime'
       });
+    }
+    if (!isValidEmail(leadEmail)) {
+      return res.status(400).json({ error: 'Please provide a valid email address.' });
+    }
+    const requested = new Date(requestedDate);
+    if (Number.isNaN(requested.getTime())) {
+      return res.status(400).json({ error: 'Invalid requested date.' });
+    }
+    // Reject dates in the past (compare on day granularity).
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (requested < today) {
+      return res.status(400).json({ error: 'Requested date cannot be in the past.' });
+    }
+
+    // Duplicate prevention: same lead, agent, date and time slot still pending/confirmed.
+    const existing = await prisma.bookingRequest.findFirst({
+      where: {
+        agentId,
+        leadEmail: { equals: leadEmail, mode: 'insensitive' },
+        requestedDate: requested,
+        requestedTime,
+        status: { in: ['pending', 'confirmed'] }
+      }
+    });
+    if (existing) {
+      return res.status(409).json({ error: 'You already have a request for this time slot.' });
     }
 
     const request = await prisma.bookingRequest.create({
@@ -412,12 +447,23 @@ exports.createBookingRequest = async (req, res) => {
         leadEmail,
         leadPhone,
         propertyId,
-        requestedDate: new Date(requestedDate),
+        requestedDate: requested,
         requestedTime,
         duration: duration || 60,
-        message
+        message,
+        serviceType: serviceType || null,
+        timezone: timezone || null
       }
     });
+
+    // Fire-and-forget acknowledgement email (never block the response on email).
+    emailService.sendBookingStatusEmail({
+      to: leadEmail,
+      name: leadName,
+      kind: 'received',
+      dateLabel: formatDateLabel(requested),
+      timeLabel: requestedTime
+    }).catch(err => console.error('Booking received email failed:', err.message));
 
     res.status(201).json(serializeBigInt(request));
   } catch (error) {
@@ -463,6 +509,16 @@ exports.confirmBookingRequest = async (req, res) => {
       }
     });
 
+    // Notify the lead their appointment is confirmed.
+    emailService.sendBookingStatusEmail({
+      to: bookingRequest.leadEmail,
+      name: bookingRequest.leadName,
+      kind: 'confirmed',
+      dateLabel: formatDateLabel(startTime),
+      timeLabel: new Date(startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      location
+    }).catch(err => console.error('Booking confirmed email failed:', err.message));
+
     res.json({
       bookingRequest: serializeBigInt(updated),
       event: serializeBigInt(event)
@@ -477,15 +533,50 @@ exports.confirmBookingRequest = async (req, res) => {
 exports.rejectBookingRequest = async (req, res) => {
   try {
     const { id } = req.params;
+    const { rejectionReason } = req.body || {};
 
     const request = await prisma.bookingRequest.update({
       where: { id },
-      data: { status: 'rejected' }
+      data: { status: 'rejected', rejectionReason: rejectionReason || null }
     });
+
+    emailService.sendBookingStatusEmail({
+      to: request.leadEmail,
+      name: request.leadName,
+      kind: 'rejected',
+      dateLabel: formatDateLabel(request.requestedDate),
+      timeLabel: request.requestedTime
+    }).catch(err => console.error('Booking rejected email failed:', err.message));
 
     res.json(serializeBigInt(request));
   } catch (error) {
     console.error('Error rejecting booking request:', error);
     res.status(500).json({ error: 'Failed to reject booking request' });
+  }
+};
+
+// GET /api/bookings/user/:userId - Bookings made by a given user (matched by email)
+exports.getUserBookings = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const bookings = await prisma.bookingRequest.findMany({
+      where: { leadEmail: { equals: user.email, mode: 'insensitive' } },
+      orderBy: { requestedDate: 'desc' }
+    });
+
+    res.json(serializeBigInt(bookings));
+  } catch (error) {
+    console.error('Error fetching user bookings:', error);
+    res.status(500).json({ error: 'Failed to fetch user bookings' });
   }
 };

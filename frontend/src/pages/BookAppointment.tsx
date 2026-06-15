@@ -37,7 +37,8 @@ const BookAppointment: React.FC = () => {
     leadName: '',
     leadEmail: '',
     leadPhone: '',
-    message: ''
+    message: '',
+    serviceType: 'showing'
   });
 
   useEffect(() => {
@@ -82,7 +83,21 @@ const BookAppointment: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Client-side validation (mirrors the server checks for fast feedback).
+    if (!formData.leadName || formData.leadName.trim().length < 2) {
+      alert('Please enter your full name.');
+      return;
+    }
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.leadEmail);
+    if (!emailOk) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    if (formData.leadPhone && formData.leadPhone.replace(/[^\d]/g, '').length < 7) {
+      alert('Please enter a valid phone number, or leave it blank.');
+      return;
+    }
     if (!selectedSlot) {
       alert('Please select a time slot');
       return;
@@ -98,20 +113,25 @@ const BookAppointment: React.FC = () => {
         },
         body: JSON.stringify({
           agentId,
-          leadName: formData.leadName,
-          leadEmail: formData.leadEmail,
+          leadName: formData.leadName.trim(),
+          leadEmail: formData.leadEmail.trim(),
           leadPhone: formData.leadPhone,
           requestedDate: selectedDate,
           requestedTime: new Date(selectedSlot.startTime).toTimeString().slice(0, 5),
           duration: 60,
-          message: formData.message
+          message: formData.message,
+          serviceType: formData.serviceType,
+          // Pass the browser's timezone so the agent sees the request in context.
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         })
       });
 
       if (response.ok) {
         setSuccess(true);
       } else {
-        alert('Failed to book appointment. Please try again.');
+        // Surface the server's specific message (e.g. duplicate slot, past date).
+        const err = await response.json().catch(() => ({}));
+        alert(err.error || 'Failed to book appointment. Please try again.');
       }
     } catch (error) {
       console.error('Error booking appointment:', error);
@@ -260,6 +280,23 @@ const BookAppointment: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, leadPhone: e.target.value })}
                 placeholder="(555) 123-4567"
               />
+            </div>
+
+            {/* Service Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Appointment Type
+              </label>
+              <select
+                value={formData.serviceType}
+                onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="showing">Property Showing</option>
+                <option value="consultation">Consultation</option>
+                <option value="appraisal">Appraisal</option>
+                <option value="inspection">Inspection</option>
+              </select>
             </div>
 
             {/* Date Selection */}

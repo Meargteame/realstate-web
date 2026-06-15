@@ -1,1 +1,52 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Database data directories (never commit live DB state)
+backend/pgdata/
+pgdata/
+
+# Logs
+*.log
+backend/err.log
+backend/out.log
+backend/logfile
+
+# Uploads (keep folder, ignore contents)
+backend/uploads/*
+!backend/uploads/.gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Build output
+dist/
+build/
+.vite/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+
+# Ad-hoc dev/test scripts in backend root (archive only)
+backend/test-*.js
+backend/check-*.js
+backend/fix-*.js
+backend/create-*.js
+backend/delete-*.js
+backend/verify-*.js
+backend/make-me-agent.js
+backend/simple-test.js
+backend/setup-db.js
+backend/init-db.sql
+backend/create-agent-direct.sql
+backend/insert-agent.sql
+
+# Session handoff / deferred work (private notes, not shipped)
+SESSION_HANDOFF.md
+DEFERRED_WORK.md

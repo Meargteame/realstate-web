@@ -1,10 +1,14 @@
 const prisma = require('../config/prisma');
 
+// Helper: safely serialize BigInt fields (from Prisma) to Number for JSON
+const serializeBigInt = (obj) =>
+  JSON.parse(JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? Number(v) : v)));
+
 // PATCH /api/leads/:id — update lead status (New → Contacted → Closed)
 exports.createLead = async (req, res) => {
   try {
-    const { name, email, phone, message, agentId, propertyId, type } = req.body;
-    
+    const { name, email, phone, message, agentId, propertyId, type, source, tags } = req.body;
+
     if (!name || !email) {
       return res.status(400).json({ error: 'Missing required fields: name, email' });
     }
@@ -24,11 +28,14 @@ exports.createLead = async (req, res) => {
         phone: phone || '',
         message: message || '',
         type: type || 'property_inquiry',
+        // Default source: a property inquiry came from a listing page, otherwise the website.
+        source: source || (propertyId ? 'property_inquiry' : 'website'),
+        tags: Array.isArray(tags) ? tags : [],
         agentId: resolvedAgentId,
         propertyId: propertyId || null
       }
     });
-    
+
     res.status(201).json(lead);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -97,12 +104,12 @@ exports.getAllLeads = async (req, res) => {
       prisma.lead.count({ where })
     ]);
 
-    res.json({ 
+    res.json(serializeBigInt({ 
       leads, 
       total: Number(total), 
       page: parseInt(page), 
       limit: parseInt(limit) 
-    });
+    }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -141,21 +148,26 @@ exports.toggleFavorite = async (req, res) => {
   }
 };
 
-// PATCH /api/leads/:id - Update lead (notes, etc.)
+// PATCH /api/leads/:id - Update lead (notes, source, tags, follow-up, etc.)
 exports.updateLead = async (req, res) => {
   try {
     const { id } = req.params;
-    const { notes, lastContacted } = req.body;
-    
+    const { notes, lastContacted, source, tags, nextFollowUpDate } = req.body;
+
     const data = {};
     if (notes !== undefined) data.notes = notes;
     if (lastContacted !== undefined) data.lastContacted = new Date(lastContacted);
-    
+    if (source !== undefined) data.source = source;
+    if (Array.isArray(tags)) data.tags = tags;
+    if (nextFollowUpDate !== undefined) {
+      data.nextFollowUpDate = nextFollowUpDate ? new Date(nextFollowUpDate) : null;
+    }
+
     const lead = await prisma.lead.update({
       where: { id },
       data
     });
-    
+
     res.json(lead);
   } catch (error) {
     res.status(500).json({ error: error.message });

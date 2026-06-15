@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Database data
+pgdata/
+
+# Logs
+*.log
+err.log
+out.log
+logfile
+
+# Test / dev scripts (do NOT ship in image)
+test-*.js
+check-*.js
+fix-*.js
+create-*.js
+delete-*.js
+make-me-agent.js
+simple-test.js
+verify-*.js
+setup-db.js
+
+# Git / CI
+.git/
+.gitignore
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Uploads (mounted as volume)
+uploads/*
+!uploads/.gitkeep
+
+# Docs
+README.md
+*.md
+
+# Archive
+archive/

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm, Avatar, Tabs, Drawer, Timeline } from "antd";
+import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm, Avatar, Tabs, Drawer, Timeline, Empty } from "antd";
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, HistoryOutlined, TeamOutlined, SafetyOutlined, CrownOutlined } from "@ant-design/icons";
 import { useIsMobile } from "../hooks/useBreakpoint";
+import { useDebounce } from "../hooks/useDebounce";
 
 const { Title } = Typography;
 const AntSelect = Select as any;
@@ -11,6 +12,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const debouncedSearch = useDebounce(searchText, 350);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [form] = Form.useForm();
@@ -29,7 +31,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.current, pagination.pageSize, searchText, activeTab]);
+  }, [pagination.current, pagination.pageSize, debouncedSearch, activeTab]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -48,7 +50,7 @@ export default function AdminUsers() {
       const params = new URLSearchParams({
         page: pagination.current.toString(),
         limit: pagination.pageSize.toString(),
-        search: searchText,
+        search: debouncedSearch,
         ...(activeTab !== 'all' ? { role: activeTab } : {})
       });
 
@@ -328,14 +330,21 @@ export default function AdminUsers() {
         variant="borderless"
         style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
       >
-        <Input
-          placeholder="Search users by name or email..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ marginBottom: 16, width: isMobile ? '100%' : 300, borderRadius: 8 }}
-        />
-        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+          <Input
+            placeholder="Search users by name or email..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
+          />
+          {!loading && (
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              {pagination.total} {pagination.total === 1 ? 'user' : 'users'} found
+            </Typography.Text>
+          )}
+        </div>
+
         {isMobile ? (
           // Mobile Card View
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -393,6 +402,20 @@ export default function AdminUsers() {
             loading={loading}
             pagination={pagination}
             onChange={handleTableChange}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={searchText ? `No users match "${searchText}"` : 'No users yet'}
+                >
+                  {!searchText && (
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAddUser} style={{ background: '#b40101', borderColor: '#b40101' }}>
+                      Add First User
+                    </Button>
+                  )}
+                </Empty>
+              )
+            }}
             rowSelection={{
               selectedRowKeys,
               onChange: (keys: React.Key[], rows: any[]) => { setSelectedRowKeys(keys); setSelectedRows(rows); },

@@ -19,6 +19,7 @@ router.use(isAdmin);
 // PLATFORM STATISTICS
 // =====================================================
 router.get('/stats', adminController.getPlatformStats);
+router.get('/trends', adminController.getPlatformTrends);
 router.get('/top-agents', adminController.getTopAgents);
 
 // =====================================================

@@ -4,6 +4,7 @@ const propertyController = require('../controllers/propertyController');
 
 router.get('/', propertyController.getProperties);
 router.get('/city/:city', propertyController.getPropertiesByCity);
+router.get('/saved', propertyController.getSavedProperties);
 
 // Phase 7D: Comparisons (must be before /:id to avoid route conflicts)
 router.get('/comparisons', propertyController.getComparisons);
@@ -15,6 +16,7 @@ router.get('/:id', propertyController.getPropertyById);
 router.get('/:id/similar', propertyController.getSimilarProperties);
 router.get('/:id/price-history', propertyController.getPriceHistory);
 router.post('/:id/price-history', propertyController.addPriceChange);
+router.post('/:id/share', propertyController.trackShare);
 router.post('/', propertyController.createProperty);
 router.patch('/:id', propertyController.updateProperty);
 router.delete('/:id', propertyController.deleteProperty);

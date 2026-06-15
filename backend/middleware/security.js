@@ -114,44 +114,46 @@ const additionalHeaders = (req, res, next) => {
 
 /**
  * Request sanitization middleware
+ *
+ * NOTE: In Express 5 `req.query` is a read-only getter, so we mutate the
+ * existing objects in place rather than reassigning them.
  */
 const sanitizeInput = (req, res, next) => {
-  // Remove null bytes from all inputs
-  const sanitize = (obj) => {
-    if (typeof obj === 'string') {
-      return obj.replace(/\0/g, '');
-    }
-    if (typeof obj === 'object' && obj !== null) {
-      Object.keys(obj).forEach(key => {
-        obj[key] = sanitize(obj[key]);
-      });
-    }
-    return obj;
+  // Remove null bytes from all inputs, mutating in place.
+  const sanitizeInPlace = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (typeof value === 'string') {
+        obj[key] = value.replace(/\0/g, '');
+      } else if (value && typeof value === 'object') {
+        sanitizeInPlace(value);
+      }
+    });
   };
 
-  if (req.body) req.body = sanitize(req.body);
-  if (req.query) req.query = sanitize(req.query);
-  if (req.params) req.params = sanitize(req.params);
+  sanitizeInPlace(req.body);
+  sanitizeInPlace(req.query);
+  sanitizeInPlace(req.params);
 
   next();
 };
 
 /**
  * Prevent parameter pollution
+ *
+ * Mutates req.query in place (read-only getter in Express 5).
  */
 const preventParameterPollution = (req, res, next) => {
-  // Convert array parameters to single values (take first)
-  const cleanParams = (obj) => {
-    Object.keys(obj).forEach(key => {
-      if (Array.isArray(obj[key])) {
-        obj[key] = obj[key][0];
+  const query = req.query;
+  if (query && typeof query === 'object') {
+    Object.keys(query).forEach(key => {
+      if (Array.isArray(query[key])) {
+        query[key] = query[key][0];
       }
     });
-    return obj;
-  };
+  }
 
-  if (req.query) req.query = cleanParams(req.query);
-  
   next();
 };
 

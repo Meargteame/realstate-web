@@ -1,12 +1,42 @@
 import React, { useState } from "react";
-import { Card, Form, InputNumber, Button, Typography, Row, Col, Divider, Space, Statistic } from "antd";
-import { DollarOutlined, HomeOutlined, CalculatorOutlined } from "@ant-design/icons";
+import { Card, Form, InputNumber, Button, Typography, Row, Col, Divider, Space, Statistic, Input, notification } from "antd";
+import { DollarOutlined, HomeOutlined, CalculatorOutlined, UserOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 
 const { Title, Text, Paragraph } = Typography;
+const AntCard = Card as any;
 
 export default function AffordabilityCalculator() {
   const [form] = Form.useForm();
+  const [leadForm] = Form.useForm();
   const [result, setResult] = useState<any>(null);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+
+  const handleLeadSubmit = async (values: any) => {
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          phone: values.phone || '',
+          message: `Affordability inquiry — Max home price: $${result?.homePrice?.toLocaleString()}, Monthly: $${result?.monthlyPayment?.toLocaleString()}/mo, DTI: ${result?.dtiRatio}%`,
+          type: 'affordability_inquiry',
+          source: 'affordability_calculator'
+        })
+      });
+      if (!res.ok) throw new Error('failed');
+      setLeadSubmitted(true);
+      leadForm.resetFields();
+      notification.success({
+        message: 'Request Sent',
+        description: 'A TORRA agent will reach out to help you find homes in your budget.',
+        duration: 6
+      });
+    } catch {
+      notification.error({ message: 'Submission failed', description: 'Please try again.' });
+    }
+  };
 
   const calculateAffordability = (values: any) => {
     const { annualIncome, monthlyDebts, downPayment, interestRate, loanTerm } = values;
@@ -233,12 +263,51 @@ export default function AffordabilityCalculator() {
 
                 <Card style={{ marginTop: 24, background: 'rgba(255,255,255,0.1)', border: 'none' }}>
                   <Text style={{ color: 'white', fontSize: 12 }}>
-                    <strong>Note:</strong> This is an estimate based on standard lending guidelines (28/36 rule). 
+                    <strong>Note:</strong> This is an estimate based on standard lending guidelines (28/36 rule).
                     Actual loan approval depends on credit score, employment history, and lender requirements.
                   </Text>
                 </Card>
               </Card>
-            ) : (
+            ) : null}
+
+            {/* Lead capture — only after results are calculated */}
+            {result && (
+              leadSubmitted ? (
+                <AntCard style={{ borderRadius: 16, marginTop: 16, textAlign: 'center', borderColor: '#b7eb8f', background: '#f6ffed' }}>
+                  <Title level={4} style={{ color: '#389e0d', marginBottom: 4 }}>You're all set! ✅</Title>
+                  <Text type="secondary">A TORRA agent will contact you shortly to find homes in your budget.</Text>
+                </AntCard>
+              ) : (
+                <AntCard style={{ borderRadius: 16, marginTop: 16 }}>
+                  <Title level={4} style={{ marginTop: 0 }}>Ready to find homes in your budget?</Title>
+                  <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+                    Connect with a TORRA agent who can show you properties up to ${result.homePrice.toLocaleString()}.
+                  </Paragraph>
+                  <Form form={leadForm} layout="vertical" onFinish={handleLeadSubmit}>
+                    <Row gutter={12}>
+                      <Col xs={24} sm={12}>
+                        <Form.Item name="name" rules={[{ required: true, message: 'Name required' }]} style={{ marginBottom: 12 }}>
+                          <Input size="large" prefix={<UserOutlined />} placeholder="Full name" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} sm={12}>
+                        <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Valid email required' }]} style={{ marginBottom: 12 }}>
+                          <Input size="large" prefix={<MailOutlined />} placeholder="Email" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Form.Item name="phone" style={{ marginBottom: 12 }}>
+                      <Input size="large" prefix={<PhoneOutlined />} placeholder="Phone (optional)" />
+                    </Form.Item>
+                    <Button type="primary" htmlType="submit" size="large" block style={{ height: 52, fontWeight: 600, background: '#b40101', borderColor: '#b40101' }}>
+                      Connect with an Agent
+                    </Button>
+                  </Form>
+                </AntCard>
+              )
+            )}
+
+            {!result && (
               <Card style={{ borderRadius: '16px', textAlign: 'center', padding: '80px 20px' }}>
                 <DollarOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: 16 }} />
                 <Title level={4} type="secondary">

@@ -10,9 +10,13 @@ import {
   MessageOutlined, PhoneOutlined, MailOutlined,
   ExpandOutlined, DollarOutlined, CalculatorOutlined
 } from "@ant-design/icons";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import PropertyChatModal from "../components/PropertyChatModal";
 import PropertyCard from "../components/PropertyCard";
 import { useIsMobile } from "../hooks/useBreakpoint";
+
+const formatPrice = (val: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -30,6 +34,7 @@ export default function PropertyDetails() {
   const [mortgageDown, setMortgageDown] = useState(20);
   const [mortgageRate, setMortgageRate] = useState(6.5);
   const [mortgageYears, setMortgageYears] = useState(30);
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
   const isMobile = useIsMobile();
 
   const calcMonthlyPayment = (price: number) => {
@@ -87,6 +92,12 @@ export default function PropertyDetails() {
         setSimilarProperties(Array.isArray(data) ? data : []);
       })
       .catch(err => console.error('Error fetching similar properties:', err));
+
+    // Fetch price history (drives the price-trend chart)
+    fetch(`/api/properties/${id}/price-history`)
+      .then(res => res.json())
+      .then(data => setPriceHistory(Array.isArray(data) ? data : []))
+      .catch(err => console.error('Error fetching price history:', err));
   }, [id]);
 
   const handleShare = async () => {
@@ -337,6 +348,18 @@ export default function PropertyDetails() {
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Price and Address */}
                 <div>
+                  <Space align="center" wrap style={{ marginBottom: 4 }}>
+                    {property.isVerified && (
+                      <Tag color="green" icon={<CheckCircleOutlined />} style={{ fontWeight: 600 }}>
+                        Verified Listing
+                      </Tag>
+                    )}
+                    {typeof property.dataQuality === 'number' && property.dataQuality > 0 && (
+                      <Tag color={property.dataQuality >= 80 ? 'blue' : 'default'}>
+                        {property.dataQuality}% complete
+                      </Tag>
+                    )}
+                  </Space>
                   <Title level={1} style={{ margin: 0, fontSize: 48, fontWeight: 700 }}>
                     {formattedPrice}
                   </Title>
@@ -372,6 +395,33 @@ export default function PropertyDetails() {
                   </Col>
                 </Row>
 
+                {/* Property Facts (surfaces previously-unused schema fields) */}
+                {(() => {
+                  const facts: { label: string; value: any }[] = [];
+                  if (property.propertyType) facts.push({ label: 'Type', value: property.propertyType });
+                  if (property.yearBuilt) facts.push({ label: 'Year Built', value: property.yearBuilt });
+                  if (property.lotSize) facts.push({ label: 'Lot Size', value: `${property.lotSize.toLocaleString()} sqft` });
+                  if (property.condition) facts.push({ label: 'Condition', value: property.condition });
+                  if (typeof property.daysOnMarket === 'number') facts.push({ label: 'Days on Market', value: property.daysOnMarket });
+                  if (property.stories) facts.push({ label: 'Stories', value: property.stories });
+                  if (property.hoaFees) facts.push({ label: 'HOA', value: `${formatPrice(property.hoaFees)}/mo` });
+                  if (typeof property.viewCount === 'number') facts.push({ label: 'Views', value: property.viewCount.toLocaleString() });
+                  if (facts.length === 0) return null;
+                  return (
+                    <>
+                      <Divider style={{ margin: 0 }} />
+                      <Row gutter={[16, 16]}>
+                        {facts.map((f) => (
+                          <Col xs={12} sm={8} key={f.label}>
+                            <Text type="secondary" style={{ fontSize: 13, display: 'block' }}>{f.label}</Text>
+                            <Text strong style={{ fontSize: 15 }}>{f.value}</Text>
+                          </Col>
+                        ))}
+                      </Row>
+                    </>
+                  );
+                })()}
+
                 <Divider style={{ margin: 0 }} />
 
                 {/* Description */}
@@ -385,20 +435,15 @@ export default function PropertyDetails() {
                   </Paragraph>
                 </div>
 
-                {/* Key Features */}
+                {/* Key Features (from real property data, with sensible fallback) */}
                 <div>
                   <Title level={4}>Key Features</Title>
                   <Row gutter={[16, 16]}>
-                    {[
-                      'Hardwood Floors',
-                      'Granite Countertops',
-                      'Stainless Appliances',
-                      'Central Air',
-                      'Attached Garage',
-                      'Fenced Yard',
-                      'Updated Kitchen',
-                      'Walk-in Closets'
-                    ].map((feature, idx) => (
+                    {(
+                      (Array.isArray(property.features) && property.features.length > 0)
+                        ? property.features
+                        : ['Hardwood Floors', 'Central Air', 'Updated Kitchen', 'Walk-in Closets']
+                    ).map((feature: string, idx: number) => (
                       <Col span={12} key={idx}>
                         <Space>
                           <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 18 }} />
@@ -408,6 +453,28 @@ export default function PropertyDetails() {
                     ))}
                   </Row>
                 </div>
+
+                {/* Price History chart (real PropertyPriceHistory data) */}
+                {priceHistory.length > 1 && (
+                  <div>
+                    <Title level={4}>Price History</Title>
+                    <div style={{ width: '100%', height: 240 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={priceHistory.map((h: any) => ({
+                          date: new Date(h.changedAt).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                          price: h.price,
+                          changeType: h.changeType
+                        }))}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                          <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} width={60} />
+                          <RechartsTooltip formatter={(v: any) => formatPrice(Number(v))} />
+                          <Line type="monotone" dataKey="price" stroke="#b40101" strokeWidth={2} dot={{ r: 4 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
               </Space>
             </Card>
 

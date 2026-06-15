@@ -16,20 +16,18 @@ exports.getConversations = async (req, res) => {
       orderBy: { lastMessageAt: 'desc' }
     });
     
-    // Get lead details for each conversation
-    const conversationsWithLeads = await Promise.all(
-      conversations.map(async (conv) => {
-        const lead = await prisma.lead.findUnique({
-          where: { id: conv.leadId },
-          include: { property: true }
-        });
-        
-        return {
-          ...conv,
-          lead
-        };
-      })
-    );
+    // Batch-fetch all leads in ONE query instead of one per conversation (N+1).
+    const leadIds = [...new Set(conversations.map(c => c.leadId).filter(Boolean))];
+    const leads = await prisma.lead.findMany({
+      where: { id: { in: leadIds } },
+      include: { property: true }
+    });
+    const leadById = new Map(leads.map(l => [l.id, l]));
+
+    const conversationsWithLeads = conversations.map(conv => ({
+      ...conv,
+      lead: leadById.get(conv.leadId) || null
+    }));
     
     // Convert BigInt to Number
     const data = JSON.parse(JSON.stringify(conversationsWithLeads, (key, value) =>
@@ -47,12 +45,29 @@ exports.getConversations = async (req, res) => {
 exports.getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    
+
+    // Opt-in pagination: ?before=<ISO> and ?limit fetch the most recent page and
+    // older history on scroll-up. Without params, returns the full thread (legacy).
+    const rawLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : undefined;
+    const before = req.query.before ? new Date(req.query.before) : undefined;
+
+    if (limit) {
+      const where = { conversationId, ...(before ? { createdAt: { lt: before } } : {}) };
+      // Pull newest-first for the page, then return ascending for display.
+      const page = await prisma.message.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      });
+      return res.json(page.reverse());
+    }
+
     const messages = await prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'asc' }
     });
-    
+
     res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
@@ -127,13 +142,13 @@ exports.markAsRead = async (req, res) => {
   try {
     const { conversationId } = req.params;
     
-    // Mark all messages as read
+    // Mark all messages as read and stamp when (powers read receipts)
     await prisma.message.updateMany({
-      where: { 
+      where: {
         conversationId,
         isRead: false
       },
-      data: { isRead: true }
+      data: { isRead: true, readAt: new Date() }
     });
     
     // Reset unread count

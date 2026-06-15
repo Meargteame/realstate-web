@@ -4,16 +4,27 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const notificationService = require('./services/notificationService');
 const cacheService = require('./services/cacheService');
-const { securityHeaders, additionalHeaders } = require('./middleware/security');
-// TEMPORARILY DISABLED - const { sanitizeInput, preventParameterPollution } = require('./middleware/security');
-// TEMPORARILY DISABLED - const { globalLimiter } = require('./middleware/rateLimiter');
-// TEMPORARILY DISABLED - const { performanceMonitor, requestLogger, errorTracker, getHealthStatus } = require('./middleware/monitoring');
+const { securityHeaders, additionalHeaders, sanitizeInput, preventParameterPollution } = require('./middleware/security');
+const { globalLimiter } = require('./middleware/rateLimiter');
+const { performanceMonitor, requestLogger, errorTracker } = require('./middleware/monitoring');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// =====================================================
+// TRUST PROXY — required behind Caddy / Nginx / load balancers
+// =====================================================
+// Express needs this to read X-Forwarded-For/Proto correctly.
+// '1' = trust the nearest proxy (Caddy in Docker, or Nginx in production).
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+} else {
+  // In dev, trust localhost proxy (Vite dev server)
+  app.set('trust proxy', 'loopback');
+}
 
 // =====================================================
 // CORS CONFIGURATION
@@ -53,20 +64,19 @@ app.use(additionalHeaders);
 // =====================================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-// TEMPORARILY DISABLED FOR DEBUGGING
-// app.use(sanitizeInput);
-// app.use(preventParameterPollution);
+app.use(sanitizeInput);
+app.use(preventParameterPollution);
 
 // =====================================================
-// MONITORING & LOGGING - TEMPORARILY DISABLED
+// MONITORING & LOGGING
 // =====================================================
-// app.use(requestLogger);
-// app.use(performanceMonitor.trackRequest());
+app.use(requestLogger);
+app.use(performanceMonitor.trackRequest());
 
 // =====================================================
-// RATE LIMITING (Global) - TEMPORARILY DISABLED FOR DEBUGGING
+// RATE LIMITING (Global)
 // =====================================================
-// app.use('/api/', globalLimiter);
+app.use('/api/', globalLimiter);
 
 // =====================================================
 // STATIC FILES (Serve uploaded images)
@@ -109,10 +119,12 @@ const blogRoutes = require('./routes/blogRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const communicationRoutes = require('./routes/communicationRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 const videoRoutes = require('./routes/videoRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const userRoutes = require('./routes/userRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/agents', agentRoutes);
@@ -132,10 +144,12 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/video', videoRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
 
 // =====================================================
 // HEALTH & MONITORING ENDPOINTS
@@ -180,9 +194,8 @@ app.get('/api/metrics', (req, res) => {
 });
 
 // =====================================================
-// ERROR HANDLING - TEMPORARILY DISABLED
+// ERROR HANDLING
 // =====================================================
-// app.use(errorTracker);
 
 // 404 handler
 app.use((req, res) => {
@@ -191,6 +204,9 @@ app.use((req, res) => {
     message: `Cannot ${req.method} ${req.path}`
   });
 });
+
+// Centralized error tracker (must be the last middleware, 4-arg signature)
+app.use(errorTracker);
 
 // =====================================================
 // SERVER STARTUP

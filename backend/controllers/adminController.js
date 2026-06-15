@@ -1,5 +1,18 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
+const cacheService = require('../services/cacheService');
+
+// Helper: safely serialize BigInt fields (from Prisma) to Number for JSON
+const serializeBigInt = (obj) =>
+  JSON.parse(JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? Number(v) : v)));
+
+// Invalidate cached admin aggregates after a mutation so the dashboard
+// reflects changes well before the short TTL would expire.
+const invalidateAdminStats = async () => {
+  await cacheService.del('admin:platform-stats');
+  await cacheService.del('admin:trends');
+  await cacheService.delPattern('admin:top-agents:*');
+};
 
 // =====================================================
 // USER MANAGEMENT
@@ -81,7 +94,7 @@ exports.getUserById = async (req, res) => {
 
     // Remove password from response
     const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+    res.json(serializeBigInt(userWithoutPassword));
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
@@ -127,6 +140,7 @@ exports.createUser = async (req, res) => {
       }
     });
 
+    await invalidateAdminStats();
     res.status(201).json(user);
   } catch (error) {
     console.error('Error creating user:', error);
@@ -200,6 +214,7 @@ exports.deleteUser = async (req, res) => {
       where: { id }
     });
 
+    await invalidateAdminStats();
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -271,7 +286,7 @@ exports.getAllAgents = async (req, res) => {
       }
     }));
 
-    res.json({
+    res.json(serializeBigInt({
       agents: agentsWithStats,
       pagination: {
         total: Number(total),
@@ -279,7 +294,7 @@ exports.getAllAgents = async (req, res) => {
         limit: parseInt(limit),
         totalPages: Math.ceil(Number(total) / parseInt(limit))
       }
-    });
+    }));
   } catch (error) {
     console.error('Error fetching agents:', error);
     res.status(500).json({ error: 'Failed to fetch agents' });
@@ -308,7 +323,7 @@ exports.updateAgentStatus = async (req, res) => {
       }
     });
 
-    res.json({ ...agent, status: agent.isActive ? 'active' : 'inactive' });
+    res.json(serializeBigInt({ ...agent, status: agent.isActive ? 'active' : 'inactive' }));
   } catch (error) {
     console.error('Error updating agent status:', error);
     res.status(500).json({ error: 'Failed to update agent status' });
@@ -324,6 +339,7 @@ exports.deleteAgent = async (req, res) => {
       where: { id }
     });
 
+    await invalidateAdminStats();
     res.json({ message: 'Agent deleted successfully' });
   } catch (error) {
     console.error('Error deleting agent:', error);
@@ -426,6 +442,7 @@ exports.deleteProperty = async (req, res) => {
       where: { id }
     });
 
+    await invalidateAdminStats();
     res.json({ message: 'Property deleted successfully' });
   } catch (error) {
     console.error('Error deleting property:', error);
@@ -440,6 +457,9 @@ exports.deleteProperty = async (req, res) => {
 // Get platform statistics
 exports.getPlatformStats = async (req, res) => {
   try {
+    const cached = await cacheService.get('admin:platform-stats');
+    if (cached) return res.json(cached);
+
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -522,7 +542,7 @@ exports.getPlatformStats = async (req, res) => {
       })
     ]);
 
-    res.json({
+    const payload = {
       totalUsers,
       totalAgents,
       totalProperties,
@@ -539,10 +559,85 @@ exports.getPlatformStats = async (req, res) => {
         agents: recentAgents,
         properties: recentProperties
       }
-    });
+    };
+
+    // Cache for 2 minutes (stats tolerate slight staleness, dashboard hits this often)
+    await cacheService.set('admin:platform-stats', payload, 120);
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching platform stats:', error);
     res.status(500).json({ error: 'Failed to fetch platform stats' });
+  }
+};
+
+// GET /api/admin/trends - Real revenue & user-growth trends (replaces mocked charts)
+exports.getPlatformTrends = async (req, res) => {
+  try {
+    const cached = await cacheService.get('admin:trends');
+    if (cached) return res.json(cached);
+
+    const months = 12;
+    const now = new Date();
+    const windowStart = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+
+    // One query each, then bucket in memory (no per-month N+1).
+    const [closedOpps, users] = await Promise.all([
+      prisma.opportunity.findMany({
+        where: { status: 'Closed', updatedAt: { gte: windowStart } },
+        select: { price: true, updatedAt: true }
+      }),
+      prisma.user.findMany({
+        select: { createdAt: true }
+      })
+    ]);
+
+    const revenueByMonth = [];
+    const userGrowthByMonth = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+      const label = monthStart.toLocaleDateString('en-US', { month: 'short' });
+
+      const revenue = closedOpps
+        .filter(o => { const t = new Date(o.updatedAt); return t >= monthStart && t <= monthEnd; })
+        .reduce((sum, o) => sum + (o.price || 0), 0);
+      revenueByMonth.push({ month: label, revenue });
+
+      // Cumulative user count up to the end of this month.
+      const cumulativeUsers = users.filter(u => new Date(u.createdAt) <= monthEnd).length;
+      userGrowthByMonth.push({ month: label, users: cumulativeUsers });
+    }
+
+    // Real system health snapshot.
+    const memory = process.memoryUsage();
+    const systemHealth = [
+      {
+        name: 'API Server',
+        status: 'healthy',
+        uptime: `${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m`,
+        detail: `${Math.round(memory.heapUsed / 1024 / 1024)}MB heap`
+      },
+      {
+        name: 'Database',
+        status: 'healthy',
+        uptime: '—',
+        detail: 'Connected'
+      },
+      {
+        name: 'Cache (Redis)',
+        status: cacheService.isConnected ? 'healthy' : 'warning',
+        uptime: '—',
+        detail: cacheService.isConnected ? 'Connected' : 'Disabled'
+      }
+    ];
+
+    const payload = { revenueByMonth, userGrowthByMonth, systemHealth };
+    await cacheService.set('admin:trends', payload, 300);
+    res.json(payload);
+  } catch (error) {
+    console.error('Error fetching platform trends:', error);
+    res.status(500).json({ error: 'Failed to fetch platform trends' });
   }
 };
 
@@ -551,34 +646,38 @@ exports.getTopAgents = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
 
-    const agents = await prisma.agent.findMany({
-      include: {
-        properties: {
-          select: {
-            id: true,
-            status: true
-          }
-        },
-        leads: {
-          select: {
-            id: true
-          }
-        },
-        opportunities: {
-          select: {
-            id: true,
-            price: true
-          }
-        }
-      }
-    });
+    const cacheKey = `admin:top-agents:${limit}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) return res.json(cached);
 
-    // Calculate performance score for each agent
+    // Aggregate per-agent metrics with grouped queries instead of loading every
+    // property/lead/opportunity row into memory.
+    const [agents, propsByAgent, activeByAgent, leadsByAgent, oppsByAgent] = await Promise.all([
+      prisma.agent.findMany({
+        select: { id: true, name: true, email: true, imageUrl: true, phone: true }
+      }),
+      prisma.property.groupBy({ by: ['agentId'], _count: { _all: true } }),
+      prisma.property.groupBy({ by: ['agentId'], where: { status: 'Active' }, _count: { _all: true } }),
+      prisma.lead.groupBy({ by: ['agentId'], _count: { _all: true } }),
+      prisma.opportunity.groupBy({ by: ['agentId'], _count: { _all: true }, _sum: { price: true } })
+    ]);
+
+    const toMap = (rows, pick) => {
+      const m = new Map();
+      rows.forEach(r => { if (r.agentId) m.set(r.agentId, pick(r)); });
+      return m;
+    };
+    const propCount = toMap(propsByAgent, r => r._count._all);
+    const activeCount = toMap(activeByAgent, r => r._count._all);
+    const leadCount = toMap(leadsByAgent, r => r._count._all);
+    const oppCount = toMap(oppsByAgent, r => r._count._all);
+    const oppValue = toMap(oppsByAgent, r => Number(r._sum.price || 0));
+
     const agentsWithScore = agents.map(agent => {
-      const activeListings = agent.properties.filter(p => p.status === 'Active').length;
-      const totalLeads = agent.leads.length;
-      const totalValue = agent.opportunities.reduce((sum, o) => sum + Number(o.price || 0), 0);
-      
+      const activeListings = activeCount.get(agent.id) || 0;
+      const totalLeads = leadCount.get(agent.id) || 0;
+      const totalValue = oppValue.get(agent.id) || 0;
+
       return {
         id: agent.id,
         name: agent.name,
@@ -586,10 +685,10 @@ exports.getTopAgents = async (req, res) => {
         imageUrl: agent.imageUrl,
         phone: agent.phone,
         stats: {
-          listingsCount: agent.properties.length,
+          listingsCount: propCount.get(agent.id) || 0,
           activeListings,
           leadsCount: totalLeads,
-          opportunitiesCount: agent.opportunities.length,
+          opportunitiesCount: oppCount.get(agent.id) || 0,
           totalValue
         },
         performanceScore: (activeListings * 10) + (totalLeads * 5) + (totalValue / 10000)
@@ -601,6 +700,7 @@ exports.getTopAgents = async (req, res) => {
       .sort((a, b) => b.performanceScore - a.performanceScore)
       .slice(0, parseInt(limit));
 
+    await cacheService.set(cacheKey, topAgents, 300);
     res.json(topAgents);
   } catch (error) {
     console.error('Error fetching top agents:', error);

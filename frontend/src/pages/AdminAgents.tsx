@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic, Badge } from "antd";
+import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic, Badge, Empty } from "antd";
 import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, HomeOutlined, TeamOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, CrownOutlined, RiseOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
+import { useDebounce } from "../hooks/useDebounce";
 
 const { Title, Text } = Typography;
 const AntSelect = Select as any;
@@ -13,6 +14,7 @@ export default function AdminAgents() {
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const debouncedSearch = useDebounce(searchText, 350);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -29,7 +31,7 @@ export default function AdminAgents() {
 
   useEffect(() => {
     fetchAgents();
-  }, [pagination.current, pagination.pageSize, searchText]);
+  }, [pagination.current, pagination.pageSize, debouncedSearch]);
 
   const fetchAgents = async () => {
     setLoading(true);
@@ -48,7 +50,7 @@ export default function AdminAgents() {
       const params = new URLSearchParams({
         page: pagination.current.toString(),
         limit: pagination.pageSize.toString(),
-        search: searchText
+        search: debouncedSearch
       });
 
       const res = await fetch(`/api/admin/agents?${params}`, {
@@ -330,14 +332,21 @@ export default function AdminAgents() {
         variant="borderless"
         style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
       >
-        <Input
-          placeholder="Search agents by name or email..."
-          prefix={<SearchOutlined />}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ marginBottom: 16, width: isMobile ? '100%' : 300, borderRadius: 8 }}
-        />
-        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+          <Input
+            placeholder="Search agents by name or email..."
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
+          />
+          {!loading && (
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              {pagination.total} {pagination.total === 1 ? 'agent' : 'agents'} found
+            </Typography.Text>
+          )}
+        </div>
+
         {isMobile ? (
           // Mobile Card View
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -421,6 +430,14 @@ export default function AdminAgents() {
             loading={loading}
             pagination={pagination}
             onChange={handleTableChange}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={searchText ? `No agents match "${searchText}"` : 'No agents yet'}
+                />
+              )
+            }}
           />
         )}
       </Card>

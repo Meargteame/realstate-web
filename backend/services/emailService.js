@@ -380,6 +380,74 @@ Timestamp: ${new Date().toISOString()}
   }
 
   /**
+   * Notify a lead about the status of their appointment booking.
+   * kind: 'received' | 'confirmed' | 'rejected'
+   */
+  async sendBookingStatusEmail({ to, name, kind, dateLabel, timeLabel, location }) {
+    const copy = {
+      received: {
+        subject: 'We received your appointment request',
+        heading: 'Request received',
+        body: `Thanks for requesting an appointment${dateLabel ? ` on <strong>${dateLabel}</strong>` : ''}${timeLabel ? ` at <strong>${timeLabel}</strong>` : ''}. Our agent will review it and get back to you shortly.`
+      },
+      confirmed: {
+        subject: 'Your appointment is confirmed',
+        heading: 'Appointment confirmed ✅',
+        body: `Your appointment is confirmed for <strong>${dateLabel || ''} ${timeLabel || ''}</strong>${location ? ` at <strong>${location}</strong>` : ''}. We look forward to seeing you.`
+      },
+      rejected: {
+        subject: 'Update on your appointment request',
+        heading: 'Appointment update',
+        body: `Unfortunately the requested time${dateLabel ? ` on <strong>${dateLabel}</strong>` : ''} is no longer available. Please reply to this email or book another slot and we'll be happy to help.`
+      }
+    }[kind] || {};
+
+    if (!this.isConfigured) {
+      console.log(`⚠️  Email service not configured - booking "${kind}" email not sent to ${to}.`);
+      return { success: false, error: 'Email service not configured' };
+    }
+
+    try {
+      const mailOptions = {
+        from: process.env.FROM_EMAIL || 'noreply@torra-realestate.com',
+        to,
+        subject: copy.subject || 'Appointment update',
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <body style="margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f8f8f8;">
+            <div style="max-width:600px;margin:0 auto;background:#fff;">
+              <div style="background:#b40101;color:#fff;padding:24px;text-align:center;">
+                <h1 style="margin:0;font-size:22px;">TORRA Commercial Real Estate</h1>
+              </div>
+              <div style="padding:32px 24px;">
+                <h2 style="color:#333;margin:0 0 16px;">Hi ${name || 'there'},</h2>
+                <h3 style="color:#b40101;margin:0 0 12px;">${copy.heading || ''}</h3>
+                <p style="color:#666;line-height:1.6;margin:0 0 20px;">${copy.body || ''}</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+        text: `Hi ${name || 'there'},\n\n${(copy.body || '').replace(/<[^>]+>/g, '')}`
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📧 Booking email preview URL:', nodemailer.getTestMessageUrl(result));
+      }
+      return {
+        success: true,
+        messageId: result.messageId,
+        previewUrl: process.env.NODE_ENV === 'development' ? nodemailer.getTestMessageUrl(result) : null
+      };
+    } catch (error) {
+      console.error('❌ Send booking status email error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Get email service status
    */
   getStatus() {

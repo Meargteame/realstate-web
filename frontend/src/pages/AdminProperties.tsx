@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic } from "antd";
+import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic, Empty } from "antd";
 import { SearchOutlined, EyeOutlined, DeleteOutlined, HomeOutlined, StarFilled, StarOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
+import { useDebounce } from "../hooks/useDebounce";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const { Title, Text } = Typography;
@@ -14,6 +15,7 @@ export default function AdminProperties() {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const debouncedSearch = useDebounce(searchText, 350);
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
@@ -36,7 +38,7 @@ export default function AdminProperties() {
 
   useEffect(() => {
     fetchProperties();
-  }, [pagination.current, pagination.pageSize, searchText, statusFilter]);
+  }, [pagination.current, pagination.pageSize, debouncedSearch, statusFilter]);
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -55,7 +57,7 @@ export default function AdminProperties() {
       const params = new URLSearchParams({
         page: pagination.current.toString(),
         limit: pagination.pageSize.toString(),
-        search: searchText,
+        search: debouncedSearch,
         status: statusFilter
       });
 
@@ -450,8 +452,13 @@ export default function AdminProperties() {
             <AntOption value="Sold">Sold</AntOption>
             <AntOption value="Inactive">Inactive</AntOption>
           </Select>
+          {!loading && (
+            <Typography.Text type="secondary" style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
+              {pagination.total} {pagination.total === 1 ? 'property' : 'properties'} found
+            </Typography.Text>
+          )}
         </Space>
-        
+
         {isMobile ? (
           // Mobile Card View
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -552,6 +559,14 @@ export default function AdminProperties() {
             loading={loading}
             pagination={pagination}
             onChange={handleTableChange}
+            locale={{
+              emptyText: (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description={searchText || statusFilter ? 'No properties match your filters' : 'No properties yet'}
+                />
+              )
+            }}
             rowSelection={{
               selectedRowKeys,
               onChange: (keys: React.Key[], rows: any[]) => { setSelectedRowKeys(keys); setSelectedRows(rows); },

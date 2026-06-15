@@ -1,2 +1,9 @@
 {
+
+  "claude-code.apiKey": "fe_oa_3d734d412fb627971bddf8d97feba2b3b27d8a9ad6bfdcf4",
+
+  "claude-code.baseUrl": "https://cc.freemodel.dev",
+
+  "claude-code.disableTelemetry": true
+
 }

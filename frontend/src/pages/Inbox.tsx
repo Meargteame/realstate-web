@@ -45,6 +45,9 @@ export default function Inbox() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const MESSAGE_PAGE_SIZE = 30;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -103,21 +106,25 @@ export default function Inbox() {
     }
   };
 
-  // Fetch messages for selected conversation
+  // Fetch the most recent page of messages for the selected conversation.
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
+    setHasMoreMessages(false);
     try {
-      const res = await fetch(`/api/messages/conversation/${conversation.id}`);
+      const res = await fetch(`/api/messages/conversation/${conversation.id}?limit=${MESSAGE_PAGE_SIZE}`);
       const data = await res.json();
-      setMessages(data);
-      
+      const list = Array.isArray(data) ? data : [];
+      setMessages(list);
+      // A full page back implies there may be older messages to load.
+      setHasMoreMessages(list.length === MESSAGE_PAGE_SIZE);
+
       // Mark as read
       if (conversation.unreadCount > 0) {
         await fetch(`/api/messages/conversation/${conversation.id}/read`, {
           method: 'PATCH'
         });
         // Update local state
-        setConversations(prev => prev.map(c => 
+        setConversations(prev => prev.map(c =>
           c.id === conversation.id ? { ...c, unreadCount: 0 } : c
         ));
       }
@@ -126,11 +133,47 @@ export default function Inbox() {
     }
   };
 
-  // Send message
+  // Load an older page (messages before the earliest one currently shown).
+  const loadOlderMessages = async () => {
+    if (!selectedConversation || messages.length === 0) return;
+    setLoadingOlder(true);
+    try {
+      const oldest = messages[0];
+      const res = await fetch(
+        `/api/messages/conversation/${selectedConversation.id}?limit=${MESSAGE_PAGE_SIZE}&before=${encodeURIComponent(oldest.createdAt)}`
+      );
+      const data = await res.json();
+      const older = Array.isArray(data) ? data : [];
+      setMessages(prev => [...older, ...prev]);
+      setHasMoreMessages(older.length === MESSAGE_PAGE_SIZE);
+    } catch (error) {
+      console.error('Error loading older messages:', error);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
+  // Send message (optimistic)
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-    
+    const content = newMessage.trim();
+    if (!content || !selectedConversation) return;
+
+    // Optimistically render the message with a temp id and "sending" flag.
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: any = {
+      id: tempId,
+      conversationId: selectedConversation.id,
+      senderId: agent.id,
+      senderType: 'agent',
+      content,
+      createdAt: new Date().toISOString(),
+      pending: true
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setNewMessage("");
     setSending(true);
+    scrollToBottom();
+
     try {
       const res = await fetch('/api/messages/send', {
         method: 'POST',
@@ -139,26 +182,27 @@ export default function Inbox() {
           conversationId: selectedConversation.id,
           senderId: agent.id,
           senderType: 'agent',
-          content: newMessage.trim()
+          content
         })
       });
-      
+
       if (!res.ok) throw new Error('Failed to send message');
-      
+
       const message = await res.json();
-      setMessages(prev => [...prev, message]);
-      setNewMessage("");
-      
+      // Replace the temp message with the persisted one.
+      setMessages(prev => prev.map(m => m.id === tempId ? message : m));
+
       // Update conversation list
-      setConversations(prev => prev.map(c => 
-        c.id === selectedConversation.id 
+      setConversations(prev => prev.map(c =>
+        c.id === selectedConversation.id
           ? { ...c, lastMessage: message.content, lastMessageAt: message.createdAt }
           : c
       ));
-      
-      scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error);
+      // Roll back the optimistic message and restore the draft.
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setNewMessage(content);
       antMessage.error('Failed to send message');
     } finally {
       setSending(false);
@@ -170,13 +214,17 @@ export default function Inbox() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Don't yank the viewport to the bottom when prepending older history.
+    if (!loadingOlder) scrollToBottom();
+  }, [messages, loadingOlder]);
 
   const filteredConversations = conversations.filter(c =>
     c.lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.lead.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Inbox-level unread rollup for the header badge.
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -208,8 +256,13 @@ export default function Inbox() {
         }}
       >
         <div style={{ padding: '24px', borderBottom: '1px solid #f0f0f0' }}>
-          <Title level={4} style={{ margin: 0 }}>Messages</Title>
-          <Input 
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Title level={4} style={{ margin: 0 }}>Messages</Title>
+            {totalUnread > 0 && (
+              <Badge count={totalUnread} style={{ backgroundColor: '#b40101' }} />
+            )}
+          </div>
+          <Input
             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />} 
             placeholder="Search conversations..." 
             value={searchQuery}
@@ -324,6 +377,13 @@ export default function Inbox() {
               padding: isMobile ? '16px' : '24px 32px',
               background: '#fafafa'
             }}>
+              {hasMoreMessages && (
+                <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <Button size="small" loading={loadingOlder} onClick={loadOlderMessages}>
+                    Load older messages
+                  </Button>
+                </div>
+              )}
               {messages.map((msg, index) => {
                 const isAgent = msg.senderType === 'agent';
                 const showDate = index === 0 || 
@@ -357,14 +417,19 @@ export default function Inbox() {
                         boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                       }}>
                         <div style={{ marginBottom: 4 }}>{msg.content}</div>
-                        <Text style={{ 
-                          fontSize: 11, 
+                        <Text style={{
+                          fontSize: 11,
                           color: isAgent ? 'rgba(255,255,255,0.7)' : '#8c8c8c'
                         }}>
-                          {new Date(msg.createdAt).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
+                          {isAgent && (
+                            <span style={{ marginLeft: 6 }}>
+                              {msg.pending ? '· Sending…' : msg.readAt ? '· Read ✓✓' : msg.isRead ? '· Read ✓✓' : '· Sent ✓'}
+                            </span>
+                          )}
                         </Text>
                       </div>
                     </div>

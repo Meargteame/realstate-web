@@ -1,44 +1,71 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: kw_postgres
+    container_name: torra_postgres
     environment:
       POSTGRES_USER: ${DB_USER:-kw_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-kw_password123}
-      POSTGRES_DB: ${DB_NAME:-kw_realestate}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required - set it in a .env file}
+      POSTGRES_DB: ${DB_NAME:-torra_realestate}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kw_user} -d ${DB_NAME:-torra_realestate}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    container_name: kw_redis
+    container_name: torra_redis
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: kw_backend
+    container_name: torra_backend
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://${DB_USER:-kw_user}:${DB_PASSWORD:-kw_password123}@postgres:5432/${DB_NAME:-kw_realestate}?schema=public
+      - DATABASE_URL=postgresql://${DB_USER:-kw_user}:${DB_PASSWORD:?DB_PASSWORD is required}@postgres:5432/${DB_NAME:-torra_realestate}?schema=public
       - REDIS_URL=redis://redis:6379
+      - REDIS_ENABLED=true
       - PORT=5000
       - NODE_ENV=production
-      - JWT_SECRET=kw-real-estate-super-secure-jwt-secret-2026
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required - set a strong random value in a .env file}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+    volumes:
+      - uploads_data:/app/uploads
     restart: unless-stopped
-    command: sh -c "npx prisma generate && npx prisma db push && npm start"
+    # Generate Prisma client, sync schema (no migration history needed), then start
+    command: sh -c "npx prisma generate && npx prisma db push --accept-data-loss && node server.js"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: kw_frontend
+      args:
+        VITE_MAPBOX_ACCESS_TOKEN: ${VITE_MAPBOX_ACCESS_TOKEN:-}
+    container_name: torra_frontend
     depends_on:
       - backend
     ports:
@@ -48,3 +75,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:

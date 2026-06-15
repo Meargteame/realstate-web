@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer } from "antd";
 import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined, StarFilled, MessageOutlined } from "@ant-design/icons";
 import { Link, useOutletContext, useNavigate } from "react-router-dom";
@@ -18,25 +18,34 @@ export default function LeadsPage() {
 
   useEffect(() => {
     if (!parentAgent) return;
-    fetch(`/api/agents/${parentAgent.id}`)
+    // Use the dedicated paginated leads endpoint instead of the whole agent object.
+    fetch(`/api/agents/${parentAgent.id}/leads?limit=100`)
       .then(res => res.json())
       .then(data => {
-        setLeads(data.leads || []);
+        setLeads(Array.isArray(data?.leads) ? data.leads : (Array.isArray(data) ? data : []));
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        message.error('Could not load leads. Please refresh to try again.');
+      });
   }, [parentAgent]);
 
   const updateLeadStatus = async (leadId: string, status: string) => {
+    // Optimistic: apply immediately, remember previous so we can revert on failure.
+    const previous = leads.find(l => l.id === leadId)?.status;
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l));
     try {
-      await fetch(`/api/leads/${leadId}/status`, {
+      const res = await fetch(`/api/leads/${leadId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
-      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l));
+      if (!res.ok) throw new Error('Request failed');
       message.success(`Lead moved to ${status}`);
     } catch {
+      // Revert
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: previous } : l));
       message.error('Failed to update lead status');
     }
   };
@@ -70,8 +79,8 @@ export default function LeadsPage() {
     New: 'error', Contacted: 'processing', Qualified: 'warning', Closed: 'success', Lost: 'default'
   };
 
-  // Lead scoring based on status and recency
-  const getLeadScore = (lead: any) => {
+  // Lead scoring based on status and recency.
+  const computeLeadScore = (lead: any) => {
     let score = 0;
     if (lead.status === 'Qualified') score += 40;
     else if (lead.status === 'Contacted') score += 25;
@@ -84,6 +93,14 @@ export default function LeadsPage() {
     else if (daysSince <= 7) score += 10;
     return Math.min(100, score);
   };
+
+  // Precompute scores once per leads change instead of on every render/row/sort.
+  const leadScores = useMemo(() => {
+    const m = new Map<string, number>();
+    leads.forEach(l => m.set(l.id, computeLeadScore(l)));
+    return m;
+  }, [leads]);
+  const getLeadScore = (lead: any) => leadScores.get(lead.id) ?? computeLeadScore(lead);
 
   const getScoreColor = (score: number) => {
     if (score >= 70) return '#10b981';

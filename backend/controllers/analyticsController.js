@@ -1,10 +1,20 @@
 const prisma = require('../config/prisma');
+const cacheService = require('../services/cacheService');
+
+// Analytics responses change slowly; cache per-agent for 5 minutes.
+const ANALYTICS_TTL = 300;
+const analyticsKey = (kind, agentId, extra = '') =>
+  `analytics:${kind}:${agentId}${extra ? ':' + extra : ''}`;
 
 // GET /api/analytics/agent/:agentId - Get agent performance analytics
 exports.getAgentAnalytics = async (req, res) => {
   try {
     const { agentId } = req.params;
     const { startDate, endDate } = req.query;
+
+    const cacheKey = analyticsKey('agent', agentId, `${startDate || ''}-${endDate || ''}`);
+    const cached = await cacheService.get(cacheKey);
+    if (cached) return res.json(cached);
 
     const dateFilter = {};
     if (startDate) dateFilter.gte = new Date(startDate);
@@ -70,7 +80,7 @@ exports.getAgentAnalytics = async (req, res) => {
       daysOnMarket: Math.floor((new Date() - new Date(p.listedAt)) / (1000 * 60 * 60 * 24))
     }));
 
-    res.json({
+    const payload = {
       agent: {
         id: agent.id,
         name: agent.name,
@@ -98,7 +108,10 @@ exports.getAgentAnalytics = async (req, res) => {
         leadSources
       },
       propertyPerformance: propertyPerformance.slice(0, 10) // Top 10
-    });
+    };
+
+    await cacheService.set(cacheKey, payload, ANALYTICS_TTL);
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching agent analytics:', error);
     res.status(500).json({ error: error.message });
@@ -110,9 +123,13 @@ exports.getLeadAnalytics = async (req, res) => {
   try {
     const { agentId } = req.params;
 
+    const cacheKey = analyticsKey('leads', agentId);
+    const cached = await cacheService.get(cacheKey);
+    if (cached) return res.json(cached);
+
     const leads = await prisma.lead.findMany({
       where: { agentId },
-      include: { property: true }
+      select: { status: true, type: true, source: true, propertyId: true, createdAt: true, lastContacted: true }
     });
 
     // Lead status breakdown
@@ -131,11 +148,39 @@ exports.getLeadAnalytics = async (req, res) => {
       typeBreakdown[type] = (typeBreakdown[type] || 0) + 1;
     });
 
+    // Lead source breakdown (real `source` field, fallback to type)
+    const sourceBreakdown = {};
+    leads.forEach(lead => {
+      const source = lead.source || lead.type || 'Direct';
+      sourceBreakdown[source] = (sourceBreakdown[source] || 0) + 1;
+    });
+
+    // Conversion funnel: each stage counts leads at-or-beyond that point.
+    // (Closed implies it passed through Contacted/Qualified.)
+    const reached = (statuses) => leads.filter(l => statuses.includes(l.status)).length;
+    const funnel = [
+      { stage: 'Inquiries', count: leads.length },
+      { stage: 'Contacted', count: reached(['Contacted', 'Qualified', 'Closed']) },
+      { stage: 'Qualified', count: reached(['Qualified', 'Closed']) },
+      { stage: 'Closed', count: reached(['Closed']) }
+    ];
+
     // Leads by month (last 6 months)
     const leadsByMonth = getLeadsByMonth(leads, 6);
 
-    // Average time to close (mock)
-    const avgTimeToClose = 14; // days
+    // Average time to close: createdAt -> lastContacted for closed leads that
+    // have a contact timestamp. Falls back to 0 when there's no data yet.
+    const closedWithDates = leads.filter(
+      l => l.status === 'Closed' && l.lastContacted && l.createdAt
+    );
+    const avgTimeToClose = closedWithDates.length > 0
+      ? Math.round(
+          closedWithDates.reduce((sum, l) => {
+            const days = (new Date(l.lastContacted) - new Date(l.createdAt)) / (1000 * 60 * 60 * 24);
+            return sum + Math.max(0, days);
+          }, 0) / closedWithDates.length
+        )
+      : 0;
 
     // Top performing properties (by lead count)
     const propertyLeadCounts = {};
@@ -145,14 +190,19 @@ exports.getLeadAnalytics = async (req, res) => {
       }
     });
 
-    res.json({
+    const payload = {
       total: leads.length,
       statusBreakdown,
       typeBreakdown,
+      sourceBreakdown,
+      funnel,
       leadsByMonth,
       avgTimeToClose,
       conversionRate: leads.length > 0 ? (statusBreakdown.Closed / leads.length * 100).toFixed(1) : 0
-    });
+    };
+
+    await cacheService.set(cacheKey, payload, ANALYTICS_TTL);
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching lead analytics:', error);
     res.status(500).json({ error: error.message });
@@ -164,10 +214,20 @@ exports.getPropertyAnalytics = async (req, res) => {
   try {
     const { agentId } = req.params;
 
+    const cacheKey = analyticsKey('properties', agentId);
+    const cached = await cacheService.get(cacheKey);
+    if (cached) return res.json(cached);
+
     const properties = await prisma.property.findMany({
       where: { agentId },
-      include: {
-        leads: true
+      select: {
+        id: true,
+        address: true,
+        price: true,
+        status: true,
+        viewCount: true,
+        listedAt: true,
+        _count: { select: { leads: true } }
       }
     });
 
@@ -188,7 +248,7 @@ exports.getPropertyAnalytics = async (req, res) => {
       : 0;
 
     const avgLeadCount = properties.length > 0
-      ? Math.round(properties.reduce((sum, p) => sum + p.leads.length, 0) / properties.length)
+      ? Math.round(properties.reduce((sum, p) => sum + p._count.leads, 0) / properties.length)
       : 0;
 
     // Calculate average days on market
@@ -217,11 +277,11 @@ exports.getPropertyAnalytics = async (req, res) => {
         address: p.address,
         price: p.price,
         viewCount: p.viewCount,
-        leadCount: p.leads.length,
+        leadCount: p._count.leads,
         status: p.status
       }));
 
-    res.json({
+    const payload = {
       total: properties.length,
       statusBreakdown,
       averages: {
@@ -232,7 +292,10 @@ exports.getPropertyAnalytics = async (req, res) => {
       },
       priceRanges,
       topProperties
-    });
+    };
+
+    await cacheService.set(cacheKey, payload, ANALYTICS_TTL);
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching property analytics:', error);
     res.status(500).json({ error: error.message });
@@ -244,8 +307,12 @@ exports.getSalesReports = async (req, res) => {
   try {
     const { agentId } = req.params;
 
+    const cacheKey = analyticsKey('sales', agentId);
+    const cached = await cacheService.get(cacheKey);
+    if (cached) return res.json(cached);
+
     const opportunities = await prisma.opportunity.findMany({
-      where: { 
+      where: {
         agentId,
         status: 'Closed'
       }
@@ -285,39 +352,103 @@ exports.getSalesReports = async (req, res) => {
     // Commission estimate (assuming 3% commission)
     const estimatedCommission = Math.round(totalVolume * 0.03);
 
-    res.json({
+    const payload = {
       totalVolume,
       totalDeals,
       avgDealSize,
       estimatedCommission,
       salesByMonth,
       dealTypeBreakdown
-    });
+    };
+
+    await cacheService.set(cacheKey, payload, ANALYTICS_TTL);
+    res.json(payload);
   } catch (error) {
     console.error('Error fetching sales reports:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
+// GET /api/analytics/export/:agentId?range=30d - Download analytics as CSV
+exports.exportAnalytics = async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    const { range } = req.query;
+
+    const agent = await prisma.agent.findUnique({
+      where: { id: agentId },
+      include: { properties: true, leads: true, opportunities: true }
+    });
+
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    const totalListings = agent.properties.length;
+    const activeListings = agent.properties.filter(p => p.status === 'Active').length;
+    const soldListings = agent.properties.filter(p => p.status === 'Sold').length;
+    const totalLeads = agent.leads.length;
+    const closedLeads = agent.leads.filter(l => l.status === 'Closed').length;
+    const conversionRate = totalLeads > 0 ? (closedLeads / totalLeads * 100).toFixed(1) : '0';
+    const closedOpps = agent.opportunities.filter(o => o.status === 'Closed');
+    const totalVolume = closedOpps.reduce((sum, o) => sum + o.price, 0);
+    const estimatedCommission = Math.round(totalVolume * 0.03);
+
+    // Build CSV. Wrap values to guard against commas.
+    const csvValue = (v) => `"${String(v).replace(/"/g, '""')}"`;
+    const rows = [
+      ['Metric', 'Value'],
+      ['Report Range', range || 'all-time'],
+      ['Agent', agent.name],
+      ['Total Listings', totalListings],
+      ['Active Listings', activeListings],
+      ['Sold Listings', soldListings],
+      ['Total Leads', totalLeads],
+      ['Closed Leads', closedLeads],
+      ['Lead Conversion Rate (%)', conversionRate],
+      ['Closed Deals', closedOpps.length],
+      ['Total Sales Volume', totalVolume],
+      ['Estimated Commission (3%)', estimatedCommission]
+    ];
+    const csv = rows.map(r => r.map(csvValue).join(',')).join('\r\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="analytics-${agentId}.csv"`
+    );
+    res.send(csv);
+  } catch (error) {
+    console.error('Error exporting analytics:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Helper functions
 async function getSalesByMonth(agentId, months) {
+  // Single query over the whole window, then bucket in memory (avoids N queries).
+  const now = new Date();
+  const windowStart = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+
+  const closedOpps = await prisma.opportunity.findMany({
+    where: {
+      agentId,
+      status: 'Closed',
+      updatedAt: { gte: windowStart }
+    },
+    select: { price: true, updatedAt: true }
+  });
+
   const salesByMonth = [];
-  
   for (let i = months - 1; i >= 0; i--) {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
     const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-    const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const monthOpps = await prisma.opportunity.findMany({
-      where: {
-        agentId,
-        status: 'Closed',
-        updatedAt: {
-          gte: monthStart,
-          lte: monthEnd
-        }
-      }
+    const monthOpps = closedOpps.filter(o => {
+      const d = new Date(o.updatedAt);
+      return d >= monthStart && d <= monthEnd;
     });
 
     salesByMonth.push({
@@ -332,12 +463,14 @@ async function getSalesByMonth(agentId, months) {
 
 async function getLeadSources(agentId) {
   const leads = await prisma.lead.findMany({
-    where: { agentId }
+    where: { agentId },
+    select: { source: true, type: true }
   });
 
   const sources = {};
   leads.forEach(lead => {
-    const source = lead.type || 'Direct';
+    // Prefer the explicit source field; fall back to type, then Direct.
+    const source = lead.source || lead.type || 'Direct';
     sources[source] = (sources[source] || 0) + 1;
   });
 

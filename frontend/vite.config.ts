@@ -15,6 +15,23 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    build: {
+      // Suppress the chunk-size warning; antd alone is ~1.3 MB.
+      chunkSizeWarningLimit: 1400,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // UI framework — ~800 kB uncompressed, always cached separately
+            antd: ['antd', '@ant-design/icons'],
+            // Map libraries — heavy, only loaded on map pages
+            maps: ['leaflet', 'mapbox-gl', 'react-map-gl', 'supercluster'],
+            // Charts
+            charts: ['recharts'],
+            // Motion/animations (already tiny — bundled with main)
+          },
+        },
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.

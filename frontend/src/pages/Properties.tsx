@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification, Checkbox, Card, FloatButton } from "antd";
+import { Layout, Button, Space, Typography, Badge, Empty, Select, Slider, InputNumber, Row, Col, Drawer, notification, Checkbox, Card, FloatButton, Skeleton } from "antd";
 import { PushpinOutlined, FilterOutlined, SearchOutlined, UnorderedListOutlined, AppstoreOutlined, DollarOutlined, HomeOutlined, SaveOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
 import PropertyMapLeaflet from "@/components/PropertyMapLeaflet";
 import SaveSearchModal from "@/components/SaveSearchModal";
 import { useIsMobile, useIsTablet } from "../hooks/useBreakpoint";
+import { useDebounce } from "../hooks/useDebounce";
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
+const AntCard = Card as any;
 
 export default function Properties() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const query = searchParams.get("q") || "";
   const typeParam = searchParams.get("type") || "";
@@ -31,12 +33,21 @@ export default function Properties() {
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
   
-  // Filter states
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000]);
-  const [bedrooms, setBedrooms] = useState<number | null>(null);
-  const [bathrooms, setBathrooms] = useState<number | null>(null);
-  const [propertyType, setPropertyType] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>("newest");
+  // Filter states (initialised from URL so shared links restore the search)
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    parseInt(searchParams.get("minPrice") || "0", 10),
+    parseInt(searchParams.get("maxPrice") || "5000000", 10)
+  ]);
+  const [bedrooms, setBedrooms] = useState<number | null>(
+    searchParams.get("beds") ? Number(searchParams.get("beds")) : null
+  );
+  const [bathrooms, setBathrooms] = useState<number | null>(
+    searchParams.get("baths") ? Number(searchParams.get("baths")) : null
+  );
+  const [propertyType, setPropertyType] = useState<string | null>(
+    searchParams.get("propertyType") || null
+  );
+  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") || "newest");
   
   // Phase 7A: Advanced filters
   const [yearRange, setYearRange] = useState<[number, number]>([1900, new Date().getFullYear()]);
@@ -51,6 +62,37 @@ export default function Properties() {
   const [storiesRange, setStoriesRange] = useState<[number, number]>([1, 5]);
   const [condition, setCondition] = useState<string | null>(null);
   const [maxDaysOnMarket, setMaxDaysOnMarket] = useState<number | null>(null);
+
+  // Serialize all filters into one string and debounce it so that dragging a
+  // slider (which fires dozens of state updates) only triggers ONE fetch.
+  const filterSignature = JSON.stringify({
+    query, drawnArea, priceRange, bedrooms, bathrooms, propertyType,
+    yearRange, lotSizeRange, hoaFeesRange, minGarageSpaces, hasPool,
+    hasBasement, hasFireplace, isWaterfront, isPetFriendly, storiesRange,
+    condition, maxDaysOnMarket
+  });
+  const debouncedSignature = useDebounce(filterSignature, 400);
+
+  // Keep the URL in sync with the primary filters so a search is shareable and
+  // restorable via the back button. Uses replace to avoid spamming history.
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const setOrDelete = (key: string, value: string | null | undefined, isDefault: boolean) => {
+      if (value && !isDefault) next.set(key, value);
+      else next.delete(key);
+    };
+    setOrDelete("propertyType", propertyType, !propertyType);
+    setOrDelete("beds", bedrooms?.toString(), bedrooms == null);
+    setOrDelete("baths", bathrooms?.toString(), bathrooms == null);
+    setOrDelete("minPrice", priceRange[0].toString(), priceRange[0] <= 0);
+    setOrDelete("maxPrice", priceRange[1].toString(), priceRange[1] >= 5000000);
+    setOrDelete("sort", sortBy, sortBy === "newest");
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyType, bedrooms, bathrooms, priceRange, sortBy]);
 
   // Set property type from URL parameter
   useEffect(() => {
@@ -128,7 +170,7 @@ export default function Properties() {
     };
 
     fetchProperties();
-  }, [query, drawnArea, priceRange, bedrooms, bathrooms, propertyType, yearRange, lotSizeRange, hoaFeesRange, minGarageSpaces, hasPool, hasBasement, hasFireplace, isWaterfront, isPetFriendly, storiesRange, condition, maxDaysOnMarket]);
+  }, [debouncedSignature]);
   
   // Helper function to build filter params
   const buildFilterParams = () => {
@@ -726,7 +768,26 @@ export default function Properties() {
 
         {/* Results Area */}
         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px' : '40px', background: '#fafafa' }}>
-          {viewMode === 'grid' ? (
+          {loading ? (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile
+                ? '1fr'
+                : isTablet
+                  ? 'repeat(2, 1fr)'
+                  : showMap
+                    ? 'repeat(2, 1fr)'
+                    : 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: isMobile ? '16px' : '32px'
+            }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <AntCard key={i} style={{ borderRadius: '12px' }}>
+                  <Skeleton.Image active style={{ width: '100%', height: 180 }} />
+                  <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 16 }} />
+                </AntCard>
+              ))}
+            </div>
+          ) : viewMode === 'grid' ? (
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: isMobile 
@@ -807,8 +868,6 @@ export default function Properties() {
               )}
             </Space>
           )}
-          
-          {loading && <div style={{ textAlign: 'center', padding: '80px' }}><Text type="secondary">Loading properties...</Text></div>}
         </div>
       </Content>
 

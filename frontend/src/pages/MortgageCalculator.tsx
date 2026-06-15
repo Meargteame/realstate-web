@@ -38,7 +38,8 @@ export default function MortgageCalculator() {
           ...values,
           phone: values.phone || '',
           message: `Mortgage Calculator Inquiry - Home Price: ${fmt(homePrice)}, Down Payment: ${fmt(downPayment)}, Monthly Payment: ${fmtMo(monthlyPayment)}`,
-          type: 'mortgage_inquiry'
+          type: 'mortgage_inquiry',
+          source: 'mortgage_calculator'
         })
       });
 

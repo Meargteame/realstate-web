@@ -12,10 +12,7 @@ import {
   SearchOutlined,
   BellOutlined,
   FileTextOutlined,
-  FolderOutlined,
-  CalendarOutlined,
-  VideoCameraOutlined,
-  HeartOutlined
+  FolderOutlined
 } from "@ant-design/icons";
 
 const { Header, Sider, Content } = Layout;
@@ -73,10 +70,7 @@ export default function AdminLayout() {
     { key: '/admin/properties', icon: <HomeOutlined />, label: 'Properties Management' },
     { key: '/admin/blog', icon: <FileTextOutlined />, label: 'Blog Management' },
     { key: '/admin/documents', icon: <FolderOutlined />, label: 'Document Management' },
-    { key: '/admin/calendar', icon: <CalendarOutlined />, label: 'Calendar' },
-    { key: '/admin/video-calls', icon: <VideoCameraOutlined />, label: 'Video Calls' },
     { key: '/admin/analytics', icon: <BarChartOutlined />, label: 'Platform Analytics' },
-    { key: '/admin/system-health', icon: <HeartOutlined />, label: 'System Health' },
   ];
 
   const bottomMenuItems = [
