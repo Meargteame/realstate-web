@@ -1,29 +1,9 @@
-# Dependencies
-node_modules/
+node_modules
+dist
 npm-debug.log*
-
-# Build output
-dist/
-build/
-.vite/
-
-# Environment
 .env
 .env.*
-!.env.example
-
-# Git / CI
-.git/
+*.log
+.git
 .gitignore
-
-# IDE / OS
-.vscode/
-.DS_Store
-Thumbs.db
-
-# Docs
-README.md
-*.md
-
-# Tests
-coverage/
+.vscode
