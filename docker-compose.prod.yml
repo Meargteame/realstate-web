@@ -4,11 +4,11 @@
 # Run with: docker compose -f docker-compose.prod.yml up -d --build
 #
 # Architecture:
-#   Internet → Caddy (:80, :443 auto-SSL)
-#                ├── /api/*     → backend:5000
-#                ├── /uploads/* → backend:5000
-#                ├── /socket.io → backend:5000 (WebSocket)
-#                └── /*         → frontend:80  (Nginx SPA)
+#   Host Nginx (:80)
+#     ├── /api/*     → host:5001 (backend)
+#     ├── /uploads/* → host:5001 (backend)
+#     ├── /socket.io → host:5001 (backend, WebSocket)
+#     └── /*         → host:3000 (frontend Nginx)
 # ═══════════════════════════════════════════════════════════
 
 services:
@@ -58,9 +58,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # NOT exposed to host — Caddy proxies to it internally
-    expose:
-      - "5000"
+    ports:
+      - "5001:5000"
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-torra_user}:${DB_PASSWORD:?Set DB_PASSWORD}@postgres:5432/${DB_NAME:-torra_realestate}?schema=public
       - REDIS_URL=redis://redis:6379
@@ -68,8 +67,8 @@ services:
       - PORT=5000
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
-      - FRONTEND_URL=https://${DOMAIN:?Set DOMAIN in .env}
-      - ALLOWED_ORIGINS=https://${DOMAIN},https://www.${DOMAIN}
+      - FRONTEND_URL=http://${DOMAIN:?Set DOMAIN in .env}
+      - ALLOWED_ORIGINS=http://${DOMAIN},http://www.${DOMAIN}
       - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
@@ -92,30 +91,8 @@ services:
     container_name: torra_frontend
     depends_on:
       - backend
-    # NOT exposed to host — Caddy proxies to it internally
-    expose:
-      - "80"
-    restart: unless-stopped
-    networks:
-      - internal
-
-  # ── HTTPS Reverse Proxy (auto Let's Encrypt) ──────────────
-  caddy:
-    image: caddy:2-alpine
-    container_name: torra_caddy
-    depends_on:
-      - frontend
-      - backend
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"   # HTTP/3
-    environment:
-      - DOMAIN=${DOMAIN:?Set DOMAIN in .env}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - "3000:80"
     restart: unless-stopped
     networks:
       - internal
@@ -124,8 +101,6 @@ volumes:
   postgres_data:
   redis_data:
   uploads_data:
-  caddy_data:       # Let's Encrypt certs persisted here
-  caddy_config:
 
 networks:
   internal:
