@@ -26,44 +26,26 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Nginx config: SPA routing + reverse proxy /api and /uploads to backend
-# NOTE: $$ escapes the dollar sign so Docker shell doesn't eat Nginx variables
-RUN printf 'server {\n\
+# Nginx config: SPA routing only (Caddy handles /api and /uploads proxying)
+# Write to template dir so envsubst won't touch our nginx variables
+RUN rm -f /etc/nginx/conf.d/default.conf && \
+    rm -rf /etc/nginx/templates && \
+    printf 'server {\n\
     listen 80;\n\
     root /usr/share/nginx/html;\n\
     index index.html;\n\
 \n\
-    # gzip\n\
     gzip on;\n\
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;\n\
     gzip_min_length 256;\n\
 \n\
-    # static assets: long cache\n\
     location /assets/ {\n\
         expires 1y;\n\
         add_header Cache-Control "public, immutable";\n\
     }\n\
 \n\
-    # API reverse proxy\n\
-    location /api/ {\n\
-        proxy_pass http://backend:5000/api/;\n\
-        proxy_set_header Host $$host;\n\
-        proxy_set_header X-Real-IP $$remote_addr;\n\
-        proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;\n\
-        proxy_set_header X-Forwarded-Proto $$scheme;\n\
-        proxy_read_timeout 60s;\n\
-    }\n\
-\n\
-    # Uploaded files reverse proxy\n\
-    location /uploads/ {\n\
-        proxy_pass http://backend:5000/uploads/;\n\
-        proxy_set_header Host $$host;\n\
-        proxy_set_header X-Real-IP $$remote_addr;\n\
-    }\n\
-\n\
-    # SPA fallback — must be last\n\
     location / {\n\
-        try_files $$uri $$uri/ /index.html;\n\
+        try_files $uri $uri/ /index.html;\n\
     }\n\
 }\n' > /etc/nginx/conf.d/default.conf
 
