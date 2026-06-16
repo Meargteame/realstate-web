@@ -199,10 +199,15 @@ exports.getPropertiesByCity = async (req, res) => {
       include: { agent: true }
     });
     
+    // Convert BigInt to Number for JSON serialization
+    const propertiesData = JSON.parse(JSON.stringify(properties, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
     // Cache for 5 minutes
-    await cacheService.set(cacheKey, properties, 300);
+    await cacheService.set(cacheKey, propertiesData, 300);
     
-    res.json(properties);
+    res.json(propertiesData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -337,7 +342,12 @@ exports.updateProperty = async (req, res) => {
     await cacheService.del(cacheService.generatePropertyIdKey(id));
     await cacheService.delPattern('properties:*');
     
-    res.json(property);
+    // Convert BigInt to Number for JSON serialization
+    const propertyData = JSON.parse(JSON.stringify(property, (key, value) =>
+      typeof value === 'bigint' ? Number(value) : value
+    ));
+
+    res.json(propertyData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
