@@ -1,7 +1,8 @@
-# ── Caddy — auto-HTTPS reverse proxy for Hostinger VPS ──
-# Domain is injected via the DOMAIN env var at deploy time.
+# ── Caddy — reverse proxy for Hostinger VPS ──
+# Uses :80 (HTTP only) for IP-based access.
+# When you have a domain, change ":80" to "yourdomain.com" for auto-HTTPS.
 
-{$DOMAIN} {
+:80 {
 	# Let's Encrypt cert is obtained and renewed automatically.
 
 	# Compress responses
