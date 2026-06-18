@@ -1,5 +1,19 @@
 const prisma = require('../config/prisma');
 
+// Helper to check if user has admin role
+async function checkAdmin(userId) {
+  if (!userId) return false;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+    return user?.role === 'admin';
+  } catch {
+    return false;
+  }
+}
+
 // GET /api/documents - Get all documents for current user
 exports.getDocuments = async (req, res) => {
   try {
@@ -11,10 +25,13 @@ exports.getDocuments = async (req, res) => {
     
     // Only filter by user if userId is provided
     if (userId) {
-      where.OR = [
-        { uploadedBy: userId },
-        { sharedWith: { has: userId } }
-      ];
+      const isAdmin = await checkAdmin(userId);
+      if (!isAdmin) {
+        where.OR = [
+          { uploadedBy: userId },
+          { sharedWith: { has: userId } }
+        ];
+      }
     }
     
     if (category) where.category = category;
@@ -116,7 +133,8 @@ exports.getDocumentById = async (req, res) => {
     }
     
     // Check access permission
-    if (document.uploadedBy !== userId && !document.sharedWith.includes(userId)) {
+    const isAdmin = await checkAdmin(userId);
+    if (!isAdmin && document.uploadedBy !== userId && !document.sharedWith.includes(userId)) {
       return res.status(403).json({ error: 'Access denied' });
     }
     
@@ -244,7 +262,8 @@ exports.updateDocument = async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
     
-    if (existing.uploadedBy !== userId) {
+    const isAdmin = await checkAdmin(userId);
+    if (!isAdmin && existing.uploadedBy !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
     
@@ -322,7 +341,8 @@ exports.deleteDocument = async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
     
-    if (existing.uploadedBy !== userId) {
+    const isAdmin = await checkAdmin(userId);
+    if (!isAdmin && existing.uploadedBy !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
     
@@ -370,7 +390,8 @@ exports.shareDocument = async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
     
-    if (document.uploadedBy !== userId) {
+    const isAdmin = await checkAdmin(userId);
+    if (!isAdmin && document.uploadedBy !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
     
@@ -417,7 +438,8 @@ exports.downloadDocument = async (req, res) => {
     }
     
     // Check access permission
-    if (document.uploadedBy !== userId && !document.sharedWith.includes(userId)) {
+    const isAdmin = await checkAdmin(userId);
+    if (!isAdmin && document.uploadedBy !== userId && !document.sharedWith.includes(userId)) {
       return res.status(403).json({ error: 'Access denied' });
     }
     
