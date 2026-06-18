@@ -335,9 +335,15 @@ exports.deleteAgent = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.agent.delete({
-      where: { id }
-    });
+    // Use transaction to ensure properties are deleted first to avoid FK constraints
+    await prisma.$transaction([
+      prisma.property.deleteMany({
+        where: { agentId: id }
+      }),
+      prisma.agent.delete({
+        where: { id }
+      })
+    ]);
 
     await invalidateAdminStats();
     res.json({ message: 'Agent deleted successfully' });
