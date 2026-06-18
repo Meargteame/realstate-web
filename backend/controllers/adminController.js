@@ -111,9 +111,11 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
+    const emailLower = email.toLowerCase().trim();
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: emailLower }
     });
 
     if (existingUser) {
@@ -127,7 +129,7 @@ exports.createUser = async (req, res) => {
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: emailLower,
         password: hashedPassword,
         role
       },
@@ -154,15 +156,30 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, role, password } = req.body;
 
+    const emailLower = email ? email.toLowerCase().trim() : undefined;
+
     const updateData = {
       name,
-      email,
+      email: emailLower,
       role
     };
 
     // If password is provided, hash it
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    // Check if email is being updated to an already existing email
+    if (emailLower) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: emailLower,
+          NOT: { id }
+        }
+      });
+      if (existingUser) {
+        return res.status(400).json({ error: 'Another user with this email already exists' });
+      }
     }
 
     const user = await prisma.user.update({
