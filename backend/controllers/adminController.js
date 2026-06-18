@@ -202,16 +202,24 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // If user is an agent, delete agent record first
-    if (user.agent) {
-      await prisma.agent.delete({
-        where: { id: user.agent.id }
-      });
-    }
+    // Run deletions in a transaction to prevent constraint errors
+    await prisma.$transaction(async (tx) => {
+      if (user.agent) {
+        // 1. Delete all properties associated with the agent
+        await tx.property.deleteMany({
+          where: { agentId: user.agent.id }
+        });
+        
+        // 2. Delete the agent profile
+        await tx.agent.delete({
+          where: { id: user.agent.id }
+        });
+      }
 
-    // Delete user
-    await prisma.user.delete({
-      where: { id }
+      // 3. Delete the user
+      await tx.user.delete({
+        where: { id }
+      });
     });
 
     await invalidateAdminStats();
