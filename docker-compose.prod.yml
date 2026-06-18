@@ -68,7 +68,7 @@ services:
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
       - FRONTEND_URL=http://${DOMAIN:?Set DOMAIN in .env}
-      - ALLOWED_ORIGINS=http://${DOMAIN},http://www.${DOMAIN}
+      - ALLOWED_ORIGINS=http://${DOMAIN},https://${DOMAIN},http://www.${DOMAIN},https://www.${DOMAIN}
       - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
