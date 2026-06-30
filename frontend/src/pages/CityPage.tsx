@@ -12,6 +12,7 @@ import {
   HomeOutlined, ArrowRightOutlined, DollarOutlined  
 } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -29,6 +30,7 @@ export default function CityPage() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   const cityKey = city?.toLowerCase() || "default";
   const displayName = city?.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ') || "Your City";
@@ -92,7 +94,7 @@ export default function CityPage() {
     <div style={{ background: '#f8f9fa' }}>
       {/* Hero */}
       <section style={{
-        position: 'relative', height: '500px', display: 'flex', alignItems: 'center',
+        position: 'relative', height: isMobile ? 'auto' : '500px', minHeight: isMobile ? '400px' : undefined, padding: isMobile ? '60px 0' : undefined, display: 'flex', alignItems: 'center',
         justifyContent: 'center', overflow: 'hidden', color: 'white', textAlign: 'center'
       }}>
         <div style={{
@@ -100,21 +102,21 @@ export default function CityPage() {
           backgroundImage: `url("https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1920&q=80")`,
           backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.45)'
         }} />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '900px', padding: '0 32px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '900px', padding: isMobile ? '0 16px' : '0 32px' }}>
           <Tag color="#b40101" style={{ fontSize: '13px', fontWeight: 'bold', padding: '4px 16px', marginBottom: '24px', borderRadius: '4px' }}>
             <EnvironmentOutlined /> LOCAL MARKET REPORT
           </Tag>
-          <Title style={{ color: 'white', fontSize: '72px', fontWeight: 900, margin: 0, lineHeight: 1, letterSpacing: '-2px' }}>
+          <Title style={{ color: 'white', fontSize: isMobile ? '36px' : '72px', fontWeight: 900, margin: 0, lineHeight: 1, letterSpacing: '-2px' }}>
             Homes for Sale in {displayName}
           </Title>
-          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '22px', display: 'block', margin: '24px 0 40px' }}>
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: isMobile ? '16px' : '22px', display: 'block', margin: '24px 0 40px' }}>
             {market.totalListings} active listings · Median price ${(market.medianPrice / 1000).toFixed(0)}K
           </Text>
           <Button
             size="large"
             icon={<SearchOutlined />}
             onClick={() => navigate(`/properties?q=${city}`)}
-            style={{ height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px', fontSize: '16px', background: '#b40101', borderColor: '#b40101', color: 'white' }}
+            style={{ height: isMobile ? '48px' : '64px', padding: isMobile ? '0 24px' : '0 48px', fontWeight: 900, borderRadius: '32px', fontSize: isMobile ? '14px' : '16px', background: '#b40101', borderColor: '#b40101', color: 'white' }}
           >
             Search All {displayName} Listings
           </Button>
@@ -122,7 +124,7 @@ export default function CityPage() {
       </section>
 
       {/* Market Stats */}
-      <section style={{ background: '#111827', padding: '48px 64px' }}>
+      <section style={{ background: '#111827', padding: isMobile ? '32px 16px' : '48px 64px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <Row gutter={[48, 24]} justify="center">
             {[
@@ -132,8 +134,8 @@ export default function CityPage() {
               { label: 'Active Listings', value: `${market.totalListings}`, icon: <EnvironmentOutlined /> },
             ].map((stat, i) => (
               <Col xs={12} md={6} key={i} style={{ textAlign: 'center' }}>
-                <div style={{ color: '#b40101', fontSize: '32px', marginBottom: '8px' }}>{stat.icon}</div>
-                <div style={{ color: 'white', fontSize: '32px', fontWeight: 900 }}>{stat.value}</div>
+                <div style={{ color: '#b40101', fontSize: isMobile ? '24px' : '32px', marginBottom: '8px' }}>{stat.icon}</div>
+                <div style={{ color: 'white', fontSize: isMobile ? '22px' : '32px', fontWeight: 900 }}>{stat.value}</div>
                 <div style={{ color: '#6b7280', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>{stat.label}</div>
               </Col>
             ))}
@@ -142,7 +144,7 @@ export default function CityPage() {
       </section>
 
       {/* Listings Grid */}
-      <section style={{ maxWidth: '1400px', margin: '0 auto', padding: '80px 64px' }}>
+      <section style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '40px 16px' : '80px 64px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <div>
             <Title level={2} style={{ fontWeight: 900, textTransform: 'uppercase', margin: 0 }}>Featured Listings</Title>
@@ -168,14 +170,14 @@ export default function CityPage() {
       </section>
 
       {/* Lead Capture: Home Valuation */}
-      <section style={{ background: '#111827', padding: '96px 64px' }}>
+      <section style={{ background: '#111827', padding: isMobile ? '48px 16px' : '96px 64px' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <Row gutter={64} align="middle">
             <Col xs={24} md={12}>
-              <Title level={2} style={{ color: 'white', fontWeight: 900, textTransform: 'uppercase', fontSize: '48px', letterSpacing: '-1px' }}>
+              <Title level={2} style={{ color: 'white', fontWeight: 900, textTransform: 'uppercase', fontSize: isMobile ? '28px' : '48px', letterSpacing: '-1px' }}>
                 What Is Your {displayName} Home Worth?
               </Title>
-              <Paragraph style={{ color: '#9ca3af', fontSize: '18px', lineHeight: 1.8 }}>
+              <Paragraph style={{ color: '#9ca3af', fontSize: isMobile ? '15px' : '18px', lineHeight: 1.8 }}>
                 Get an instant, data-driven valuation from a TORRA local expert. No obligations, no cost.
               </Paragraph>
             </Col>
@@ -209,7 +211,7 @@ export default function CityPage() {
       </section>
 
       {/* Neighborhood Insights */}
-      <section style={{ maxWidth: '1400px', margin: '0 auto', padding: '80px 64px' }}>
+      <section style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '40px 16px' : '80px 64px' }}>
         <Title level={2} style={{ fontWeight: 900, textTransform: 'uppercase', marginBottom: '48px' }}>Explore {displayName} Neighborhoods</Title>
         <Row gutter={[24, 24]}>
           {['Downtown', 'Midtown', 'East Side', 'Northshore', 'West End', 'Historic District'].map((n, i) => (

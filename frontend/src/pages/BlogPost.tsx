@@ -3,10 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { Typography, Avatar, Space, Tag, Divider, Card, Row, Col, Button } from "antd";
 import { ClockCircleOutlined, EyeOutlined, ArrowLeftOutlined, UserOutlined, ShareAltOutlined } from "@ant-design/icons";
 import SocialShare from "@/components/SocialShare";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function BlogPost() {
+  const isMobile = useIsMobile();
   const { slug } = useParams();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -99,7 +101,7 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div style={{ padding: '200px', textAlign: 'center' }}>
+      <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}>
         <Title level={2}>Article Not Found</Title>
         <Link to="/blog">
           <Button type="primary">Back to Blog</Button>
@@ -111,7 +113,7 @@ export default function BlogPost() {
   return (
     <div style={{ background: '#f8f9fa', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e8e8e8', padding: '16px 32px' }}>
+      <div style={{ background: 'white', borderBottom: '1px solid #e8e8e8', padding: isMobile ? '12px 16px' : '16px 32px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <Link to="/blog">
             <Button icon={<ArrowLeftOutlined />} type="text">
@@ -124,7 +126,7 @@ export default function BlogPost() {
       {/* Cover Image */}
       {post.coverImage && (
         <div style={{
-          height: '400px',
+          height: isMobile ? '250px' : '400px',
           background: `url(${post.coverImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center'
@@ -132,7 +134,7 @@ export default function BlogPost() {
       )}
 
       {/* Content */}
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '48px 32px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: isMobile ? '24px 16px' : '48px 32px' }}>
         <Card style={{ borderRadius: '16px' }}>
           {/* Categories */}
           <Space wrap size="small" style={{ marginBottom: 16 }}>
@@ -144,7 +146,7 @@ export default function BlogPost() {
           </Space>
 
           {/* Title */}
-          <Title level={1} style={{ fontSize: 48, fontWeight: 900, marginBottom: 24 }}>
+          <Title level={1} style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, marginBottom: 24 }}>
             {post.title}
           </Title>
 
@@ -155,9 +157,11 @@ export default function BlogPost() {
             alignItems: 'center',
             marginBottom: 32,
             paddingBottom: 24,
-            borderBottom: '2px solid #f0f0f0'
+            borderBottom: '2px solid #f0f0f0',
+            flexWrap: 'wrap',
+            gap: 16
           }}>
-            <Space size="large">
+            <Space size={isMobile ? "middle" : "large"}>
               <Space>
                 <Avatar src={post.author?.imageUrl} icon={<UserOutlined />} size={40} />
                 <div>
@@ -188,7 +192,7 @@ export default function BlogPost() {
           {/* Content */}
           <div
             style={{
-              fontSize: 18,
+              fontSize: isMobile ? 16 : 18,
               lineHeight: 1.8,
               color: '#333'
             }}

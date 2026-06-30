@@ -7,6 +7,7 @@
 import React, { useState, useCallback } from "react";
 import { Row, Col, Typography, Card, Slider, Form, Input, Button, Divider, Statistic, notification } from "antd";
 import { DollarOutlined, BankOutlined, HomeOutlined, CalculatorOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -60,29 +61,30 @@ export default function MortgageCalculator() {
   };
 
   const AntCard = Card as any;
+  const isMobile = useIsMobile();
   const piPct = loanAmount / totalPaid * 100 || 0;
 
   return (
     <div style={{ background: '#f8f9fa', minHeight: '100vh' }}>
       {/* Hero */}
-      <section style={{ background: '#111827', padding: '96px 64px', textAlign: 'center', color: 'white' }}>
+      <section style={{ background: '#111827', padding: isMobile ? '48px 16px' : '96px 64px', textAlign: 'center', color: 'white' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <CalculatorOutlined style={{ fontSize: '48px', color: '#b40101', marginBottom: '24px', display: 'block' }} />
-          <Title style={{ color: 'white', fontSize: '56px', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+          <CalculatorOutlined style={{ fontSize: isMobile ? '36px' : '48px', color: '#b40101', marginBottom: '24px', display: 'block' }} />
+          <Title style={{ color: 'white', fontSize: isMobile ? '32px' : '56px', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
             Mortgage Calculator
           </Title>
-          <Paragraph style={{ color: '#9ca3af', fontSize: '20px', marginTop: '16px' }}>
+          <Paragraph style={{ color: '#9ca3af', fontSize: isMobile ? '16px' : '20px', marginTop: '16px' }}>
             Estimate your monthly payment and connect with a TORRA certified home loan specialist.
           </Paragraph>
         </div>
       </section>
 
       {/* Calculator Body */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '80px 64px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '32px 16px' : '80px 64px' }}>
         <Row gutter={[64, 64]}>
           {/* Controls Column */}
           <Col xs={24} lg={13}>
-            <AntCard style={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }} styles={{ body: { padding: '48px' } }}>
+            <AntCard style={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }} styles={{ body: { padding: isMobile ? '24px' : '48px' } }}>
               <Title level={3} style={{ fontWeight: 900, textTransform: 'uppercase', marginBottom: '40px' }}>
                 <HomeOutlined style={{ color: '#b40101', marginRight: '12px' }} /> Loan Details
               </Title>
@@ -161,7 +163,7 @@ export default function MortgageCalculator() {
                 <Text style={{ color: '#9ca3af', fontSize: '14px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px', display: 'block', marginBottom: '16px' }}>
                   Estimated Monthly Payment
                 </Text>
-                <div style={{ color: 'white', fontSize: '72px', fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>
+                <div style={{ color: 'white', fontSize: isMobile ? '40px' : '72px', fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>
                   {fmtMo(monthlyPayment)}
                 </div>
                 <Text style={{ color: '#6b7280', fontSize: '14px', display: 'block', marginTop: '8px' }}>
@@ -172,18 +174,18 @@ export default function MortgageCalculator() {
 
                 <Row gutter={24}>
                   <Col span={12} style={{ textAlign: 'center' }}>
-                    <div style={{ color: 'white', fontSize: '24px', fontWeight: 900 }}>{fmt(loanAmount)}</div>
+                    <div style={{ color: 'white', fontSize: isMobile ? '18px' : '24px', fontWeight: 900 }}>{fmt(loanAmount)}</div>
                     <Text style={{ color: '#6b7280', fontSize: '12px', textTransform: 'uppercase' }}>Loan Amount</Text>
                   </Col>
                   <Col span={12} style={{ textAlign: 'center' }}>
-                    <div style={{ color: 'white', fontSize: '24px', fontWeight: 900 }}>{fmt(totalInterest)}</div>
+                    <div style={{ color: 'white', fontSize: isMobile ? '18px' : '24px', fontWeight: 900 }}>{fmt(totalInterest)}</div>
                     <Text style={{ color: '#6b7280', fontSize: '12px', textTransform: 'uppercase' }}>Total Interest</Text>
                   </Col>
                 </Row>
               </AntCard>
 
               {/* Lead Capture Card */}
-              <AntCard style={{ borderRadius: '16px', border: '2px solid #b40101' }} styles={{ body: { padding: '32px' } }}>
+              <AntCard style={{ borderRadius: '16px', border: '2px solid #b40101' }} styles={{ body: { padding: isMobile ? '24px' : '32px' } }}>
                 <Title level={4} style={{ fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>
                   Ready to Get Pre-Approved?
                 </Title>
@@ -201,7 +203,7 @@ export default function MortgageCalculator() {
                     <Input size="large" placeholder="Phone Number" style={{ borderRadius: '24px' }} />
                   </Form.Item>
                   <Button type="primary" block size="large" htmlType="submit"
-                    style={{ background: '#b40101', borderColor: '#b40101', height: '56px', fontWeight: 900, borderRadius: '28px' }}>
+                    style={{ background: '#b40101', borderColor: '#b40101', height: isMobile ? '48px' : '56px', fontWeight: 900, borderRadius: '28px' }}>
                     MATCH ME WITH A LOAN SPECIALIST
                   </Button>
                 </Form>

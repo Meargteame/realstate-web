@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message, Popconfirm, Switch, Row, Col, Statistic, Divider } from "antd";
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, SendOutlined, FileTextOutlined, CheckCircleOutlined, StarFilled } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 const AntSelect = Select as any;
@@ -9,6 +10,7 @@ const AntCard = Card as any;
 const { TextArea } = Input;
 
 export default function AdminBlog() {
+  const isMobile = useIsMobile();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -234,34 +236,34 @@ export default function AdminBlog() {
   ];
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: isMobile ? '12px' : '32px' }}>
       {/* Post Status Summary */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+      <Row gutter={[8, 8]} style={{ marginBottom: isMobile ? 16 : 24 }}>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Posts</Text>} value={posts.length} prefix={<FileTextOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Posts</Text>} value={posts.length} prefix={<FileTextOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Published</Text>} value={posts.filter((p: any) => p.status === 'published').length} prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />} valueStyle={{ color: '#10b981', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Published</Text>} value={posts.filter((p: any) => p.status === 'published').length} prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />} valueStyle={{ color: '#10b981', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Drafts</Text>} value={posts.filter((p: any) => p.status === 'draft').length} prefix={<EditOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Drafts</Text>} value={posts.filter((p: any) => p.status === 'draft').length} prefix={<EditOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Featured</Text>} value={posts.filter((p: any) => p.featured).length} prefix={<StarFilled style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Featured</Text>} value={posts.filter((p: any) => p.featured).length} prefix={<StarFilled style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
       </Row>
 
       <Card>
-        <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={2} style={{ margin: 0 }}>Blog Management</Title>
+        <div style={{ marginBottom: isMobile ? 16 : 24, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
+          <Title level={isMobile ? 4 : 2} style={{ margin: 0 }}>Blog Management</Title>
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -272,32 +274,33 @@ export default function AdminBlog() {
           </Button>
         </div>
 
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+        <div style={{ marginBottom: 16, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', justifyContent: 'space-between' }}>
           <Input
             placeholder="Search posts..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 300, borderRadius: 8 }}
+            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
           />
           <Select
             placeholder="Filter by status"
             value={statusFilter}
             onChange={setStatusFilter}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: isMobile ? '100%' : 200 }}
           >
             <AntOption value="published">Published</AntOption>
             <AntOption value="draft">Draft</AntOption>
           </Select>
-        </Space>
+        </div>
 
         <Table
           columns={columns}
           dataSource={posts}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          scroll={{ x: 'max-content' }}
+          pagination={{ pageSize: 10, size: isMobile ? 'small' : 'default' }}
         />
       </Card>
 
@@ -310,7 +313,7 @@ export default function AdminBlog() {
           form.resetFields();
         }}
         footer={null}
-        width={900}
+        width={isMobile ? '95%' : 900}
       >
         <Form
           form={form}

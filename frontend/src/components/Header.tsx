@@ -148,8 +148,8 @@ export default function Header() {
       }}>
         {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.03)'; }}
+          onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
         >
           <TorraLogo size={isMobile ? 36 : 48} color="#b40101" compact showText />
         </Link>
@@ -240,11 +240,13 @@ export default function Header() {
                 boxShadow: '0 2px 8px rgba(55,58,75,0.2)'
               }}
               onMouseEnter={(e) => {
+                if (isMobile) return;
                 e.currentTarget.style.background = '#2a2d3a';
                 e.currentTarget.style.transform = 'translateY(-2px)';
                 e.currentTarget.style.boxShadow = '0 4px 12px rgba(55,58,75,0.3)';
               }}
               onMouseLeave={(e) => {
+                if (isMobile) return;
                 e.currentTarget.style.background = '#373a4b';
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(55,58,75,0.2)';

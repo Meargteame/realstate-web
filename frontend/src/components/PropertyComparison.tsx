@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Row, Col, Typography, Button, Space, Tag, Divider, message, Modal, Checkbox } from "antd";
 import { CloseOutlined, SaveOutlined, ShareAltOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 
@@ -10,6 +11,7 @@ interface PropertyComparisonProps {
 }
 
 export default function PropertyComparison({ propertyIds, onClose }: PropertyComparisonProps) {
+  const isMobile = useIsMobile();
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -78,10 +80,10 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
   ];
 
   return (
-    <div style={{ padding: '32px', background: '#f8f9fa', minHeight: '100vh' }}>
+    <div style={{ padding: isMobile ? '16px' : '32px', background: '#f8f9fa', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <Title level={2} style={{ margin: 0 }}>Property Comparison</Title>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', marginBottom: 24 }}>
+          <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>Property Comparison</Title>
           <Space>
             <Button icon={<SaveOutlined />} onClick={() => setShowSaveModal(true)}>
               Save Comparison

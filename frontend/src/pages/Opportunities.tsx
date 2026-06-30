@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Card, Tag, Typography, Button, Space, Progress, Badge, Modal, Form, Input, InputNumber, Select, message } from "antd";
 import { PlusOutlined, MoreOutlined, DollarOutlined, EditOutlined, DeleteOutlined, CalendarOutlined } from "@ant-design/icons";
 import { useOutletContext } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 const AntCard = Card as any;
@@ -10,6 +11,7 @@ const AntOption = (Select as any).Option;
 
 export default function Opportunities() {
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
+  const isMobile = useIsMobile();
   const [activeSegment, setActiveSegment] = useState<'listing' | 'buyer'>('listing');
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,20 +174,20 @@ export default function Opportunities() {
 
   return (
     <div style={{ padding: '16px', background: '#f9fafb', minHeight: 'calc(100vh - 64px)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', marginBottom: '24px', gap: '12px' }}>
         <div>
-          <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>Opportunities</Title>
-          <Text type="secondary" style={{ fontSize: '14px' }}>
+          <Title level={2} style={{ margin: 0, fontSize: isMobile ? '20px' : '24px', fontWeight: 500, color: '#111827' }}>Opportunities</Title>
+          <Text type="secondary" style={{ fontSize: isMobile ? '12px' : '14px' }}>
             Track your transaction pipeline from lead to close.
-            {opportunities.length > 0 && (
-              <span style={{ marginLeft: 16, color: '#b40101', fontWeight: 600 }}>
-                Pipeline Value: ${totalPipeline >= 1000000 ? (totalPipeline / 1000000).toFixed(1) + 'M' : (totalPipeline / 1000).toFixed(0) + 'K'}
-                {' · '}Est. Commission: ${expectedCommission >= 1000000 ? (expectedCommission / 1000000).toFixed(1) + 'M' : (expectedCommission / 1000).toFixed(0) + 'K'}
-              </span>
-            )}
           </Text>
+          {opportunities.length > 0 && (
+            <div style={{ marginTop: 4, color: '#b40101', fontWeight: 600, fontSize: isMobile ? '12px' : '14px' }}>
+              Pipeline: ${totalPipeline >= 1000000 ? (totalPipeline / 1000000).toFixed(1) + 'M' : (totalPipeline / 1000).toFixed(0) + 'K'}
+              {' · '}Est. Comm: ${expectedCommission >= 1000000 ? (expectedCommission / 1000000).toFixed(1) + 'M' : (expectedCommission / 1000).toFixed(0) + 'K'}
+            </div>
+          )}
         </div>
-        <Space>
+        <Space wrap style={{ justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
           <div style={{ background: '#f0f0f0', padding: '4px', borderRadius: '8px' }}>
             <Button 
                type={activeSegment === 'listing' ? 'primary' : 'text'} 
@@ -202,8 +204,8 @@ export default function Opportunities() {
               Buyers
             </Button>
           </div>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} style={{ background: '#b40101', borderColor: '#b40101', height: '40px' }}>
-            Create Opportunity
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate} style={{ background: '#b40101', borderColor: '#b40101', height: isMobile ? '36px' : '40px' }}>
+            Create
           </Button>
         </Space>
       </div>

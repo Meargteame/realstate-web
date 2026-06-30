@@ -257,8 +257,8 @@ export default function CommandLayout() {
             padding: '12px', borderTop: '1px solid #e5e7eb', background: '#f9fafb',
             borderRadius: '8px', margin: '0 -4px', cursor: 'pointer', transition: 'background 0.2s ease'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
-          onMouseLeave={(e) => e.currentTarget.style.background = '#f9fafb'}
+          onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f3f4f6'; }}
+          onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f9fafb'; }}
           onClick={() => navigate('/command/settings')}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

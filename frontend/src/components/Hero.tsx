@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Input, Button, Card, Typography, Space } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 
 export default function Hero() {
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSearch = () => {
     if (searchValue.trim()) {
@@ -20,8 +22,8 @@ export default function Hero() {
   return (
     <section style={{ 
       position: 'relative', 
-      height: '85vh', 
-      minHeight: '700px',
+      height: isMobile ? '100vh' : '85vh', 
+      minHeight: isMobile ? '600px' : '700px',
       width: '100%',
       display: 'flex',
       alignItems: 'center',
@@ -53,7 +55,7 @@ export default function Hero() {
         zIndex: 1, 
         maxWidth: '1100px', 
         width: '100%', 
-        padding: '0 32px', 
+        padding: '0 16px',
         textAlign: 'center', 
         color: 'white' 
       }}>
@@ -61,9 +63,9 @@ export default function Hero() {
         <Title 
           style={{ 
             color: 'white', 
-            fontSize: '72px', 
+            fontSize: isMobile ? '36px' : '72px', 
             fontWeight: 900, 
-            marginBottom: '24px', 
+            marginBottom: isMobile ? '12px' : '24px', 
             letterSpacing: '-0.03em',
             lineHeight: 1.1,
             textShadow: '0 4px 12px rgba(0,0,0,0.3)'
@@ -76,13 +78,12 @@ export default function Hero() {
         <Text 
           style={{ 
             color: 'rgba(255,255,255,0.9)', 
-            fontSize: '22px', 
+            fontSize: isMobile ? '16px' : '22px', 
             display: 'block', 
-            marginBottom: '56px',
             fontWeight: 400,
             lineHeight: 1.6,
             maxWidth: '700px',
-            margin: '0 auto 56px'
+            margin: '0 auto 32px'
           }}
         >
           Discover exceptional properties with TORRA Commercial Real Estate Group
@@ -91,27 +92,27 @@ export default function Hero() {
         {/* Enhanced Search Card */}
         <Card 
           style={{ 
-            borderRadius: '16px', 
+            borderRadius: '12px', 
             boxShadow: '0 32px 64px rgba(0,0,0,0.3)',
             border: 'none',
-            padding: '12px',
+            padding: isMobile ? '4px' : '12px',
             background: 'rgba(255,255,255,0.98)',
             backdropFilter: 'blur(10px)'
           }}
-          styles={{ body: { padding: '20px' } }}
+          styles={{ body: { padding: isMobile ? '12px' : '20px' } }}
         >
           <Space.Compact style={{ width: '100%' }}>
             <Input 
               size="large" 
-              placeholder="Enter an address, neighborhood, city, or ZIP code" 
+              placeholder="Search by city, ZIP, or address" 
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onPressEnter={handleSearch}
-              prefix={<SearchOutlined style={{ color: '#b40101', fontSize: '20px' }} />}
+              prefix={<SearchOutlined style={{ color: '#b40101', fontSize: '16px' }} />}
               style={{ 
-                height: '72px', 
+                height: '48px', 
                 borderRadius: '12px 0 0 12px',
-                fontSize: '18px',
+                fontSize: isMobile ? '14px' : '18px',
                 border: '2px solid #f0f0f0',
                 fontWeight: 500
               }} 
@@ -121,13 +122,13 @@ export default function Hero() {
               size="large" 
               onClick={handleSearch}
               style={{ 
-                height: '72px', 
+                height: '48px', 
                 borderRadius: '0 12px 12px 0',
                 background: '#b40101',
                 borderColor: '#b40101',
-                width: '140px',
+                width: isMobile ? '80px' : '140px',
                 fontWeight: 700,
-                fontSize: '16px',
+                fontSize: isMobile ? '12px' : '16px',
                 letterSpacing: '0.05em'
               }}
             >
@@ -137,9 +138,9 @@ export default function Hero() {
         </Card>
 
         {/* Trending Searches */}
-        <div style={{ marginTop: '40px' }}>
-           <Space size="large" wrap>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        <div style={{ marginTop: '24px' }}>
+           <Space size="small" wrap>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: isMobile ? '11px' : '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Trending:
               </Text>
               {['Austin, TX', 'Charlotte, NC', 'Miami, FL', 'Denver, CO'].map(city => (
@@ -148,19 +149,21 @@ export default function Hero() {
                   style={{ 
                     color: 'white', 
                     cursor: 'pointer',
-                    fontSize: '15px',
+                    fontSize: isMobile ? '12px' : '15px',
                     fontWeight: 500,
-                    padding: '8px 16px',
+                    padding: isMobile ? '4px 10px' : '8px 16px',
                     borderRadius: '20px',
                     background: 'rgba(255,255,255,0.1)',
                     backdropFilter: 'blur(10px)',
                     transition: 'all 0.2s'
                   }}
                   onMouseEnter={(e) => {
+                    if (isMobile) return;
                     e.currentTarget.style.background = 'rgba(180,1,1,0.9)';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
+                    if (isMobile) return;
                     e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}

@@ -2,10 +2,12 @@ import React from "react";
 import { Button, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { HomeOutlined, SearchOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Paragraph } = Typography;
 
 export default function NotFound() {
+  const isMobile = useIsMobile();
   return (
     <div style={{ 
       minHeight: 'calc(100vh - 80px)', 
@@ -13,21 +15,21 @@ export default function NotFound() {
       alignItems: 'center', 
       justifyContent: 'center',
       background: '#f8f9fa',
-      padding: '40px'
+      padding: isMobile ? '24px 16px' : '40px'
     }}>
       <div style={{ textAlign: 'center', maxWidth: '600px' }}>
         <div style={{
-          width: '64px', height: '64px', background: '#b40101',
+          width: isMobile ? '48px' : '64px', height: isMobile ? '48px' : '64px', background: '#b40101',
           borderRadius: '14px', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', color: 'white', fontSize: '28px',
-          fontWeight: 900, letterSpacing: '-0.5px', margin: '0 auto 24px'
+          justifyContent: 'center', color: 'white', fontSize: isMobile ? '22px' : '28px',
+          fontWeight: 900, letterSpacing: '-0.5px', margin: '0 auto 16px'
         }}>TR</div>
         <div style={{ 
-          fontSize: '180px', 
+          fontSize: isMobile ? '96px' : '180px', 
           fontWeight: 900, 
           color: '#b40101', 
           lineHeight: 1,
-          marginBottom: '24px',
+          marginBottom: isMobile ? '12px' : '24px',
           textShadow: '4px 4px 0 rgba(0,0,0,0.05)'
         }}>
           404
@@ -36,16 +38,16 @@ export default function NotFound() {
         <Title level={1} style={{ 
           fontWeight: 900, 
           textTransform: 'uppercase', 
-          marginBottom: '16px',
-          fontSize: '48px'
+          marginBottom: isMobile ? '12px' : '16px',
+          fontSize: isMobile ? '28px' : '48px'
         }}>
           Page Not Found
         </Title>
         
         <Paragraph style={{ 
-          fontSize: '18px', 
+          fontSize: isMobile ? '15px' : '18px', 
           color: '#666', 
-          marginBottom: '40px',
+          marginBottom: isMobile ? '24px' : '40px',
           lineHeight: 1.6
         }}>
           Sorry, the page you're looking for doesn't exist or has been moved. 
@@ -56,15 +58,16 @@ export default function NotFound() {
           <Link to="/">
             <Button 
               type="primary" 
-              size="large" 
+              size={isMobile ? "middle" : "large"} 
               icon={<HomeOutlined />}
               style={{ 
                 background: '#b40101', 
                 borderColor: '#b40101',
-                height: '56px',
-                padding: '0 32px',
+                height: isMobile ? '44px' : '56px',
+                padding: isMobile ? '0 24px' : '0 32px',
                 fontWeight: 'bold',
-                borderRadius: '28px'
+                borderRadius: isMobile ? '22px' : '28px',
+                fontSize: isMobile ? '13px' : '15px'
               }}
             >
               Go Home
@@ -73,13 +76,14 @@ export default function NotFound() {
           
           <Link to="/properties">
             <Button 
-              size="large" 
+              size={isMobile ? "middle" : "large"} 
               icon={<SearchOutlined />}
               style={{ 
-                height: '56px',
-                padding: '0 32px',
+                height: isMobile ? '44px' : '56px',
+                padding: isMobile ? '0 24px' : '0 32px',
                 fontWeight: 'bold',
-                borderRadius: '28px'
+                borderRadius: isMobile ? '22px' : '28px',
+                fontSize: isMobile ? '13px' : '15px'
               }}
             >
               Browse Properties

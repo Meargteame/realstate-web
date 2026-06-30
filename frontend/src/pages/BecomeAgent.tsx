@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Button, Row, Col, Typography, Input, Form, Card, Space, Divider, notification } from "antd";
 import { CheckCircleOutlined, RiseOutlined, HomeOutlined, BookOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -8,6 +9,7 @@ export default function BecomeAgent() {
   const formRef = useRef<HTMLDivElement>(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   const scrollToForm = () => {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -61,7 +63,7 @@ export default function BecomeAgent() {
       <section style={{ 
         position: 'relative', 
         background: '#111827', 
-        padding: '120px 64px',
+        padding: isMobile ? '60px 16px' : '120px 64px',
         color: 'white',
         overflow: 'hidden'
       }}>
@@ -78,17 +80,17 @@ export default function BecomeAgent() {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
           <Row gutter={[64, 64]} align="middle">
             <Col xs={24} md={14}>
-              <Title style={{ color: 'white', fontSize: '72px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.9, marginBottom: '24px' }}>
+              <Title style={{ color: 'white', fontSize: isMobile ? '36px' : '72px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 0.9, marginBottom: '24px' }}>
                 Build Your Business With <span style={{ color: '#b40101' }}>TORRA</span>
               </Title>
-              <Paragraph style={{ color: 'rgba(255,255,255,0.7)', fontSize: '24px', textTransform: 'uppercase', fontWeight: 'bold', borderLeft: '4px solid #b40101', paddingLeft: '24px', marginBottom: '48px' }}>
+              <Paragraph style={{ color: 'rgba(255,255,255,0.7)', fontSize: isMobile ? '16px' : '24px', textTransform: 'uppercase', fontWeight: 'bold', borderLeft: '4px solid #b40101', paddingLeft: '24px', marginBottom: isMobile ? '32px' : '48px' }}>
                 Join a premier commercial real estate group driven by innovation and excellence.
               </Paragraph>
               <Space size="large">
-                <Button type="primary" size="large" onClick={scrollToForm} style={{ background: '#b40101', borderColor: '#b40101', height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px' }}>
+                <Button type="primary" size="large" onClick={scrollToForm} style={{ background: '#b40101', borderColor: '#b40101', height: isMobile ? '48px' : '64px', padding: isMobile ? '0 24px' : '0 48px', fontWeight: 900, borderRadius: isMobile ? '24px' : '32px' }}>
                   APPLY TODAY
                 </Button>
-                <Button size="large" ghost onClick={scrollToForm} style={{ height: '64px', padding: '0 48px', fontWeight: 900, borderRadius: '32px', color: 'white', borderColor: 'white' }}>
+                <Button size="large" ghost onClick={scrollToForm} style={{ height: isMobile ? '48px' : '64px', padding: isMobile ? '0 24px' : '0 48px', fontWeight: 900, borderRadius: isMobile ? '24px' : '32px', color: 'white', borderColor: 'white' }}>
                   LEARN MORE
                 </Button>
               </Space>
@@ -114,7 +116,7 @@ export default function BecomeAgent() {
                       htmlType="submit" 
                       loading={loading}
                       disabled={loading}
-                      style={{ background: '#111827', borderColor: '#111827', height: '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}
+                      style={{ background: '#111827', borderColor: '#111827', height: isMobile ? '48px' : '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}
                     >
                       {loading ? 'SUBMITTING...' : 'SUBMIT INQUIRY'}
                     </Button>
@@ -127,16 +129,16 @@ export default function BecomeAgent() {
       </section>
 
       {/* Value Prop Section */}
-      <section style={{ padding: '128px 64px', maxWidth: '1400px', margin: '0 auto' }}>
+      <section style={{ padding: isMobile ? '48px 16px' : '128px 64px', maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-          <Title level={2} style={{ fontSize: '48px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '24px' }}>Why Choose Us?</Title>
+          <Title level={2} style={{ fontSize: isMobile ? '28px' : '48px', fontWeight: 900, textTransform: 'uppercase', marginBottom: isMobile ? '16px' : '24px' }}>Why Choose Us?</Title>
           <div style={{ width: '80px', height: '8px', background: '#b40101', margin: '0 auto 32px' }} />
-          <Paragraph style={{ fontSize: '18px', color: '#8c8c8c', fontWeight: 'bold', textTransform: 'uppercase', maxWidth: '800px', margin: '0 auto' }}>
+          <Paragraph style={{ fontSize: isMobile ? '15px' : '18px', color: '#8c8c8c', fontWeight: 'bold', textTransform: 'uppercase', maxWidth: '800px', margin: '0 auto' }}>
             We believe that real estate is a local business, driven by individual agents and their local image.
           </Paragraph>
         </div>
 
-        <Row gutter={[48, 48]}>
+        <Row gutter={isMobile ? [16, 24] : [48, 48]}>
           {[
             { icon: <BookOutlined />, title: "Industry-Leading Training", color: '#b40101', desc: "Ranked the #1 training organization across all industries worldwide. Continuous education for agents at every level." },
             { icon: <RiseOutlined />, title: "Uncapped Earning", color: '#111827', desc: "Our unique commission structure and profit-sharing model means there's no limit to what you can achieve." },
@@ -169,9 +171,9 @@ export default function BecomeAgent() {
       </section>
 
       {/* Footer CTA */}
-      <section style={{ background: '#b40101', padding: '96px 64px', textAlign: 'center' }}>
-        <Title level={2} style={{ color: 'white', fontSize: '56px', fontWeight: 900, marginBottom: '48px', textTransform: 'uppercase' }}>Ready to Accelerate Your Career?</Title>
-        <Button size="large" onClick={scrollToForm} style={{ height: '64px', padding: '0 64px', fontWeight: 900, borderRadius: '32px', fontSize: '16px' }}>
+      <section style={{ background: '#b40101', padding: isMobile ? '48px 16px' : '96px 64px', textAlign: 'center' }}>
+        <Title level={2} style={{ color: 'white', fontSize: isMobile ? '28px' : '56px', fontWeight: 900, marginBottom: '48px', textTransform: 'uppercase' }}>Ready to Accelerate Your Career?</Title>
+        <Button size="large" onClick={scrollToForm} style={{ height: isMobile ? '48px' : '64px', padding: isMobile ? '0 32px' : '0 64px', fontWeight: 900, borderRadius: isMobile ? '24px' : '32px', fontSize: isMobile ? '14px' : '16px' }}>
           SCHEDULE A CONFIDENTIAL MEETING
         </Button>
       </section>

@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { Input, Button, Space, Typography, Select, Breadcrumb, Empty, notification } from "antd";
 import { SearchOutlined, GlobalOutlined, StarOutlined } from "@ant-design/icons";
 import AgentCard from "@/components/AgentCard";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 
 export default function AgentSearch() {
+  const isMobile = useIsMobile();
   const [agents, setAgents] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -53,17 +55,17 @@ export default function AgentSearch() {
   return (
     <div style={{ background: '#f0f2f5', minHeight: 'calc(100vh - 80px)' }}>
       {/* Top Filter Bar */}
-      <div style={{ background: 'white', borderBottom: '1px solid #d9d9d9', padding: '24px 64px', position: 'sticky', top: '80px', zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '24px' }}>
+      <div style={{ background: 'white', borderBottom: '1px solid #d9d9d9', padding: isMobile ? '16px' : '24px 64px', position: 'sticky', top: isMobile ? '64px' : '80px', zIndex: 100 }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: isMobile ? '12px' : '24px' }}>
           
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, minWidth: '300px' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: isMobile ? 'auto' : '300px' }}>
             <Input 
-              placeholder="Find an agent by name, email or bio" 
+              placeholder={isMobile ? "Search agents..." : "Find an agent by name, email or bio"} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onPressEnter={handleSearch}
               prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-              style={{ height: '48px', borderRadius: '24px', flex: 1, maxWidth: '500px' }}
+              style={{ height: '44px', borderRadius: '22px', flex: 1, maxWidth: '500px', fontSize: isMobile ? '14px' : '15px' }}
             />
             <Button 
                type="primary" 
@@ -76,10 +78,10 @@ export default function AgentSearch() {
             </Button>
           </div>
 
-          <Space size="middle">
+          <Space size={isMobile ? "small" : "middle"}>
             <Select 
                placeholder="Languages" 
-               style={{ width: 150 }} 
+               style={{ width: isMobile ? 120 : 150 }} 
                suffixIcon={<GlobalOutlined />}
                value={selectedLanguage}
                onChange={setSelectedLanguage}
@@ -105,10 +107,10 @@ export default function AgentSearch() {
       </div>
 
       {/* Content Area */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '64px' }}>
-        <div style={{ marginBottom: '40px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '24px 16px' : '64px' }}>
+        <div style={{ marginBottom: isMobile ? '24px' : '40px' }}>
           <Breadcrumb items={[{ title: <Link to="/">Home</Link> }, { title: 'Agents' }]} />
-          <Title level={1} style={{ margin: '16px 0 8px', fontWeight: 900 }}>All Agents</Title>
+          <Title level={1} style={{ margin: '12px 0 8px', fontWeight: 900, fontSize: isMobile ? 24 : 38 }}>All Agents</Title>
           <Text type="secondary" strong>
             {filteredAgents.length} Result{filteredAgents.length !== 1 ? 's' : ''}
             {(selectedLanguage || showLuxuryOnly) && ` (filtered from ${agents.length} total)`}
@@ -118,7 +120,7 @@ export default function AgentSearch() {
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', 
-          gap: '32px' 
+          gap: isMobile ? '16px' : '32px' 
         }}>
           {filteredAgents.map((agent) => (
             <div key={agent.id}>
@@ -127,19 +129,19 @@ export default function AgentSearch() {
           ))}
 
           {!loading && filteredAgents.length === 0 && agents.length > 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: isMobile ? '40px 16px' : '80px' }}>
               <Empty description="No agents found matching your filters. Try adjusting your search criteria." />
             </div>
           )}
 
           {!loading && agents.length === 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: isMobile ? '40px 16px' : '80px' }}>
               <Empty description="No agents found matching your query." />
             </div>
           )}
         </div>
 
-        {loading && <div style={{ textAlign: 'center', padding: '80px' }}><Text type="secondary">Searching for agents...</Text></div>}
+        {loading && <div style={{ textAlign: 'center', padding: isMobile ? '40px 16px' : '80px' }}><Text type="secondary">Searching for agents...</Text></div>}
       </div>
     </div>
   );

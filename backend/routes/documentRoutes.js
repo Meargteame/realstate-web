@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const documentController = require('../controllers/documentController');
+const { authenticateToken } = require('../middleware/auth');
 
-// Public/Protected routes
-router.get('/', documentController.getDocuments);
+// Public/Protected read routes (use authenticateToken to set req.user if available)
 router.get('/categories', documentController.getCategories);
-router.get('/:id', documentController.getDocumentById);
-router.get('/:id/download', documentController.downloadDocument);
+router.get('/', authenticateToken, documentController.getDocuments);
+router.get('/:id', authenticateToken, documentController.getDocumentById);
+router.get('/:id/download', authenticateToken, documentController.downloadDocument);
 
-// Protected routes (would need auth middleware in production)
-router.post('/', documentController.createDocument);
-router.patch('/:id', documentController.updateDocument);
-router.delete('/:id', documentController.deleteDocument);
-router.post('/:id/share', documentController.shareDocument);
+// Protected write routes — require authentication
+router.post('/', authenticateToken, documentController.createDocument);
+router.patch('/:id', authenticateToken, documentController.updateDocument);
+router.delete('/:id', authenticateToken, documentController.deleteDocument);
+router.post('/:id/share', authenticateToken, documentController.shareDocument);
 
 module.exports = router;

@@ -11,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import PropertyCard from "@/components/PropertyCard";
 import AgentReviews from "../components/AgentReviews";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -18,6 +19,7 @@ export default function AgentProfile() {
   const { id } = useParams();
   const [agent, setAgent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetch(`/api/agents/${id}`)
@@ -60,22 +62,22 @@ export default function AgentProfile() {
     }
   };
 
-  if (loading) return <div style={{ padding: '200px', textAlign: 'center' }}><Title level={3}>Loading Agent Summary...</Title></div>;
-  if (!agent) return <div style={{ padding: '200px', textAlign: 'center' }}><Title level={2}>Agent Not Found</Title></div>;
+  if (loading) return <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}><Title level={3}>Loading Agent Summary...</Title></div>;
+  if (!agent) return <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}><Title level={2}>Agent Not Found</Title></div>;
 
   const agentListings = agent.properties || [];
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', paddingBottom: '96px' }}>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh', paddingBottom: isMobile ? '80px' : '96px' }}>
       {/* Profile Header Block */}
-      <div style={{ background: 'white', borderBottom: '1px solid #d9d9d9', padding: '64px 64px 48px' }}>
+      <div style={{ background: 'white', borderBottom: '1px solid #d9d9d9', padding: isMobile ? '32px 16px 24px' : '64px 64px 48px' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <Breadcrumb items={[{ title: <Link to="/">Home</Link> }, { title: <Link to="/agents">Agents</Link> }, { title: agent.name }]} style={{ marginBottom: '32px' }} />
+          <Breadcrumb items={[{ title: <Link to="/">Home</Link> }, { title: <Link to="/agents">Agents</Link> }, { title: agent.name }]} style={{ marginBottom: isMobile ? '16px' : '32px' }} />
           
-          <Row gutter={[48, 48]} align="middle">
+          <Row gutter={isMobile ? [16, 24] : [48, 48]} align="middle">
             <Col xs={24} md={6}>
                <Avatar 
-                size={220} 
+                size={isMobile ? 140 : 220} 
                 src={agent.imageUrl} 
                 style={{ 
                   border: '8px solid white', 
@@ -87,10 +89,10 @@ export default function AgentProfile() {
             <Col xs={24} md={18}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                   <div>
-                    <Title style={{ fontSize: '64px', fontWeight: 900, textTransform: 'uppercase', margin: 0, letterSpacing: '-2px', lineHeight: 1 }}>
+                    <Title style={{ fontSize: isMobile ? '36px' : '64px', fontWeight: 900, textTransform: 'uppercase', margin: 0, letterSpacing: '-2px', lineHeight: 1 }}>
                       {agent.name}
                     </Title>
-                    <Text strong style={{ fontSize: '20px', color: '#b40101', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', margin: '12px 0 24px' }}>
+                    <Text strong style={{ fontSize: isMobile ? '16px' : '20px', color: '#b40101', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', margin: '12px 0 24px' }}>
                       {agent.brokerage || "TORRA Commercial Real Estate"}
                     </Text>
                   </div>
@@ -102,10 +104,10 @@ export default function AgentProfile() {
 
                <Divider style={{ margin: '24px 0' }} />
 
-               <Row gutter={48}>
+               <Row gutter={isMobile ? [0, 16] : 48}>
                   <Col>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <Text strong style={{ fontSize: '24px', fontWeight: 900 }}>{agentListings.length}</Text>
+                       <Text strong style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900 }}>{agentListings.length}</Text>
                        <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Active Listings</Text>
                     </div>
                   </Col>
@@ -128,10 +130,10 @@ export default function AgentProfile() {
       </div>
 
       {/* Content Body */}
-      <div style={{ maxWidth: '1400px', margin: '64px auto 0', padding: '0 64px' }}>
-        <Row gutter={64}>
+      <div style={{ maxWidth: '1400px', margin: isMobile ? '32px auto 0' : '64px auto 0', padding: isMobile ? '0 16px' : '0 64px' }}>
+        <Row gutter={isMobile ? [0, 48] : 64}>
           <Col xs={24} lg={16}>
-             <section style={{ marginBottom: '64px' }}>
+             <section style={{ marginBottom: isMobile ? '32px' : '64px' }}>
                 <Title level={2} style={{ textTransform: 'uppercase', fontWeight: 900, borderBottom: '4px solid black', paddingBottom: '16px', marginBottom: '32px' }}>
                   Biography
                 </Title>
@@ -165,7 +167,7 @@ export default function AgentProfile() {
                   </div>
                 )}
                 
-                <Paragraph style={{ fontSize: '18px', lineHeight: 1.8, color: '#4b5563' }}>
+                <Paragraph style={{ fontSize: isMobile ? '15px' : '18px', lineHeight: 1.8, color: '#4b5563' }}>
                   {agent.bio || `As a lead specialist at TORRA Commercial Real Estate Group, ${agent.name} is dedicated to providing an unparalleled real estate experience. With a deep understanding of market dynamics and a commitment to excellence, they ensure every client achieves their property goals with precision and care.`}
                 </Paragraph>
                 

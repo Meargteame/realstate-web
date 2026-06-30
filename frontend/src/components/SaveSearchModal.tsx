@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Switch, Select, Button, Typography, Space, Alert } from 'antd';
 import { SaveOutlined, BellOutlined, SearchOutlined } from '@ant-design/icons';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -29,6 +30,7 @@ export default function SaveSearchModal({
   currentMapArea,
   loading = false
 }: SaveSearchModalProps) {
+  const isMobile = useIsMobile();
   const [form] = Form.useForm();
   const [emailAlerts, setEmailAlerts] = useState(true);
 
@@ -109,7 +111,7 @@ export default function SaveSearchModal({
           Save Search
         </Button>
       ]}
-      width={500}
+      width={isMobile ? '95%' : 500}
     >
       <div style={{ marginBottom: '24px' }}>
         <Alert

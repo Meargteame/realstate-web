@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer } from "antd";
 import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined, StarFilled, MessageOutlined } from "@ant-design/icons";
 import { Link, useOutletContext, useNavigate } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 const AntSelect = Select as any;
@@ -9,6 +10,7 @@ const AntOption = (Select as any).Option;
 
 export default function LeadsPage() {
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -250,21 +252,21 @@ export default function LeadsPage() {
   );
 
   return (
-    <div style={{ padding: '16px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
-      <div style={{ marginBottom: '24px' }}>
+    <div style={{ padding: isMobile ? '12px' : '16px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
         <Breadcrumb items={[{ title: <Link to="/command">Dashboard</Link> }, { title: 'Contacts / Leads' }]} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-end', marginTop: '16px', gap: '12px' }}>
           <div>
-            <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>
+            <Title level={2} style={{ margin: 0, fontSize: isMobile ? '20px' : '24px', fontWeight: 500, color: '#111827' }}>
               Contact Pipeline
             </Title>
-            <Text type="secondary">Manage and track your real estate inquiries. Click status to update pipeline stage.</Text>
+            {!isMobile && <Text type="secondary">Manage and track your real estate inquiries. Click status to update pipeline stage.</Text>}
           </div>
-          <Space>
+          <Space wrap style={{ justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
             <Input
               placeholder="Search leads..."
               prefix={<SearchOutlined />}
-              style={{ width: 300, borderRadius: '8px' }}
+              style={{ width: isMobile ? '100%' : 300, borderRadius: '8px' }}
               onChange={e => setSearchText(e.target.value)}
             />
             <Button icon={<FilterOutlined />} onClick={() => setShowFilterDrawer(true)}>Filters</Button>

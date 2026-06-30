@@ -25,9 +25,9 @@ export default function Footer() {
     setNewsletterEmail("");
   };
   return (
-    <footer className="bg-brand-dark text-white pt-24 pb-12 px-8 flex-shrink-0">
+    <footer className="bg-brand-dark text-white pt-12 md:pt-24 pb-16 md:pb-12 px-4 md:px-8 flex-shrink-0">
       <div className="max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20 border-b border-white/10 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-16 mb-12 md:mb-20 border-b border-white/10 pb-12 md:pb-20">
           {/* Logo & Address */}
           <div>
             <div className="mb-6">
@@ -177,7 +177,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center text-[11px] text-gray-500 uppercase tracking-wider font-bold">
+        <div className="flex flex-col md:flex-row justify-between items-center text-[11px] text-gray-500 uppercase tracking-wider font-bold gap-2 text-center md:text-left">
           <p>© 2026 TORRA COMMERCIAL REAL ESTATE GROUP. ALL RIGHTS RESERVED.</p>
           <p className="text-gray-600">BROKERAGE ID: 0751886</p>
         </div>

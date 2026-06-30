@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import { Layout, Menu, Avatar, Input, Badge, Space, Spin } from "antd";
+import { Layout, Menu, Avatar, Input, Badge, Space, Spin, Button } from "antd";
 import {
   DashboardOutlined,
   TeamOutlined,
@@ -12,14 +12,19 @@ import {
   SearchOutlined,
   BellOutlined,
   FileTextOutlined,
-  FolderOutlined
+  FolderOutlined,
+  MenuOutlined,
+  CloseOutlined
 } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Header, Sider, Content } = Layout;
 
 export default function AdminLayout() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -80,18 +85,26 @@ export default function AdminLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      {isMobile && mobileMenuOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+          zIndex: 999,
+        }} onClick={() => setMobileMenuOpen(false)} />
+      )}
       <Sider 
-        width={260} 
+        width={isMobile ? 280 : 260} 
         theme="light" 
         style={{ 
           position: 'fixed', 
           left: 0, 
           top: 0, 
           bottom: 0, 
-          zIndex: 100, 
+          zIndex: 1000, 
           background: '#ffffff',
           borderRight: '1px solid #e5e7eb',
-          boxShadow: 'none'
+          boxShadow: isMobile && mobileMenuOpen ? '0 0 20px rgba(0,0,0,0.15)' : 'none',
+          transform: isMobile ? (mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease'
         }}
       >
         {/* Logo Section */}
@@ -200,8 +213,8 @@ export default function AdminLayout() {
               cursor: 'pointer',
               transition: 'background 0.2s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#f9fafb'}
+             onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f3f4f6'; }}
+             onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f9fafb'; }}
             onClick={() => navigate('/admin/settings')}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -243,10 +256,10 @@ export default function AdminLayout() {
         </div>
       </Sider>
 
-      <Layout style={{ marginLeft: 260, background: '#f9fafb' }}>
+      <Layout style={{ marginLeft: isMobile ? 0 : 260, background: '#f9fafb' }}>
         <Header style={{ 
           background: '#fff', 
-          padding: '0 32px', 
+          padding: isMobile ? '0 16px' : '0 32px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between', 
@@ -254,26 +267,40 @@ export default function AdminLayout() {
           position: 'sticky', 
           top: 0, 
           zIndex: 10, 
-          height: '72px',
-          lineHeight: '72px',
+          height: isMobile ? '56px' : '72px',
+          lineHeight: isMobile ? '56px' : '72px',
           margin: 0
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ fontSize: '20px', fontWeight: 400, color: '#111827', lineHeight: 1.2 }}>
-              Welcome back, {currentUser?.name?.split(' ')[0]}
-            </div>
-            <div style={{ fontSize: '13px', color: '#6b7280' }}>
-              Administrator Dashboard
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '0px' }}>
+            {isMobile && (
+              <Button
+                type="text"
+                icon={mobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{ fontSize: '18px', width: 40, height: 40 }}
+              />
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 400, color: '#111827', lineHeight: 1.2 }}>
+                Welcome back, {currentUser?.name?.split(' ')[0]}
+              </div>
+              {!isMobile && (
+                <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                  Administrator Dashboard
+                </div>
+              )}
             </div>
           </div>
-          <Space size="middle">
-            <Input 
-              prefix={<SearchOutlined style={{ color: '#9ca3af' }} />} 
-              placeholder="Search users, agents, properties..." 
-              style={{ borderRadius: '8px', width: 280, height: '40px' }}
-            />
+          <Space size={isMobile ? 'small' : 'middle'}>
+            {!isMobile && (
+              <Input 
+                prefix={<SearchOutlined style={{ color: '#9ca3af' }} />} 
+                placeholder="Search users, agents, properties..." 
+                style={{ borderRadius: '8px', width: 280, height: '40px' }}
+              />
+            )}
             <Badge count={0}>
-               <BellOutlined style={{ fontSize: '20px', cursor: 'pointer', color: '#6b7280' }} />
+               <BellOutlined style={{ fontSize: isMobile ? '18px' : '20px', cursor: 'pointer', color: '#6b7280' }} />
             </Badge>
           </Space>
         </Header>

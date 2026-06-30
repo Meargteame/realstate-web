@@ -2,6 +2,7 @@ import React from "react";
 import { Card, Tag, Typography, Space, Button } from "antd";
 import { HomeOutlined, EnvironmentOutlined, ArrowRightOutlined, HeartOutlined, ClockCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -10,6 +11,7 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+  const isMobile = useIsMobile();
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
@@ -30,17 +32,19 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         }}
         styles={{ body: { padding: 0 } }}
         onMouseEnter={(e: any) => {
+          if (isMobile) return;
           e.currentTarget.style.transform = 'translateY(-8px)';
           e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)';
           e.currentTarget.style.borderColor = '#b40101';
         }}
         onMouseLeave={(e: any) => {
+          if (isMobile) return;
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
           e.currentTarget.style.borderColor = '#f0f0f0';
         }}
         cover={
-          <div style={{ position: 'relative', height: '280px', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', height: isMobile ? '220px' : '280px', overflow: 'hidden' }}>
             <img
               alt={property.address}
               src={property.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"}
@@ -51,8 +55,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 objectFit: 'cover',
                 transition: 'transform 0.3s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.05)'; }}
+              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
             />
 
             {/* "New" / "Reduced" marketing badge based on real data */}
@@ -87,10 +91,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 e.stopPropagation();
               }}
               onMouseEnter={(e) => {
+                if (isMobile) return;
                 e.currentTarget.style.background = '#b40101';
                 e.currentTarget.querySelector('svg')!.style.color = 'white';
               }}
               onMouseLeave={(e) => {
+                if (isMobile) return;
                 e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
                 e.currentTarget.querySelector('svg')!.style.color = '#b40101';
               }}
@@ -141,13 +147,13 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
         }
       >
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: isMobile ? '16px' : '24px' }}>
           {/* Price */}
           <Title 
             level={3} 
             style={{ 
               margin: '0 0 12px', 
-              fontSize: '32px', 
+              fontSize: isMobile ? '26px' : '32px', 
               fontWeight: 900,
               color: '#b40101',
               letterSpacing: '-0.01em'

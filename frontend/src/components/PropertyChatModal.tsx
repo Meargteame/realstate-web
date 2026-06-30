@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Modal, Input, Button, Avatar, Typography, Space, message as antMessage } from "antd";
 import { SendOutlined, UserOutlined, CloseOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -21,6 +22,7 @@ interface PropertyChatModalProps {
 }
 
 export default function PropertyChatModal({ visible, onClose, property, agent }: PropertyChatModalProps) {
+  const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -180,7 +182,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
       open={visible}
       onCancel={onClose}
       footer={null}
-      width={600}
+      width={isMobile ? '95%' : 600}
       closeIcon={<CloseOutlined style={{ fontSize: 20 }} />}
       styles={{ body: { padding: 0 } }}
     >

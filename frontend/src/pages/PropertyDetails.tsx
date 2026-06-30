@@ -275,8 +275,8 @@ export default function PropertyDetails() {
                 objectFit: 'cover',
                 transition: 'transform 0.3s'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.05)'; }}
+              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
             />
             {property.status && property.status !== 'Active' && (
               <Tag 
@@ -313,8 +313,8 @@ export default function PropertyDetails() {
                   objectFit: 'cover',
                   transition: 'transform 0.3s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
               />
               {idx === 3 && (
                 <div style={{
@@ -360,7 +360,7 @@ export default function PropertyDetails() {
                       </Tag>
                     )}
                   </Space>
-                  <Title level={1} style={{ margin: 0, fontSize: 48, fontWeight: 700 }}>
+                  <Title level={1} style={{ margin: 0, fontSize: isMobile ? 28 : 48, fontWeight: 700 }}>
                     {formattedPrice}
                   </Title>
                   <Title level={4} style={{ margin: '8px 0 0', fontWeight: 400, color: '#595959' }}>
@@ -633,7 +633,7 @@ export default function PropertyDetails() {
                     borderRadius: 12, padding: '20px', textAlign: 'center' 
                   }}>
                     <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>Estimated Payment</Text>
-                    <div style={{ color: 'white', fontSize: 36, fontWeight: 900 }}>
+                    <div style={{ color: 'white', fontSize: isMobile ? 24 : 36, fontWeight: 900 }}>
                       {property?.price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(calcMonthlyPayment(property.price)) : 'N/A'}
                       <span style={{ fontSize: 14, fontWeight: 400 }}>/mo</span>
                     </div>

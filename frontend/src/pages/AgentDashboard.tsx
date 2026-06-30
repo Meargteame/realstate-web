@@ -11,10 +11,12 @@ import {
   ClockCircleOutlined
 } from "@ant-design/icons";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 
 export default function AgentDashboard() {
+  const isMobile = useIsMobile();
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [activeListings, setActiveListings] = useState<any[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
@@ -146,16 +148,18 @@ export default function AgentDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
             }}
             onMouseLeave={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
             }}
           >
             <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>Active Listings</Text>
-            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: '#b40101' }}>{activeListings.length}</Title>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: isMobile ? '28px' : '36px', fontWeight: 900, color: '#b40101' }}>{activeListings.length}</Title>
             <div style={{ height: '24px' }}><Badge status="processing" text={`${activeListings.length} total units`} style={{ fontWeight: 600 }} /></div>
           </AntCard>
         </Col>
@@ -169,10 +173,12 @@ export default function AgentDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
             }}
             onMouseLeave={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
             }}
@@ -192,10 +198,12 @@ export default function AgentDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
             }}
             onMouseLeave={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
             }}
@@ -218,10 +226,12 @@ export default function AgentDashboard() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(-4px)';
               e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)';
             }}
             onMouseLeave={(e: any) => {
+              if (isMobile) return;
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
             }}

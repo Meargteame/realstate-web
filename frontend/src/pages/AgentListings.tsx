@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Table, Tag, Space, Button, Typography, Input, message, Modal, Form, Select, Row, Col, InputNumber, Upload } from "antd";
 import { useOutletContext, Link } from "react-router-dom";
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 
 export default function AgentListings() {
+  const isMobile = useIsMobile();
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -214,14 +216,14 @@ export default function AgentListings() {
   ];
 
   return (
-    <div style={{ padding: '16px', minHeight: 'calc(100vh - 64px)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
+    <div style={{ padding: isMobile ? '12px' : '16px', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-end', marginBottom: '24px', gap: '12px' }}>
         <div>
-          <Title level={2} style={{ margin: 0, fontSize: '24px', fontWeight: 500, color: '#111827' }}>My Listings</Title>
-          <Text type="secondary">Manage your active and pending property inventory.</Text>
+          <Title level={2} style={{ margin: 0, fontSize: isMobile ? '20px' : '24px', fontWeight: 500, color: '#111827' }}>My Listings</Title>
+          {!isMobile && <Text type="secondary">Manage your active and pending property inventory.</Text>}
         </div>
-        <Space>
-          <Input prefix={<SearchOutlined />} placeholder="Filter listings..." style={{ width: 250 }} onChange={e => setSearchText(e.target.value)} />
+        <Space wrap style={{ justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+          <Input prefix={<SearchOutlined />} placeholder="Filter listings..." style={{ width: isMobile ? '100%' : 250 }} onChange={e => setSearchText(e.target.value)} />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingProperty(null); setImageFileList([]); form.resetFields(); setIsModalOpen(true); }} style={{ background: '#b40101', borderColor: '#b40101' }}>
             Create New
           </Button>
@@ -255,7 +257,7 @@ export default function AgentListings() {
         />
       </div>
 
-      <Modal title={editingProperty ? "Edit Listing" : "Add New Listing"} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingProperty(null); setImageFileList([]); form.resetFields(); }} footer={null} width={680}>
+      <Modal title={editingProperty ? "Edit Listing" : "Add New Listing"} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingProperty(null); setImageFileList([]); form.resetFields(); }} footer={null} width={isMobile ? '95%' : 680}>
         <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 20 }}>
           <Form.Item label="Property Address" name="address" rules={[{ required: true }]}>
             <Input placeholder="e.g. 123 Luxury Ave" />

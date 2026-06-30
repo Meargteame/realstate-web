@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Card, Form, InputNumber, Button, Typography, Row, Col, Divider, Space, Statistic, Input, notification } from "antd";
 import { DollarOutlined, HomeOutlined, CalculatorOutlined, UserOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text, Paragraph } = Typography;
 const AntCard = Card as any;
 
 export default function AffordabilityCalculator() {
+  const isMobile = useIsMobile();
   const [form] = Form.useForm();
   const [leadForm] = Form.useForm();
   const [result, setResult] = useState<any>(null);
@@ -76,14 +78,14 @@ export default function AffordabilityCalculator() {
   };
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '64px 32px' }}>
+    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: isMobile ? '32px 16px' : '64px 32px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <Title level={1} style={{ fontSize: 48, fontWeight: 900 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 32 : 48 }}>
+          <Title level={1} style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900 }}>
             <CalculatorOutlined /> AFFORDABILITY CALCULATOR
           </Title>
-          <Paragraph style={{ fontSize: 18, color: '#666' }}>
+          <Paragraph style={{ fontSize: isMobile ? 15 : 18, color: '#666' }}>
             Find out how much home you can afford based on your income and debts
           </Paragraph>
         </div>
@@ -182,7 +184,7 @@ export default function AffordabilityCalculator() {
                   block
                   icon={<CalculatorOutlined />}
                   style={{
-                    height: 56,
+                    height: isMobile ? 48 : 56,
                     fontSize: 16,
                     fontWeight: 600,
                     background: '#b40101',
@@ -208,7 +210,7 @@ export default function AffordabilityCalculator() {
                     title="Maximum Home Price"
                     value={result.homePrice}
                     prefix={<HomeOutlined />}
-                    valueStyle={{ color: '#b40101', fontSize: 36, fontWeight: 900 }}
+                    valueStyle={{ color: '#b40101', fontSize: isMobile ? 24 : 36, fontWeight: 900 }}
                     formatter={(value) => `$${value.toLocaleString()}`}
                   />
                 </Card>
@@ -308,8 +310,8 @@ export default function AffordabilityCalculator() {
             )}
 
             {!result && (
-              <Card style={{ borderRadius: '16px', textAlign: 'center', padding: '80px 20px' }}>
-                <DollarOutlined style={{ fontSize: 64, color: '#d9d9d9', marginBottom: 16 }} />
+              <Card style={{ borderRadius: '16px', textAlign: 'center', padding: isMobile ? '40px 16px' : '80px 20px' }}>
+                <DollarOutlined style={{ fontSize: isMobile ? 40 : 64, color: '#d9d9d9', marginBottom: 16 }} />
                 <Title level={4} type="secondary">
                   Enter your information to see results
                 </Title>

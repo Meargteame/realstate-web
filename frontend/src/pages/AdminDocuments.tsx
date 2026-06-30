@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, Upload, message, Popconfirm } from "antd";
 import { SearchOutlined, PlusOutlined, DownloadOutlined, DeleteOutlined, ShareAltOutlined, UploadOutlined, FileOutlined } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
 export default function AdminDocuments() {
+  const isMobile = useIsMobile();
   const [documents, setDocuments] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -204,10 +206,10 @@ export default function AdminDocuments() {
   ];
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: isMobile ? '12px' : '32px' }}>
       <Card>
-        <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={2} style={{ margin: 0 }}>Document Management</Title>
+        <div style={{ marginBottom: isMobile ? 16 : 24, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px' }}>
+          <Title level={isMobile ? 4 : 2} style={{ margin: 0 }}>Document Management</Title>
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -218,33 +220,34 @@ export default function AdminDocuments() {
           </Button>
         </div>
 
-        <Space style={{ marginBottom: 16, width: '100%', justifyContent: 'space-between' }}>
+        <div style={{ marginBottom: 16, display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '12px', justifyContent: 'space-between' }}>
           <Input
             placeholder="Search documents..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 300, borderRadius: 8 }}
+            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
           />
           <Select
             placeholder="Filter by category"
             value={categoryFilter}
             onChange={setCategoryFilter}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: isMobile ? '100%' : 200 }}
           >
             {categories.map(cat => (
               <Option key={cat.value} value={cat.value}>{cat.label}</Option>
             ))}
           </Select>
-        </Space>
+        </div>
 
         <Table
           columns={columns}
           dataSource={documents}
           rowKey="id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          scroll={{ x: 'max-content' }}
+          pagination={{ pageSize: 10, size: isMobile ? 'small' : 'default' }}
         />
       </Card>
 
@@ -257,7 +260,7 @@ export default function AdminDocuments() {
           form.resetFields();
         }}
         footer={null}
-        width={600}
+        width={isMobile ? '95%' : 600}
       >
         <Form
           form={form}

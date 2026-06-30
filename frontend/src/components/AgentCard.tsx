@@ -2,10 +2,12 @@ import React from "react";
 import { Card, Avatar, Typography, Space, Divider, Tag } from "antd";
 import { GlobalOutlined, PhoneOutlined, MailOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Text, Title, Paragraph } = Typography;
 
 export default function AgentCard({ agent }: { agent: any }) {
+  const isMobile = useIsMobile();
   const AntCard = Card as any;
 
   return (
@@ -18,16 +20,16 @@ export default function AgentCard({ agent }: { agent: any }) {
         display: 'flex',
         flexDirection: 'column'
       }}
-      styles={{ body: { padding: '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
+      styles={{ body: { padding: isMobile ? '16px' : '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
     >
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: isMobile ? '12px' : '20px' }}>
         <Avatar 
-          size={120} 
+          size={isMobile ? 80 : 120} 
           src={agent.imageUrl} 
           style={{ 
             backgroundColor: '#f0f2f5', 
             color: '#373a4b', 
-            fontSize: '48px',
+            fontSize: isMobile ? '32px' : '48px',
             border: '4px solid white',
             boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
           }}

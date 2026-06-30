@@ -157,8 +157,8 @@ export default function UserAccount() {
         padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
         transition: 'background 0.15s', color: danger ? BRAND : '#374151'
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8f9fa')}
-      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+      onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f8f9fa'; }}
+      onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.background = 'transparent'; }}
     >
       <span style={{ fontSize: 18, color: danger ? BRAND : DARK }}>{icon}</span>
       <span style={{ flex: 1, fontWeight: 600, fontSize: 14 }}>{label}</span>
