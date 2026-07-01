@@ -267,22 +267,22 @@ export default function AdminAgents() {
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Agents</Text>} value={agents.length} prefix={<TeamOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Agents</Text>} value={agents.length} prefix={<TeamOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Active</Text>} value={activeAgents.length} prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />} valueStyle={{ color: '#10b981', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Active</Text>} value={activeAgents.length} prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />} valueStyle={{ color: '#10b981', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Listings</Text>} value={totalListings} prefix={<HomeOutlined style={{ color: '#373a4b' }} />} valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Listings</Text>} value={totalListings} prefix={<HomeOutlined style={{ color: '#373a4b' }} />} valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
         <Col xs={12} sm={6}>
           <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Leads</Text>} value={totalLeads} prefix={<RiseOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Leads</Text>} value={totalLeads} prefix={<RiseOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
           </AntCard>
         </Col>
       </Row>

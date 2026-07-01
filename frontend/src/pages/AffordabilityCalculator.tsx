@@ -216,24 +216,24 @@ export default function AffordabilityCalculator() {
                 </Card>
 
                 <Row gutter={16}>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Card style={{ borderRadius: '12px' }}>
                       <Statistic
                         title="Loan Amount"
                         value={result.loanAmount}
                         prefix="$"
-                        valueStyle={{ fontSize: 24, fontWeight: 700 }}
+                        valueStyle={{ fontSize: isMobile ? 18 : 24, fontWeight: 700 }}
                         formatter={(value) => value.toLocaleString()}
                       />
                     </Card>
                   </Col>
-                  <Col span={12}>
+                  <Col xs={24} sm={12}>
                     <Card style={{ borderRadius: '12px' }}>
                       <Statistic
                         title="Down Payment"
                         value={result.downPayment}
                         prefix="$"
-                        valueStyle={{ fontSize: 24, fontWeight: 700 }}
+                        valueStyle={{ fontSize: isMobile ? 18 : 24, fontWeight: 700 }}
                         formatter={(value) => value.toLocaleString()}
                       />
                     </Card>

@@ -119,7 +119,7 @@ export default function AgentSearch() {
 
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', 
           gap: isMobile ? '16px' : '32px' 
         }}>
           {filteredAgents.map((agent) => (

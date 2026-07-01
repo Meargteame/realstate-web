@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import CommandLayout from "./components/CommandLayout";
 import AdminLayout from "./components/AdminLayout";
@@ -50,58 +51,60 @@ import UserAccount from "./pages/UserAccount";
 export default function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="account" element={<UserAccount />} />
-          <Route path="properties" element={<Properties />} />
-          <Route path="properties/:id" element={<PropertyDetails />} />
-          <Route path="saved-searches" element={<SavedSearches />} />
-          <Route path="open-houses" element={<OpenHouses />} />
-          <Route path="agents" element={<AgentSearch />} />
-          <Route path="agents/:id" element={<AgentProfile />} />
-          <Route path="become-agent" element={<BecomeAgent />} />
-          <Route path="book-appointment/:agentId" element={<BookAppointment />} />
-          <Route path="blog" element={<Blog />} />
-          <Route path="blog/:slug" element={<BlogPost />} />
-          <Route path="affordability-calculator" element={<AffordabilityCalculator />} />
-          <Route path="terms" element={<Terms />} />
-          <Route path="privacy" element={<Privacy />} />
-          {/* SEO City Landing Template — generates thousands of pages from one component */}
-          <Route path="homes/:city" element={<CityPage />} />
-          {/* Lead Capture Micro-apps */}
-          <Route path="home-value" element={<HomeValue />} />
-          <Route path="mortgage-calculator" element={<MortgageCalculator />} />
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
-        </Route>
-        <Route path="/command" element={<CommandLayout />}>
-          <Route index element={<AgentDashboard />} />
-          <Route path="leads" element={<LeadsPage />} />
-          <Route path="inbox" element={<Inbox />} />
-          <Route path="listings" element={<AgentListings />} />
-          <Route path="opportunities" element={<Opportunities />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="video/start" element={<StartVideoCall />} />
-          <Route path="settings" element={<AgentSettings />} />
-        </Route>
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="agents" element={<AdminAgents />} />
-          <Route path="properties" element={<AdminProperties />} />
-          <Route path="blog" element={<AdminBlog />} />
-          <Route path="documents" element={<AdminDocuments />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="settings" element={<AgentSettings />} />
-        </Route>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/video-call/:videoCallId" element={<VideoCall />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="account" element={<UserAccount />} />
+            <Route path="properties" element={<Properties />} />
+            <Route path="properties/:id" element={<PropertyDetails />} />
+            <Route path="saved-searches" element={<SavedSearches />} />
+            <Route path="open-houses" element={<OpenHouses />} />
+            <Route path="agents" element={<AgentSearch />} />
+            <Route path="agents/:id" element={<AgentProfile />} />
+            <Route path="become-agent" element={<BecomeAgent />} />
+            <Route path="book-appointment/:agentId" element={<BookAppointment />} />
+            <Route path="blog" element={<Blog />} />
+            <Route path="blog/:slug" element={<BlogPost />} />
+            <Route path="affordability-calculator" element={<AffordabilityCalculator />} />
+            <Route path="terms" element={<Terms />} />
+            <Route path="privacy" element={<Privacy />} />
+            {/* SEO City Landing Template — generates thousands of pages from one component */}
+            <Route path="homes/:city" element={<CityPage />} />
+            {/* Lead Capture Micro-apps */}
+            <Route path="home-value" element={<HomeValue />} />
+            <Route path="mortgage-calculator" element={<MortgageCalculator />} />
+            {/* 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route path="/command" element={<CommandLayout />}>
+            <Route index element={<AgentDashboard />} />
+            <Route path="leads" element={<LeadsPage />} />
+            <Route path="inbox" element={<Inbox />} />
+            <Route path="listings" element={<AgentListings />} />
+            <Route path="opportunities" element={<Opportunities />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="video/start" element={<StartVideoCall />} />
+            <Route path="settings" element={<AgentSettings />} />
+          </Route>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="agents" element={<AdminAgents />} />
+            <Route path="properties" element={<AdminProperties />} />
+            <Route path="blog" element={<AdminBlog />} />
+            <Route path="documents" element={<AdminDocuments />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<AgentSettings />} />
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/video-call/:videoCallId" element={<VideoCall />} />
+        </Routes>
+      </ErrorBoundary>
     </Router>
   );
 }

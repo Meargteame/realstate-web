@@ -104,26 +104,26 @@ export default function AgentProfile() {
 
                <Divider style={{ margin: '24px 0' }} />
 
-               <Row gutter={isMobile ? [0, 16] : 48}>
-                  <Col>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <Text strong style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900 }}>{agentListings.length}</Text>
-                       <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Active Listings</Text>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <Text strong style={{ fontSize: '24px', fontWeight: 900 }}>{agent.yearsExperience || 12}</Text>
-                       <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Years Exp.</Text>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <Text strong style={{ fontSize: '24px', fontWeight: 900 }}>$45M+</Text>
-                       <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Sales Volume</Text>
-                    </div>
-                  </Col>
-               </Row>
+                <Row gutter={[16, 16]}>
+                   <Col xs={8}>
+                     <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <Text strong style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900 }}>{agentListings.length}</Text>
+                        <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Active Listings</Text>
+                     </div>
+                   </Col>
+                   <Col xs={8}>
+                     <div style={{ display: 'flex', flexDirection: 'column' }}>
+                         <Text strong style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900 }}>{agent.yearsExperience || 12}</Text>
+                        <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Years Exp.</Text>
+                     </div>
+                   </Col>
+                   <Col xs={8}>
+                     <div style={{ display: 'flex', flexDirection: 'column' }}>
+                         <Text strong style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 900 }}>$45M+</Text>
+                        <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase', fontWeight: 900 }}>Sales Volume</Text>
+                     </div>
+                   </Col>
+                </Row>
             </Col>
           </Row>
         </div>
@@ -224,27 +224,27 @@ export default function AgentProfile() {
                 )}
              </section>
 
-             <section>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '4px solid black', paddingBottom: '16px' }}>
-                   <Title level={2} style={{ textTransform: 'uppercase', fontWeight: 900, margin: 0 }}>Active Listings</Title>
-                   <Link to="/properties" style={{ fontWeight: 'bold', color: '#b40101' }}>VIEW ALL <ArrowRightOutlined /></Link>
-                </div>
-                
-                <Row gutter={[24, 24]}>
-                   {agentListings.map((prop: any) => (
-                     <Col xs={24} md={12} key={prop.id}>
-                        <PropertyCard property={prop} />
-                     </Col>
-                   ))}
-                   {agentListings.length === 0 && (
-                     <Col span={24}>
-                        <Card style={{ textAlign: 'center', padding: '40px', background: 'white', borderRadius: '12px' }}>
-                           <Text type="secondary" strong style={{ textTransform: 'uppercase' }}>Currently no active listings in this market.</Text>
-                        </Card>
-                     </Col>
-                   )}
-                </Row>
-             </section>
+              <section>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: isMobile ? '16px' : '32px', borderBottom: '4px solid black', paddingBottom: '16px' }}>
+                    <Title level={2} style={{ textTransform: 'uppercase', fontWeight: 900, margin: 0, fontSize: isMobile ? '22px' : '32px' }}>Active Listings</Title>
+                    <Link to="/properties" style={{ fontWeight: 'bold', color: '#b40101', fontSize: isMobile ? '13px' : '16px' }}>VIEW ALL <ArrowRightOutlined /></Link>
+                 </div>
+                 
+                 <Row gutter={[16, 16]}>
+                    {agentListings.map((prop: any) => (
+                      <Col xs={24} md={12} key={prop.id}>
+                         <PropertyCard property={prop} />
+                      </Col>
+                    ))}
+                    {agentListings.length === 0 && (
+                      <Col xs={24}>
+                         <Card style={{ textAlign: 'center', padding: isMobile ? '24px' : '40px', background: 'white', borderRadius: '12px' }}>
+                            <Text type="secondary" strong style={{ textTransform: 'uppercase' }}>Currently no active listings in this market.</Text>
+                         </Card>
+                      </Col>
+                    )}
+                 </Row>
+              </section>
 
              {/* Agent Reviews */}
              <section style={{ marginTop: '64px' }}>
@@ -255,7 +255,7 @@ export default function AgentProfile() {
           <Col xs={24} lg={8}>
              <Card 
                style={{ borderRadius: '16px', border: 'none', boxShadow: '0 24px 48px rgba(0,0,0,0.1)', position: 'sticky', top: '100px' }}
-               styles={{ body: { padding: '32px' } }}
+                styles={{ body: { padding: isMobile ? '20px' : '32px' } }}
              >
                 <Title level={3} style={{ textAlign: 'center', textTransform: 'uppercase', fontWeight: 900, marginBottom: '32px' }}>
                   Inquire With {agent.name.split(' ')[0]}

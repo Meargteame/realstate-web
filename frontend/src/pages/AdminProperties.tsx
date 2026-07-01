@@ -376,24 +376,24 @@ export default function AdminProperties() {
           </Col>
           <Col xs={24} sm={16}>
             <Row gutter={[12, 12]}>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Properties</Text>} value={properties.length} prefix={<HomeOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: 28 }} />
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Properties</Text>} value={properties.length} prefix={<HomeOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
                 </AntCard>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Featured</Text>} value={properties.filter((p: any) => p.featured).length} prefix={<StarFilled style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Featured</Text>} value={properties.filter((p: any) => p.featured).length} prefix={<StarFilled style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
                 </AntCard>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Avg Price</Text>} value={properties.length ? Math.round(properties.reduce((s: number, p: any) => s + (p.price || 0), 0) / properties.length) : 0} prefix="$" valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: 28 }} precision={0} />
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Avg Price</Text>} value={properties.length ? Math.round(properties.reduce((s: number, p: any) => s + (p.price || 0), 0) / properties.length) : 0} prefix="$" valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} precision={0} />
                 </AntCard>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={12}>
                 <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Pending Review</Text>} value={properties.filter((p: any) => p.status === 'Pending').length} prefix={<CheckCircleOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: 28 }} />
+                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Pending Review</Text>} value={properties.filter((p: any) => p.status === 'Pending').length} prefix={<CheckCircleOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
                 </AntCard>
               </Col>
             </Row>

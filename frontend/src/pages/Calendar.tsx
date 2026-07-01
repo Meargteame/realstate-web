@@ -508,6 +508,84 @@ const Calendar: React.FC = () => {
         )}
       </Card>
 
+      {/* Create Event Modal */}
+      {showEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => setShowEventModal(false)}>
+          <Card className="max-w-lg w-full p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <h3 className="text-xl font-bold">New Event</h3>
+              <button onClick={() => setShowEventModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.target as HTMLFormElement;
+              const data = {
+                title: (form.elements.namedItem('title') as HTMLInputElement).value,
+                startTime: new Date((form.elements.namedItem('startDate') as HTMLInputElement).value).toISOString(),
+                endTime: new Date((form.elements.namedItem('endDate') as HTMLInputElement).value).toISOString(),
+                eventType: (form.elements.namedItem('eventType') as HTMLSelectElement).value,
+                location: (form.elements.namedItem('location') as HTMLInputElement).value,
+                description: (form.elements.namedItem('description') as HTMLTextAreaElement).value,
+                allDay: (form.elements.namedItem('allDay') as HTMLInputElement).checked,
+              };
+              handleCreateEvent(data);
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <input name="title" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Event title" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start *</label>
+                    <input name="startDate" type="datetime-local" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End *</label>
+                    <input name="endDate" type="datetime-local" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select name="eventType" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white">
+                      <option value="appointment">Appointment</option>
+                      <option value="showing">Showing</option>
+                      <option value="open_house">Open House</option>
+                      <option value="meeting">Meeting</option>
+                      <option value="personal">Personal</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input name="location" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Optional" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea name="description" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Optional" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input name="allDay" type="checkbox" id="allDay" className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" />
+                  <label htmlFor="allDay" className="text-sm text-gray-700">All day event</label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button type="button" onClick={() => setShowEventModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                  Create Event
+                </button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
       {/* Event Details Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">

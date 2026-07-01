@@ -184,7 +184,7 @@ export default function AgentDashboard() {
             }}
           >
             <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>Total Active Volume</Text>
-            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: '#373a4b' }}>{formatCurrency(totalVolume)}</Title>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: isMobile ? '28px' : '36px', fontWeight: 900, color: '#373a4b' }}>{formatCurrency(totalVolume)}</Title>
             <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Current Portfolio Value</Text></div>
           </AntCard>
         </Col>
@@ -212,7 +212,7 @@ export default function AgentDashboard() {
               <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>New Leads</Text>
               {newLeads > 0 && <Badge count={newLeads} offset={[4, -4]} style={{ backgroundColor: '#b40101' }} />}
             </Space>
-            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: newLeads > 0 ? '#b40101' : '#373a4b' }}>{newLeads}</Title>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: isMobile ? '28px' : '36px', fontWeight: 900, color: newLeads > 0 ? '#b40101' : '#373a4b' }}>{newLeads}</Title>
             <div style={{ height: '24px' }}><Text type={newLeads > 0 ? "danger" : "secondary"} style={{ fontSize: 12, fontWeight: 600 }}>{newLeads > 0 ? "Needs attention" : "Everything current"}</Text></div>
           </AntCard>
         </Col>
@@ -237,7 +237,7 @@ export default function AgentDashboard() {
             }}
           >
             <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', color: '#6b7280', fontWeight: 700, letterSpacing: '1px' }}>Sales Pipeline</Text>
-            <Title level={2} style={{ margin: '16px 0 8px', fontSize: '36px', fontWeight: 900, color: '#373a4b' }}>{pipeline}</Title>
+            <Title level={2} style={{ margin: '16px 0 8px', fontSize: isMobile ? '28px' : '36px', fontWeight: 900, color: '#373a4b' }}>{pipeline}</Title>
             <div style={{ height: '24px' }}><Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>Pending Transactions</Text></div>
           </AntCard>
         </Col>

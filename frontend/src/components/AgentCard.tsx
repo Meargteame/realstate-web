@@ -52,22 +52,22 @@ export default function AgentCard({ agent }: { agent: any }) {
 
         <div style={{ flex: 1 }}>
            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                 <GlobalOutlined style={{ color: '#8c8c8c', marginTop: '4px' }} />
-                 <Text style={{ fontSize: '13px' }}>{agent.languages?.join(', ') || 'English'}</Text>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                 <PhoneOutlined style={{ color: '#b40101', marginTop: '4px' }} />
-                 <a href={`tel:${agent.phone}`} style={{ color: '#b40101', textDecoration: 'none' }}>
-                   <Text style={{ fontSize: '13px', color: '#b40101' }}>{agent.phone}</Text>
-                 </a>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                 <MailOutlined style={{ color: '#b40101', marginTop: '4px' }} />
-                 <a href={`mailto:${agent.email}`} style={{ color: '#b40101', textDecoration: 'none' }}>
-                   <Text style={{ fontSize: '13px', color: '#b40101' }} ellipsis>{agent.email}</Text>
-                 </a>
-              </div>
+               <div style={{ display: 'flex', gap: '8px', minWidth: 0 }}>
+                  <GlobalOutlined style={{ color: '#8c8c8c', marginTop: '4px', flexShrink: 0 }} />
+                  <Text style={{ fontSize: '13px' }} ellipsis>{agent.languages?.join(', ') || 'English'}</Text>
+               </div>
+               <div style={{ display: 'flex', gap: '8px', minWidth: 0 }}>
+                  <PhoneOutlined style={{ color: '#b40101', marginTop: '4px', flexShrink: 0 }} />
+                  <a href={`tel:${agent.phone}`} style={{ color: '#b40101', textDecoration: 'none', minWidth: 0 }}>
+                    <Text style={{ fontSize: '13px', color: '#b40101' }} ellipsis>{agent.phone}</Text>
+                  </a>
+               </div>
+               <div style={{ display: 'flex', gap: '8px', minWidth: 0 }}>
+                  <MailOutlined style={{ color: '#b40101', marginTop: '4px', flexShrink: 0 }} />
+                  <a href={`mailto:${agent.email}`} style={{ color: '#b40101', textDecoration: 'none', minWidth: 0 }}>
+                    <Text style={{ fontSize: '13px', color: '#b40101' }} ellipsis>{agent.email}</Text>
+                  </a>
+               </div>
            </Space>
         </div>
 

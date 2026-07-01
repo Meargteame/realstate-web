@@ -238,7 +238,7 @@ export default function UserAccount() {
                 title="Account Type"
                 value={isAgent ? 'Agent' : 'Member'}
                 prefix={<SafetyCertificateOutlined style={{ color: BRAND }} />}
-                valueStyle={{ fontWeight: 800, fontSize: 22 }}
+                valueStyle={{ fontWeight: 800, fontSize: isMobile ? 18 : 22 }}
               />
             </AntCard>
           </Col>

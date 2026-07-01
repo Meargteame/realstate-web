@@ -17,6 +17,7 @@ import {
   MenuOutlined,
   CloseOutlined
 } from "@ant-design/icons";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Header, Sider, Content } = Layout;
 
@@ -26,20 +27,15 @@ export default function CommandLayout() {
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [listingsCount, setListingsCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const isMobile = useIsMobile();
   
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Close mobile menu on route change or when switching to desktop
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (!mobile) setMobileMenuOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (!isMobile) setMobileMenuOpen(false);
+  }, [isMobile]);
 
   // Close mobile menu on route change
   useEffect(() => {

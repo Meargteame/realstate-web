@@ -158,7 +158,7 @@ export default function MortgageCalculator() {
               {/* Main Payment Card */}
               <AntCard
                 style={{ borderRadius: '16px', border: 'none', background: '#111827', marginBottom: '24px' }}
-                styles={{ body: { padding: '40px', textAlign: 'center' } }}
+                styles={{ body: { padding: isMobile ? '24px' : '40px', textAlign: 'center' } }}
               >
                 <Text style={{ color: '#9ca3af', fontSize: '14px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '1px', display: 'block', marginBottom: '16px' }}>
                   Estimated Monthly Payment
