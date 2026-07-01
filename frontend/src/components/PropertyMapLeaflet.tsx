@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import Supercluster from 'supercluster';
 import { Card, Button, Space, Typography, Tooltip } from 'antd';
 import { AimOutlined, ClearOutlined, BorderOutlined } from '@ant-design/icons';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Text } = Typography;
 
@@ -47,6 +48,7 @@ export default function PropertyMapLeaflet({
   height = '100%',
   showControls = true
 }: PropertyMapLeafletProps) {
+  const isMobile = useIsMobile();
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -250,7 +252,7 @@ export default function PropertyMapLeaflet({
           left: '16px',
           zIndex: 1000
         }}>
-          <Card size="small" style={{ minWidth: 200 }}>
+          <Card size="small" style={{ minWidth: isMobile ? 160 : 200 }}>
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Text strong style={{ fontSize: '12px', color: '#666' }}>
                 MAP TOOLS

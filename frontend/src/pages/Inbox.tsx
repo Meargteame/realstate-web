@@ -255,7 +255,7 @@ export default function Inbox() {
           display: isMobile && selectedConversation ? 'none' : 'block'
         }}
       >
-        <div style={{ padding: '24px', borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ padding: isMobile ? '16px' : '24px', borderBottom: '1px solid #f0f0f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Title level={4} style={{ margin: 0 }}>Messages</Title>
             {totalUnread > 0 && (

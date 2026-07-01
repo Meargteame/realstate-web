@@ -14,6 +14,7 @@ import {
   CalendarOutlined
 } from "@ant-design/icons";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Title, Text } = Typography;
 const AntCard = Card as any;
@@ -21,6 +22,7 @@ const AntCard = Card as any;
 const COLORS = ['#b40101', '#373a4b', '#667eea', '#43e97b', '#f59e0b'];
 
 export default function Analytics() {
+  const isMobile = useIsMobile();
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [analytics, setAnalytics] = useState<any>(null);
   const [leadAnalytics, setLeadAnalytics] = useState<any>(null);
@@ -97,7 +99,7 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: isMobile ? '16px' : '24px' }}>
         <Row gutter={[16, 16]}>
           {Array.from({ length: 4 }).map((_, i) => (
             <Col xs={12} md={6} key={i}>

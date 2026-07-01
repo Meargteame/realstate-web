@@ -95,8 +95,8 @@ export default function Header() {
                 fontSize: '11px',
                 transition: 'color 0.2s'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#b40101'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
+              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.color = '#b40101'; }}
+              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.color = 'white'; }}
             >
               LUXURY
             </Link>
@@ -107,8 +107,8 @@ export default function Header() {
                 fontSize: '11px',
                 transition: 'color 0.2s'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#b40101'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
+              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.color = '#b40101'; }}
+              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.color = 'white'; }}
             >
               LAND
             </Link>
@@ -119,8 +119,8 @@ export default function Header() {
                 fontSize: '11px',
                 transition: 'color 0.2s'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#b40101'}
-              onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
+              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.color = '#b40101'; }}
+              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.color = 'white'; }}
             >
               COMMERCIAL
             </Link>
@@ -192,10 +192,12 @@ export default function Header() {
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
+                if (isMobile) return;
                 e.currentTarget.style.background = '#f8f9fa';
                 e.currentTarget.style.transform = 'scale(1.1)';
               }}
               onMouseLeave={(e) => {
+                if (isMobile) return;
                 e.currentTarget.style.background = 'transparent';
                 e.currentTarget.style.transform = 'scale(1)';
               }}

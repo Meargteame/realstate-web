@@ -7,6 +7,7 @@ import {
   AimOutlined,
   SettingOutlined
 } from '@ant-design/icons';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Text } = Typography;
 
@@ -38,6 +39,7 @@ export default function PropertyMapFallback({
   height = '100%',
   showControls = true
 }: PropertyMapFallbackProps) {
+  const isMobile = useIsMobile();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   // Format price for display
@@ -149,7 +151,7 @@ export default function PropertyMapFallback({
         }}>
           <Card
             size="small"
-            style={{ width: 300, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
+            style={{ width: isMobile ? '85vw' : 300, maxWidth: 300, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
             cover={
               <img
                 alt={selectedProperty.address}
@@ -198,7 +200,7 @@ export default function PropertyMapFallback({
           left: '16px',
           zIndex: 1000
         }}>
-          <Card size="small" style={{ minWidth: 220 }}>
+          <Card size="small" style={{ minWidth: isMobile ? 160 : 220 }}>
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Text strong style={{ fontSize: '12px', color: '#666' }}>
                 MAP TOOLS (DEMO MODE)

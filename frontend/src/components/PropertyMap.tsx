@@ -14,6 +14,7 @@ import {
 import PropertyMapFallback from './PropertyMapFallback';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 const { Text } = Typography;
 
@@ -52,6 +53,7 @@ export default function PropertyMap({
   height = '100%',
   showControls = true
 }: PropertyMapProps) {
+  const isMobile = useIsMobile();
   // Check if Mapbox token is available
   const hasValidToken = MAPBOX_TOKEN && MAPBOX_TOKEN !== 'pk.eyJ1IjoidGVzdC1rdy1yZWFsZXN0YXRlIiwiYSI6ImNtNGZxeXg4ZGowMGNrMmpzN2V6YjBxbzJ5In0.demo-token-for-development';
 
@@ -366,7 +368,7 @@ export default function PropertyMap({
           left: '16px',
           zIndex: 1000
         }}>
-          <Card size="small" style={{ minWidth: 200 }}>
+          <Card size="small" style={{ minWidth: isMobile ? 160 : 200 }}>
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Text strong style={{ fontSize: '12px', color: '#666' }}>
                 SEARCH TOOLS

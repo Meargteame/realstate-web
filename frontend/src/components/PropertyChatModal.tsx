@@ -188,7 +188,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
     >
       {/* Header */}
       <div style={{ 
-        padding: '24px', 
+        padding: isMobile ? '16px' : '24px', 
         borderBottom: '1px solid #f0f0f0',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
       }}>
@@ -216,7 +216,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
 
       {showForm ? (
         /* Contact Form */
-        <div style={{ padding: '32px' }}>
+        <div style={{ padding: isMobile ? '20px' : '32px' }}>
           <Title level={4} style={{ marginBottom: 8 }}>Start a Conversation</Title>
           <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
             Enter your details to chat with {agent.name} about this property
@@ -284,9 +284,9 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
         /* Chat Interface */
         <>
           <div style={{ 
-            height: 400, 
+            height: isMobile ? 300 : 400, 
             overflowY: 'auto', 
-            padding: '24px',
+            padding: isMobile ? '16px' : '24px',
             background: '#f8f9fa'
           }}>
             {messages.length === 0 ? (

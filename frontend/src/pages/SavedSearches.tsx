@@ -271,7 +271,7 @@ export default function SavedSearches() {
   if (loading) {
     return (
       <Layout style={{ minHeight: '100vh', background: '#f8f8f8' }}>
-        <Content style={{ padding: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Content style={{ padding: isMobile ? '24px 16px' : '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Spin size="large" />
         </Content>
       </Layout>
