@@ -20,6 +20,12 @@ export default function ForgotPassword() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/forgot-password", {
@@ -60,8 +66,8 @@ export default function ForgotPassword() {
 
         {sent ? (
           <div className="space-y-6">
-            <div className="flex items-start gap-3 text-green-700 bg-green-50 p-4 rounded-xl border border-green-100 shadow-sm">
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div role="alert" className="flex items-start gap-3 text-green-700 bg-green-50 p-4 rounded-xl border border-green-100 shadow-sm">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <p className="text-sm font-semibold">
                 If an account exists for <strong>{email.trim()}</strong>, a password reset link is on its way. Check your inbox and spam folder.
               </p>
@@ -83,7 +89,7 @@ export default function ForgotPassword() {
             </Link>
           </div>
         ) : (
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Email Address</label>
               <Input
@@ -91,13 +97,14 @@ export default function ForgotPassword() {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email address"
                 className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
               />
             </div>
 
             {error && (
-              <div className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <div role="alert" className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-sm font-bold">{error}</p>
               </div>
             )}
@@ -105,7 +112,7 @@ export default function ForgotPassword() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest shadow-[0_8px_16px_rgba(180,1,1,0.3)] transition-all disabled:opacity-70"
+              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest shadow-[0_8px_16px_rgba(180,1,1,0.3)] transition-all disabled:opacity-70 active:scale-[0.98]"
             >
               {loading ? "Sending..." : "Send Reset Link"}
             </Button>

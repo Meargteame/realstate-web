@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card, Tag, Typography, Button, Space, Progress, Badge, Modal, Form, Input, InputNumber, Select, message } from "antd";
+import { Row, Col, Card, Tag, Typography, Button, Space, Progress, Badge, Modal, Form, Input, InputNumber, Select, message, Empty } from "antd";
 import { PlusOutlined, MoreOutlined, DollarOutlined, EditOutlined, DeleteOutlined, CalendarOutlined } from "@ant-design/icons";
 import { useOutletContext } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
@@ -210,7 +210,10 @@ export default function Opportunities() {
         </Space>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '24px' }}>
+      {opportunities.length === 0 ? (
+        <div style={{textAlign:'center',padding:'60px 20px'}}><Empty description={<div><Text strong style={{fontSize:15}}>No {activeSegment === 'listing' ? 'listing' : 'buyer'} opportunities yet</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>{activeSegment === 'listing' ? 'Create listings to start tracking selling opportunities.' : 'Capture leads to build your buyer pipeline.'}</div></div>}><Button type="primary" icon={<PlusOutlined />} style={{background:'#b40101',borderColor:'#b40101',marginTop:16}} onClick={()=>{setEditingOpp(null);form.resetFields();setIsModalOpen(true)}}>Add Opportunity</Button></Empty></div>
+      ) : (
+        <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '24px' }}>
         {pipeline.map((phase, i) => (
           <div key={i} style={{ minWidth: '300px', flex: 1 }}>
             <div style={{ padding: '12px 16px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px 8px 0 0', borderBottom: '2px solid #b40101' }}>
@@ -296,6 +299,7 @@ export default function Opportunities() {
           </div>
         ))}
       </div>
+      )}
 
       <Modal 
         title={editingOpp ? "Edit Opportunity" : "Create Opportunity"} 

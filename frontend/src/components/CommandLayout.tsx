@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import { Layout, Menu, Avatar, Input, Badge, Button, Space, Typography, Spin } from "antd";
+import { Layout, Menu, Avatar, Input, Badge, Button, Space, Typography, Spin, Skeleton } from "antd";
 import {
   DashboardOutlined,
   InboxOutlined,
@@ -157,9 +157,7 @@ export default function CommandLayout() {
   if (loading) {
     return (
       <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Spin size="large">
-          <div style={{ marginTop: 16 }}>Loading Command Center...</div>
-        </Spin>
+        <Skeleton active paragraph={{ rows: 8 }} />
       </div>
     );
   }

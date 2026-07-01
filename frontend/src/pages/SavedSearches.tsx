@@ -233,8 +233,9 @@ export default function SavedSearches() {
   const getMenuItems = (search: SavedSearch) => [
     {
       key: 'run',
-      label: 'Run Search',
-      icon: <PlayCircleOutlined />,
+      label: runningSearch === search.id ? 'Running...' : 'Run Search',
+      icon: runningSearch === search.id ? <Spin size="small" /> : <PlayCircleOutlined />,
+      disabled: runningSearch === search.id,
       onClick: () => runSavedSearch(search.id, search.name)
     },
     {
@@ -349,7 +350,8 @@ export default function SavedSearches() {
                   style={{ 
                     borderRadius: '12px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    border: '1px solid #f0f0f0'
+                    border: '1px solid #f0f0f0',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                   actions={[
                     <Button
@@ -357,7 +359,7 @@ export default function SavedSearches() {
                       icon={<PlayCircleOutlined />}
                       onClick={() => runSavedSearch(search.id, search.name)}
                       loading={runningSearch === search.id}
-                      style={{ color: '#b40101', fontSize: isMobile ? '13px' : '14px' }}
+                      style={{ color: '#b40101', fontSize: isMobile ? '13px' : '14px', transition: 'all 0.2s ease' }}
                     >
                       {isMobile ? "Run" : "Run Search"}
                     </Button>,
@@ -374,7 +376,7 @@ export default function SavedSearches() {
                       menu={{ items: getMenuItems(search) }}
                       trigger={['click']}
                     >
-                      <Button type="text" icon={<MoreOutlined />} />
+                      <Button type="text" icon={<MoreOutlined />} style={{ transition: 'all 0.2s ease' }} />
                     </Dropdown>
                   ]}
                 >

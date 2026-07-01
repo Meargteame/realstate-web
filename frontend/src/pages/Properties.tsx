@@ -833,11 +833,13 @@ export default function Properties() {
                         <img 
                           src={p.imageUrl} 
                           alt={p.address}
+                          loading="lazy"
                           style={{ 
                             width: '100%', 
                             height: '250px', 
                             objectFit: 'cover',
-                            borderRadius: isMobile ? '12px 12px 0 0' : '12px 0 0 12px'
+                            borderRadius: isMobile ? '12px 12px 0 0' : '12px 0 0 12px',
+                            transition: 'opacity 0.3s ease'
                           }}
                         />
                       </Col>

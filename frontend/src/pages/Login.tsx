@@ -17,8 +17,19 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    if (!email.trim() || !password) {
-      setError("Email and password are required.");
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Password is required.");
       return;
     }
 
@@ -68,8 +79,8 @@ export default function Login() {
     <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA]">
       {/* Premium Visual Sidebar */}
       <div className="hidden md:flex md:w-1/2 bg-[#B40101] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-30"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#B40101] via-transparent to-[#B40101]/60 mix-blend-multiply border-r border-[#6B0000]"></div>
+        <div aria-hidden="true" className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-30"></div>
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#B40101] via-transparent to-[#B40101]/60 mix-blend-multiply border-r border-[#6B0000]"></div>
         <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
           <div className="text-white text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
           <div className="text-white/80 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>
@@ -84,8 +95,8 @@ export default function Login() {
 
       {/* Modern Main Login Area */}
       <div className="flex-1 flex flex-col relative w-full items-center justify-center bg-white px-6 py-12 md:px-16 lg:px-24">
-        <Link to="/" className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
-          <X className="w-6 h-6" />
+        <Link to="/" aria-label="Close login page" onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Space') { e.preventDefault(); navigate("/"); } }} className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
+          <X className="w-6 h-6" aria-hidden="true" />
         </Link>
 
         <div className="w-full max-w-[420px]">
@@ -97,7 +108,7 @@ export default function Login() {
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={handleLogin} noValidate>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Email Address</label>
               <Input 
@@ -105,6 +116,8 @@ export default function Login() {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email address"
+                aria-describedby={error ? "login-error" : undefined}
                 className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
               />
             </div>
@@ -120,6 +133,8 @@ export default function Login() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-label="Password"
+                  aria-describedby={error ? "login-error" : undefined}
                   className="h-14 pr-12 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
                 />
                 <Button 
@@ -135,8 +150,8 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <div id="login-error" role="alert" tabIndex={0} className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-sm font-bold">{error}</p>
               </div>
             )}
@@ -157,7 +172,7 @@ export default function Login() {
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             >
               {loading ? "Authenticating..." : "Log In to Dashboard"}
             </Button>
@@ -177,8 +192,8 @@ export default function Login() {
               { name: 'Google', icon: 'https://www.svgrepo.com/show/475656/google-color.svg' },
               { name: 'Apple', icon: 'https://www.svgrepo.com/show/475633/apple-color.svg' }
             ].map((provider) => (
-              <Button key={provider.name} variant="outline" className="h-14 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px] transition-all shadow-sm">
-                <img src={provider.icon} alt={provider.name} className="w-6 h-6" referrerPolicy="no-referrer" />
+              <Button key={provider.name} type="button" variant="outline" className="h-14 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px] transition-all shadow-sm">
+                <img src={provider.icon} alt="" aria-hidden="true" className="w-6 h-6" referrerPolicy="no-referrer" />
                 <span>Continue with {provider.name}</span>
               </Button>
             ))}

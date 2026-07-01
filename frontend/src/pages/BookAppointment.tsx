@@ -164,9 +164,16 @@ const BookAppointment: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+        <div className="w-full max-w-2xl px-4">
+          <div className="animate-pulse" role="status" aria-label="Loading content">
+            <div className="h-8 bg-gray-200 rounded-lg w-1/3 mb-6" />
+            <div className="h-4 bg-gray-200 rounded w-2/3 mb-8" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="h-40 bg-gray-200 rounded-xl" />
+              <div className="h-40 bg-gray-200 rounded-xl" />
+            </div>
+            <div className="h-48 bg-gray-200 rounded-xl" />
+          </div>
         </div>
       </div>
     );
@@ -188,7 +195,7 @@ const BookAppointment: React.FC = () => {
   if (success) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Card className="max-w-md w-full p-8 text-center">
+        <Card className="max-w-md w-full p-8 text-center" role="alert">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
@@ -315,6 +322,7 @@ const BookAppointment: React.FC = () => {
                   setSelectedDate(e.target.value);
                   setSelectedSlot(null);
                 }}
+                className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
               />
             </div>
 
@@ -332,10 +340,12 @@ const BookAppointment: React.FC = () => {
                         key={index}
                         type="button"
                         onClick={() => setSelectedSlot(slot)}
-                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSlot(slot); } }}
+                        aria-label={`Select time slot ${formatTime(slot.startTime)}`}
+                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
                           selectedSlot === slot
-                            ? 'border-red-600 bg-red-50 text-red-700'
-                            : 'border-gray-200 hover:border-red-300 text-gray-700'
+                            ? 'border-red-600 bg-red-50 text-red-700 shadow-sm'
+                            : 'border-gray-200 hover:border-red-300 hover:bg-red-50/50 text-gray-700'
                         }`}
                       >
                         {formatTime(slot.startTime)}
@@ -368,7 +378,8 @@ const BookAppointment: React.FC = () => {
             <Button
               type="submit"
               disabled={submitting || !selectedSlot}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300"
+              aria-label="Book appointment"
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 transition-all active:scale-[0.98] disabled:active:scale-100"
             >
               {submitting ? 'Sending Request...' : 'Request Appointment'}
             </Button>

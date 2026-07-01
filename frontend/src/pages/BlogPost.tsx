@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Typography, Avatar, Space, Tag, Divider, Card, Row, Col, Button } from "antd";
+import { Typography, Avatar, Space, Tag, Divider, Card, Row, Col, Button, Skeleton } from "antd";
 import { ClockCircleOutlined, EyeOutlined, ArrowLeftOutlined, UserOutlined, ShareAltOutlined } from "@ant-design/icons";
 import SocialShare from "@/components/SocialShare";
 import { useIsMobile } from "../hooks/useBreakpoint";
@@ -94,7 +94,7 @@ export default function BlogPost() {
   if (loading) {
     return (
       <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}>
-        <Text>Loading article...</Text>
+        <Skeleton active avatar paragraph={{ rows: 6 }} />
       </div>
     );
   }

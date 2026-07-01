@@ -32,13 +32,40 @@ export default function SignUp() {
     e.preventDefault();
     setError("");
     
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password) {
-      setError("First name, last name, email, and password are all required.");
+    if (!firstName.trim()) {
+      setError("First name is required.");
+      return;
+    }
+    if (firstName.trim().length < 2) {
+      setError("First name must be at least 2 characters.");
+      return;
+    }
+    if (!lastName.trim()) {
+      setError("Last name is required.");
+      return;
+    }
+    if (lastName.trim().length < 2) {
+      setError("Last name must be at least 2 characters.");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Password is required.");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setError("Password must be at least 6 characters.");
       return;
     }
 
@@ -86,8 +113,8 @@ export default function SignUp() {
     <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA]">
       {/* Premium Visual Sidebar */}
       <div className="hidden md:flex md:w-1/2 bg-[#111827] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-transparent to-[#111827]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
+        <div aria-hidden="true" className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#111827] via-transparent to-[#111827]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
         <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
           <div className="text-[#B40101] text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
           <div className="text-white/60 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>
@@ -102,8 +129,8 @@ export default function SignUp() {
 
       {/* Main SignUp Area */}
       <div className="flex-1 flex flex-col relative w-full items-center justify-center bg-white px-6 py-12 md:px-16 lg:px-24">
-        <Link to="/" className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
-          <X className="w-6 h-6" />
+        <Link to="/" aria-label="Close sign up page" onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Space') { e.preventDefault(); navigate("/"); } }} className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
+          <X className="w-6 h-6" aria-hidden="true" />
         </Link>
 
         <div className="w-full max-w-[460px]">
@@ -115,7 +142,7 @@ export default function SignUp() {
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSignUp}>
+          <form className="space-y-5" onSubmit={handleSignUp} noValidate>
             <div className="grid grid-cols-2 gap-5">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">First Name</label>
@@ -123,6 +150,8 @@ export default function SignUp() {
                   placeholder="John"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  aria-label="First name"
+                  aria-describedby={error ? "signup-error" : undefined}
                   className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm" 
                 />
               </div>
@@ -132,6 +161,8 @@ export default function SignUp() {
                   placeholder="Doe"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  aria-label="Last name"
+                  aria-describedby={error ? "signup-error" : undefined}
                   className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm" 
                 />
               </div>
@@ -142,6 +173,7 @@ export default function SignUp() {
               <select 
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
+                aria-label="Account type"
                 className="h-14 w-full border border-gray-200 focus:ring-2 focus:ring-[#B40101] focus:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm outline-none appearance-none cursor-pointer"
               >
                 <option value="agent">Agent Account</option>
@@ -156,6 +188,8 @@ export default function SignUp() {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email address"
+                aria-describedby={error ? "signup-error" : undefined}
                 className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
               />
             </div>
@@ -168,6 +202,8 @@ export default function SignUp() {
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-label="Password"
+                  aria-describedby={error ? "signup-error" : undefined}
                   className="h-14 pr-12 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
                 />
                 <Button 
@@ -175,6 +211,7 @@ export default function SignUp() {
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-2 top-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -199,8 +236,8 @@ export default function SignUp() {
             </div>
 
             {error && (
-              <div className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <div id="signup-error" role="alert" tabIndex={0} className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-sm font-bold">{error}</p>
               </div>
             )}
@@ -208,7 +245,7 @@ export default function SignUp() {
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
+              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
@@ -232,8 +269,8 @@ export default function SignUp() {
               { name: 'Google', icon: 'https://www.svgrepo.com/show/475656/google-color.svg' },
               { name: 'Apple', icon: 'https://www.svgrepo.com/show/475633/apple-color.svg' }
             ].map((provider) => (
-              <Button key={provider.name} variant="outline" className="h-14 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px] transition-all shadow-sm">
-                <img src={provider.icon} alt={provider.name} className="w-6 h-6" referrerPolicy="no-referrer" />
+              <Button key={provider.name} type="button" variant="outline" className="h-14 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px] transition-all shadow-sm">
+                <img src={provider.icon} alt="" aria-hidden="true" className="w-6 h-6" referrerPolicy="no-referrer" />
                 <span>Continue with {provider.name}</span>
               </Button>
             ))}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   Button, Typography, Row, Col, Space, Card, Tag, 
-  Avatar, Divider, notification, Result, Modal, Image
+  Avatar, Divider, notification, Result, Modal, Image, Skeleton
 } from "antd";
 import { 
   ArrowLeftOutlined, ShareAltOutlined, HeartOutlined, HeartFilled,
@@ -185,7 +185,7 @@ export default function PropertyDetails() {
 
   if (loading) return (
     <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center', background: '#f8f9fa' }}>
-      <Title level={3}>Loading Property...</Title>
+      <Skeleton active avatar paragraph={{ rows: 4 }} />
     </div>
   );
   

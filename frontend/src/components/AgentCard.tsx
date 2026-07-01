@@ -13,12 +13,20 @@ export default function AgentCard({ agent }: { agent: any }) {
   return (
     <AntCard
       hoverable
+      role="article"
+      tabIndex={0}
+      aria-label={`Agent: ${agent.name}`}
+      onFocus={(e) => { e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #b40101'; }}
+      onBlur={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; }}
       style={{ 
         height: '100%', 
         borderRadius: '12px', 
         border: '1px solid #f0f0f0',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        outline: 'none'
       }}
       styles={{ body: { padding: isMobile ? '16px' : '24px', flex: 1, display: 'flex', flexDirection: 'column' } }}
     >

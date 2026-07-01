@@ -23,8 +23,12 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
 
-    if (!password || !confirm) {
-      setError("Please fill in both password fields.");
+    if (!password) {
+      setError("New password is required.");
+      return;
+    }
+    if (!confirm) {
+      setError("Please confirm your new password.");
       return;
     }
     if (password.length < 6) {
@@ -71,8 +75,8 @@ export default function ResetPassword() {
 
         {missingParams ? (
           <div className="space-y-6">
-            <div className="flex items-start gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div role="alert" className="flex items-start gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <p className="text-sm font-bold">
                 This reset link is invalid or incomplete. Please request a new one.
               </p>
@@ -85,8 +89,8 @@ export default function ResetPassword() {
           </div>
         ) : done ? (
           <div className="space-y-6">
-            <div className="flex items-start gap-3 text-green-700 bg-green-50 p-4 rounded-xl border border-green-100 shadow-sm">
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div role="alert" className="flex items-start gap-3 text-green-700 bg-green-50 p-4 rounded-xl border border-green-100 shadow-sm">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <p className="text-sm font-semibold">
                 Your password has been reset. Redirecting you to login...
               </p>
@@ -98,7 +102,7 @@ export default function ResetPassword() {
             </Link>
           </div>
         ) : (
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">New Password</label>
               <div className="relative">
@@ -107,6 +111,7 @@ export default function ResetPassword() {
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-label="New password"
                   className="h-14 pr-12 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
                 />
                 <Button
@@ -114,6 +119,7 @@ export default function ResetPassword() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-2 top-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -128,13 +134,14 @@ export default function ResetPassword() {
                 placeholder="Re-enter your password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
+                aria-label="Confirm password"
                 className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
               />
             </div>
 
             {error && (
-              <div className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <div role="alert" className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-sm font-bold">{error}</p>
               </div>
             )}
@@ -142,7 +149,7 @@ export default function ResetPassword() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest shadow-[0_8px_16px_rgba(180,1,1,0.3)] transition-all disabled:opacity-70"
+              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest shadow-[0_8px_16px_rgba(180,1,1,0.3)] transition-all disabled:opacity-70 active:scale-[0.98]"
             >
               {loading ? "Resetting..." : "Reset Password"}
             </Button>

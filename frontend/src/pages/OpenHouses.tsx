@@ -55,6 +55,7 @@ const OpenHouses: React.FC = () => {
     message: ''
   });
   const [rsvpLoading, setRSVPLoading] = useState(false);
+  const [rsvpFeedback, setRsvpFeedback] = useState<{type:'success'|'error', message:string}|null>(null);
 
   useEffect(() => {
     fetchOpenHouses();
@@ -96,7 +97,7 @@ const OpenHouses: React.FC = () => {
       });
 
       if (response.ok) {
-        alert('RSVP submitted successfully! You will receive a confirmation email.');
+        setRsvpFeedback({type:'success', message:'RSVP submitted successfully! Check your email for confirmation.'});
         setShowRSVPModal(false);
         setRSVPForm({
           name: '',
@@ -108,11 +109,11 @@ const OpenHouses: React.FC = () => {
         fetchOpenHouses(); // Refresh to update RSVP count
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to submit RSVP');
+        setRsvpFeedback({type:'error', message:error.error || 'Failed to submit RSVP'});
       }
     } catch (error) {
       console.error('Error submitting RSVP:', error);
-      alert('Failed to submit RSVP');
+      setRsvpFeedback({type:'error', message:'Failed to submit RSVP'});
     } finally {
       setRSVPLoading(false);
     }
@@ -147,10 +148,29 @@ const OpenHouses: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading open houses...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="animate-pulse" role="status" aria-label="Loading content">
+              <div className="h-8 bg-gray-200 rounded w-48 mb-2" />
+              <div className="h-4 bg-gray-200 rounded w-80" />
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-label="Loading content">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                <div className="h-48 bg-gray-200" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                  <div className="h-8 bg-gray-200 rounded w-24 mt-4" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -179,7 +199,8 @@ const OpenHouses: React.FC = () => {
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Filter by city"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               >
                 <option value="">All Cities</option>
                 {cities.map(city => (
@@ -196,7 +217,8 @@ const OpenHouses: React.FC = () => {
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Filter by date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
             <div className="flex items-end">
@@ -227,7 +249,7 @@ const OpenHouses: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {openHouses.map((openHouse) => (
-              <div key={openHouse.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div key={openHouse.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <img
@@ -306,11 +328,17 @@ const OpenHouses: React.FC = () => {
 
       {/* RSVP Modal */}
       {showRSVPModal && selectedOpenHouse && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-label="RSVP for open house">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               RSVP for Open House
             </h3>
+            
+            {rsvpFeedback && (
+              <div className={`p-4 rounded-xl mb-4 ${rsvpFeedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`} role="alert">
+                {rsvpFeedback.message}
+              </div>
+            )}
             
             <div className="mb-4 p-3 bg-gray-50 rounded-md">
               <p className="font-medium text-gray-900">
@@ -391,7 +419,7 @@ const OpenHouses: React.FC = () => {
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowRSVPModal(false)}
+                  onClick={() => { setShowRSVPModal(false); setRsvpFeedback(null); }}
                   className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Cancel
@@ -399,6 +427,7 @@ const OpenHouses: React.FC = () => {
                 <button
                   type="submit"
                   disabled={rsvpLoading}
+                  aria-label="Submit RSVP"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   {rsvpLoading ? 'Submitting...' : 'Submit RSVP'}

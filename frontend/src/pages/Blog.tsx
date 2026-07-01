@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Layout, Card, Row, Col, Typography, Tag, Space, Input, Select, Pagination, Avatar, Empty } from "antd";
+import { Layout, Card, Row, Col, Typography, Tag, Space, Input, Select, Pagination, Avatar, Empty, Skeleton } from "antd";
 import { SearchOutlined, ClockCircleOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
 import { useIsMobile } from "../hooks/useBreakpoint";
 
@@ -145,9 +145,16 @@ export default function Blog() {
       {/* Blog Posts Grid */}
       <div style={{ maxWidth: '1400px', margin: isMobile ? '32px auto 0' : '48px auto 0', padding: isMobile ? '0 16px' : '0 32px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: isMobile ? '60px 0' : '100px 0' }}>
-            <Text type="secondary">Loading articles...</Text>
-          </div>
+          <Row gutter={[16, 16]}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Col xs={24} sm={12} lg={8} key={i}>
+                <Card>
+                  <Skeleton.Image active style={{ width: '100%', height: 200 }} />
+                  <Skeleton active paragraph={{ rows: 3 }} style={{ marginTop: 16 }} />
+                </Card>
+              </Col>
+            ))}
+          </Row>
         ) : posts.length > 0 ? (
           <>
             <Row gutter={[isMobile ? 16 : 24, isMobile ? 16 : 24]}>

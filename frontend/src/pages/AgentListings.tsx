@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Tag, Space, Button, Typography, Input, message, Modal, Form, Select, Row, Col, InputNumber, Upload } from "antd";
+import { Table, Tag, Space, Button, Typography, Input, message, Modal, Form, Select, Row, Col, InputNumber, Upload, Empty } from "antd";
 import { useOutletContext, Link } from "react-router-dom";
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { useIsMobile } from "../hooks/useBreakpoint";
@@ -249,11 +249,17 @@ export default function AgentListings() {
           dataSource={listings.filter(l => l.address?.toLowerCase().includes(searchText.toLowerCase()))}
           loading={loading}
           rowKey="id"
+          onRow={() => ({
+            style: { transition: 'background 0.2s ease', cursor: 'pointer' },
+            onMouseEnter: (e) => { e.currentTarget.style.background = '#fef2f2'; },
+            onMouseLeave: (e) => { e.currentTarget.style.background = 'transparent'; }
+          })}
           rowSelection={{
             selectedRowKeys,
             onChange: (keys) => setSelectedRowKeys(keys),
           }}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} listings` }}
+          locale={{ emptyText: <div style={{padding:'40px 0'}}><Empty description={<div><Text strong style={{fontSize:15}}>No listings yet</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>Create your first listing to start showcasing properties.</div></div>}><Button type="primary" icon={<PlusOutlined />} style={{background:'#b40101',borderColor:'#b40101',marginTop:16}} onClick={()=>{setIsModalOpen(true)}}>Add Listing</Button></Empty></div> }}
         />
       </div>
 

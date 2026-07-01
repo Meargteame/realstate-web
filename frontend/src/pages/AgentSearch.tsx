@@ -66,12 +66,14 @@ export default function AgentSearch() {
               onPressEnter={handleSearch}
               prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
               style={{ height: '44px', borderRadius: '22px', flex: 1, maxWidth: '500px', fontSize: isMobile ? '14px' : '15px' }}
+              aria-label="Search agents"
             />
             <Button 
                type="primary" 
                shape="round" 
                size="large" 
                onClick={handleSearch}
+               loading={loading}
                style={{ background: '#373a4b', borderColor: '#373a4b', fontWeight: 'bold' }}
             >
               Search
@@ -86,6 +88,7 @@ export default function AgentSearch() {
                value={selectedLanguage}
                onChange={setSelectedLanguage}
                allowClear
+               aria-label="Filter by language"
                options={[
                  { value: 'English', label: 'English' }, 
                  { value: 'Spanish', label: 'Spanish' },
@@ -99,6 +102,7 @@ export default function AgentSearch() {
               type={showLuxuryOnly ? 'primary' : 'default'}
               style={showLuxuryOnly ? { background: '#faad14', borderColor: '#faad14' } : {}}
               onClick={() => setShowLuxuryOnly(!showLuxuryOnly)}
+              aria-label="Toggle luxury expert filter"
             >
               Luxury Expert
             </Button>
@@ -141,7 +145,26 @@ export default function AgentSearch() {
           )}
         </div>
 
-        {loading && <div style={{ textAlign: 'center', padding: isMobile ? '40px 16px' : '80px' }}><Text type="secondary">Searching for agents...</Text></div>}
+        {loading && <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', 
+          gap: isMobile ? '16px' : '32px' 
+        }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ 
+              background: 'white', borderRadius: 16, padding: 24,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+            }}>
+              <div className="animate-pulse">
+                <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#e5e7eb', margin: '0 auto 16px' }} />
+                <div style={{ height: 16, background: '#e5e7eb', borderRadius: 8, width: '60%', margin: '0 auto 8px' }} />
+                <div style={{ height: 12, background: '#e5e7eb', borderRadius: 8, width: '40%', margin: '0 auto 16px' }} />
+                <div style={{ height: 12, background: '#e5e7eb', borderRadius: 8, marginBottom: 8 }} />
+                <div style={{ height: 12, background: '#e5e7eb', borderRadius: 8, width: '70%' }} />
+              </div>
+            </div>
+          ))}
+        </div>}
       </div>
     </div>
   );

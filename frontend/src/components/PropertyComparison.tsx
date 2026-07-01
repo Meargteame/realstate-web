@@ -16,6 +16,7 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
   const [loading, setLoading] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [comparisonName, setComparisonName] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchProperties();
@@ -36,6 +37,7 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       const user = JSON.parse(localStorage.getItem('torra_user') || '{}');
       const response = await fetch('/api/properties/compare', {
@@ -58,6 +60,8 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
       }
     } catch (error) {
       message.error('Error saving comparison');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -85,7 +89,7 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: '12px', marginBottom: 24 }}>
           <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>Property Comparison</Title>
           <Space>
-            <Button icon={<SaveOutlined />} onClick={() => setShowSaveModal(true)}>
+            <Button icon={<SaveOutlined />} loading={saving} onClick={() => setShowSaveModal(true)}>
               Save Comparison
             </Button>
             {onClose && (
@@ -97,23 +101,24 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
         </div>
 
         <Card>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: isMobile ? '13px' : '14px' }}>
               <thead>
                 <tr>
-                  <th style={{ padding: '16px', textAlign: 'left', borderBottom: '2px solid #f0f0f0', minWidth: '150px' }}>
+                  <th style={{ padding: isMobile ? '10px' : '16px', textAlign: 'left', borderBottom: '2px solid #f0f0f0', minWidth: isMobile ? '100px' : '150px', fontSize: isMobile ? '12px' : '14px' }}>
                     Feature
                   </th>
                   {properties.map((property, index) => (
-                    <th key={index} style={{ padding: '16px', textAlign: 'center', borderBottom: '2px solid #f0f0f0', minWidth: '200px' }}>
+                    <th key={index} style={{ padding: isMobile ? '10px' : '16px', textAlign: 'center', borderBottom: '2px solid #f0f0f0', minWidth: isMobile ? '140px' : '200px' }}>
                       <div>
                         <img 
                           src={property.imageUrl} 
                           alt={property.address}
-                          style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px' }}
+                          loading="lazy"
+                          style={{ width: '100%', height: isMobile ? '80px' : '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px', transition: 'opacity 0.3s ease' }}
                         />
-                        <Text strong style={{ display: 'block' }}>{property.address}</Text>
-                        <Text type="secondary" style={{ fontSize: 12 }}>{property.city}, {property.state}</Text>
+                        <Text strong style={{ display: 'block', fontSize: isMobile ? '12px' : '14px' }}>{property.address}</Text>
+                        <Text type="secondary" style={{ fontSize: isMobile ? 10 : 12 }}>{property.city}, {property.state}</Text>
                       </div>
                     </th>
                   ))}
@@ -122,14 +127,14 @@ export default function PropertyComparison({ propertyIds, onClose }: PropertyCom
               <tbody>
                 {features.map((feature, idx) => (
                   <tr key={idx} style={{ background: idx % 2 === 0 ? '#fafafa' : 'white' }}>
-                    <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                    <td style={{ padding: isMobile ? '8px 10px' : '12px 16px', fontWeight: 600, fontSize: isMobile ? '12px' : '14px' }}>
                       {feature.label}
                     </td>
                     {properties.map((property, pIdx) => {
                       const value = property[feature.key];
                       const displayValue = feature.format ? feature.format(value) : value || 'N/A';
                       return (
-                        <td key={pIdx} style={{ padding: '12px 16px', textAlign: 'center' }}>
+                        <td key={pIdx} style={{ padding: isMobile ? '8px 10px' : '12px 16px', textAlign: 'center', fontSize: isMobile ? '12px' : '14px' }}>
                           {displayValue}
                         </td>
                       );

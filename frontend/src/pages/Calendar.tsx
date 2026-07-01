@@ -243,10 +243,25 @@ const Calendar: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading calendar...</p>
+      <div className="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto">
+        <div className="animate-pulse" role="status" aria-label="Loading content">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+            <div>
+              <div className="h-8 bg-gray-200 rounded w-48 mb-2" />
+              <div className="h-4 bg-gray-200 rounded w-64" />
+            </div>
+            <div className="h-10 bg-gray-200 rounded-lg w-32" />
+          </div>
+          <div className="grid grid-cols-7 gap-1 mb-4">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="h-4 bg-gray-200 rounded" />
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <div key={i} className="h-20 bg-gray-100 rounded" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -260,7 +275,7 @@ const Calendar: React.FC = () => {
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Calendar</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your appointments and showings</p>
         </div>
-        <Button onClick={() => setShowEventModal(true)} className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
+        <Button onClick={() => setShowEventModal(true)} aria-label="Create new event" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           New Event
         </Button>
@@ -292,6 +307,7 @@ const Calendar: React.FC = () => {
                       <div className="flex gap-2">
                         <Button
                           size="sm"
+                          aria-label="Confirm booking"
                           onClick={() => {
                             const requestedDateTime = new Date(request.requestedDate);
                             const [hours, minutes] = request.requestedTime.split(':');
@@ -306,6 +322,7 @@ const Calendar: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
+                          aria-label="Reject booking"
                           onClick={() => handleRejectBooking(request.id)}
                           className="border-red-300 text-red-600 hover:bg-red-50"
                         >
@@ -324,34 +341,36 @@ const Calendar: React.FC = () => {
       {/* View Toggle + Calendar Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (view === 'month') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
-              else if (view === 'week') { const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d); }
-              else { const d = new Date(currentDate); d.setDate(d.getDate() - 1); setCurrentDate(d); }
-            }}
-          >
-            Prev
-          </Button>
-          <h2 className="text-base sm:text-xl font-semibold whitespace-nowrap">
-            {view === 'month' && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
-            {view === 'week' && (() => { const wk = getWeekDays(); return `${monthNames[wk[0].getMonth()]} ${wk[0].getDate()} - ${wk[6].getDate()}`; })()}
-            {view === 'day' && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
-          </h2>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (view === 'month') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
-              else if (view === 'week') { const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d); }
-              else { const d = new Date(currentDate); d.setDate(d.getDate() + 1); setCurrentDate(d); }
-            }}
-          >
-            Next
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Today</Button>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Previous month"
+          onClick={() => {
+            if (view === 'month') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+            else if (view === 'week') { const d = new Date(currentDate); d.setDate(d.getDate() - 7); setCurrentDate(d); }
+            else { const d = new Date(currentDate); d.setDate(d.getDate() - 1); setCurrentDate(d); }
+          }}
+        >
+          Prev
+        </Button>
+        <h2 className="text-base sm:text-xl font-semibold whitespace-nowrap">
+          {view === 'month' && `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+          {view === 'week' && (() => { const wk = getWeekDays(); return `${monthNames[wk[0].getMonth()]} ${wk[0].getDate()} - ${wk[6].getDate()}`; })()}
+          {view === 'day' && `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
+        </h2>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Next month"
+          onClick={() => {
+            if (view === 'month') setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+            else if (view === 'week') { const d = new Date(currentDate); d.setDate(d.getDate() + 7); setCurrentDate(d); }
+            else { const d = new Date(currentDate); d.setDate(d.getDate() + 1); setCurrentDate(d); }
+          }}
+        >
+          Next
+        </Button>
+        <Button variant="outline" size="sm" aria-label="Go to today" onClick={() => setCurrentDate(new Date())}>Today</Button>
         </div>
         <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
           {(['month', 'week', 'day'] as const).map(v => (
@@ -360,7 +379,7 @@ const Calendar: React.FC = () => {
               variant={view === v ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setView(v)}
-              className={`flex-1 sm:flex-none ${view === v ? 'bg-red-600 hover:bg-red-700 text-white' : 'text-gray-600'}`}
+              className={`flex-1 sm:flex-none transition-all duration-150 active:scale-95 ${view === v ? 'bg-red-600 hover:bg-red-700 text-white' : 'text-gray-600 hover:bg-gray-200'}`}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
             </Button>
@@ -401,8 +420,8 @@ const Calendar: React.FC = () => {
                 return (
                   <div
                     key={index}
-                    className={`min-h-[60px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-2 border rounded-lg ${
-                      date ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
+                    className={`min-h-[60px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-2 border rounded-lg transition-all duration-150 ${
+                      date ? 'bg-white hover:bg-gray-100 hover:shadow-sm' : 'bg-gray-50'
                     } ${isToday ? 'border-red-500 border-2' : 'border-gray-200'}`}
                   >
                     {date && (
@@ -510,11 +529,11 @@ const Calendar: React.FC = () => {
 
       {/* Create Event Modal */}
       {showEventModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" onClick={() => setShowEventModal(false)}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" role="dialog" aria-modal="true" aria-label="Create new event" onClick={() => setShowEventModal(false)}>
           <Card className="max-w-lg w-full p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-xl font-bold">New Event</h3>
-              <button onClick={() => setShowEventModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowEventModal(false)} aria-label="Close" className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -588,11 +607,11 @@ const Calendar: React.FC = () => {
 
       {/* Event Details Modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4" role="dialog" aria-modal="true" aria-label="Event details">
           <Card className="max-w-lg w-full p-4 sm:p-6">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-xl font-bold">{selectedEvent.title}</h3>
-              <button onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSelectedEvent(null)} aria-label="Close event details" className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>

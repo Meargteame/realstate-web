@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
-import { Card, Row, Col, Typography, Badge, Avatar, Button, Table, Tag, List, Space, Progress, message } from "antd";
+import { Card, Row, Col, Typography, Badge, Avatar, Button, Table, Tag, List, Space, Progress, message, Empty } from "antd";
 import {
   InboxOutlined,
   HomeOutlined,
@@ -86,6 +86,18 @@ export default function AgentDashboard() {
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
   const AntCard = Card as any;
+
+  const leadsEmpty = (
+    <div style={{padding:'40px 0'}}>
+      <Empty description={<div><Text strong style={{fontSize:15}}>No leads yet</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>When leads contact you through your listings, they will appear here.</div></div>} />
+    </div>
+  );
+
+  const listingsEmpty = (
+    <div style={{padding:'40px 0'}}>
+      <Empty description={<div><Text strong style={{fontSize:15}}>No active listings</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>Your active property listings will appear here.</div></div>} />
+    </div>
+  );
 
   const columns = [
     {
@@ -365,8 +377,13 @@ export default function AgentDashboard() {
               columns={columns} 
               rowKey="id" 
               pagination={false}
-              locale={{ emptyText: "No leads yet." }}
+              locale={{ emptyText: leadsEmpty }}
               style={{ fontSize: '14px' }}
+              onRow={() => ({
+                style: { transition: 'background 0.2s ease', cursor: 'pointer' },
+                onMouseEnter: (e) => { e.currentTarget.style.background = '#fef2f2'; },
+                onMouseLeave: (e) => { e.currentTarget.style.background = 'transparent'; }
+              })}
             />
           </AntCard>
         </Col>
@@ -384,11 +401,13 @@ export default function AgentDashboard() {
             <List
               itemLayout="horizontal"
               dataSource={activeListings}
-              locale={{ emptyText: "No active listings." }}
+              locale={{ emptyText: listingsEmpty }}
               renderItem={(item: any) => (
                 <List.Item
                   actions={[<Link to={`/properties/${item.id}`}><Button type="text" icon={<ArrowRightOutlined />} /></Link>]}
-                  style={{ padding: '12px 0' }}
+                  style={{ padding: '12px 0', transition: 'background 0.2s ease', cursor: 'pointer', borderRadius: '8px' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f9fafb'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <List.Item.Meta
                     avatar={<Avatar src={item.imageUrl} shape="square" size={60} />}
@@ -422,7 +441,7 @@ export default function AgentDashboard() {
               <Text type="secondary" style={{ fontSize: 13 }}>No upcoming appointments</Text>
             ) : (
               appointments.map((apt: any, i: number) => (
-                <div key={i} style={{ padding: '12px 0', borderBottom: i < appointments.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+                <div key={i} style={{ padding: '12px 0', borderBottom: i < appointments.length - 1 ? '1px solid #f0f0f0' : 'none', transition: 'background 0.2s ease', cursor: 'pointer', borderRadius: '8px' }} onMouseEnter={(e) => { e.currentTarget.style.background = '#f9fafb'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
                   <Text strong style={{ fontSize: 13, display: 'block' }}>{apt.title || apt.clientName || 'Appointment'}</Text>
                   <Text type="secondary" style={{ fontSize: 12 }}>
                     {new Date(apt.date || apt.createdAt).toLocaleDateString()} at {new Date(apt.date || apt.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

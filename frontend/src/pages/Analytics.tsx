@@ -179,6 +179,7 @@ export default function Analytics() {
                     cursor: 'pointer',
                     fontSize: '12px',
                     fontWeight: 600,
+                    transition: 'all 0.2s ease',
                     background: dateRange === r ? '#b40101' : 'transparent',
                     color: dateRange === r ? 'white' : '#374151',
                   }}
@@ -211,7 +212,9 @@ export default function Analytics() {
         {/* KPI Cards */}
         <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
               <Statistic
                 title="Total Listings"
                 value={analytics?.summary.totalListings || 0}
@@ -224,7 +227,9 @@ export default function Analytics() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
               <Statistic
                 title="Total Leads"
                 value={analytics?.summary.totalLeads || 0}
@@ -237,7 +242,9 @@ export default function Analytics() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
               <Statistic
                 title="Conversion Rate"
                 value={analytics?.summary.conversionRate || 0}
@@ -251,7 +258,9 @@ export default function Analytics() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', cursor: 'pointer' }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
               <Statistic
                 title="Sales Volume"
                 value={salesReports?.totalVolume || 0}
@@ -269,7 +278,7 @@ export default function Analytics() {
         {/* Charts Row 1 */}
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
           <Col xs={24} lg={12}>
-            <Card title="Sales Performance (Last 12 Months)" style={{ height: 400 }}>
+            <Card title="Sales Performance (Last 12 Months)" style={{ height: 400, transition: 'box-shadow 0.3s ease' }}>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={salesReports?.salesByMonth || []}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -283,7 +292,7 @@ export default function Analytics() {
             </Card>
           </Col>
           <Col xs={24} lg={12}>
-            <Card title="Lead Sources" style={{ height: 400 }}>
+            <Card title="Lead Sources" style={{ height: 400, transition: 'box-shadow 0.3s ease' }}>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie

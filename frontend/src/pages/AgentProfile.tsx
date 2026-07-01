@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   Layout, Row, Col, Typography, Avatar, Button, Space, 
-  Card, Tag, Divider, Breadcrumb, Form, Input, notification 
+  Card, Tag, Divider, Breadcrumb, Form, Input, notification, Skeleton 
 } from "antd";
 import { 
   PhoneOutlined, MailOutlined, StarFilled, 
@@ -62,7 +62,7 @@ export default function AgentProfile() {
     }
   };
 
-  if (loading) return <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}><Title level={3}>Loading Agent Summary...</Title></div>;
+  if (loading) return <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}><Skeleton active avatar paragraph={{ rows: 3 }} /></div>;
   if (!agent) return <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}><Title level={2}>Agent Not Found</Title></div>;
 
   const agentListings = agent.properties || [];

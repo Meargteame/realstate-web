@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer } from "antd";
+import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer, Empty } from "antd";
 import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined, StarFilled, MessageOutlined } from "@ant-design/icons";
 import { Link, useOutletContext, useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
@@ -266,7 +266,7 @@ export default function LeadsPage() {
             <Input
               placeholder="Search leads..."
               prefix={<SearchOutlined />}
-              style={{ width: isMobile ? '100%' : 300, borderRadius: '8px' }}
+              style={{ width: isMobile ? '100%' : 300, borderRadius: '8px', transition: 'all 0.2s ease' }}
               onChange={e => setSearchText(e.target.value)}
             />
             <Button icon={<FilterOutlined />} onClick={() => setShowFilterDrawer(true)}>Filters</Button>
@@ -281,6 +281,11 @@ export default function LeadsPage() {
           dataSource={filteredLeads}
           loading={loading}
           rowKey="id"
+          onRow={() => ({
+            style: { transition: 'background 0.2s ease', cursor: 'pointer' },
+            onMouseEnter: (e) => { e.currentTarget.style.background = '#fef2f2'; },
+            onMouseLeave: (e) => { e.currentTarget.style.background = 'transparent'; }
+          })}
           expandable={{
             expandedRowRender,
             expandIcon: ({ expanded, onExpand, record }) => (
@@ -294,6 +299,7 @@ export default function LeadsPage() {
             ),
           }}
           pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} leads` }}
+          locale={{ emptyText: <div style={{padding:'40px 0'}}><Empty description={<div><Text strong style={{fontSize:15}}>No leads yet</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>When leads contact you through your listings, they will appear here.</div></div>}><Button type='primary' style={{background:'#b40101',borderColor:'#b40101',marginTop:16}}>View Your Listings</Button></Empty></div> }}
         />
       </div>
 

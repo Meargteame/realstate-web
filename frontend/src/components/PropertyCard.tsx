@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, Tag, Typography, Space, Button } from "antd";
 import { HomeOutlined, EnvironmentOutlined, ArrowRightOutlined, HeartOutlined, ClockCircleOutlined, EyeOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -12,6 +12,8 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property }: PropertyCardProps) {
   const isMobile = useIsMobile();
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [agentImgLoaded, setAgentImgLoaded] = useState(false);
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
@@ -21,6 +23,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     <Link to={`/properties/${property.id}`} style={{ display: 'block' }}>
       <AntCard
         hoverable
+        role="article"
+        tabIndex={0}
+        aria-label={`Property: ${property.address}`}
         style={{ 
           width: '100%', 
           borderRadius: '16px', 
@@ -28,9 +33,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           border: '1px solid #f0f0f0',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           cursor: 'pointer',
-          background: 'white'
+          background: 'white',
+          outline: 'none'
         }}
         styles={{ body: { padding: 0 } }}
+        onFocus={(e: any) => { e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #b40101'; }}
+        onBlur={(e: any) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; }}
         onMouseEnter={(e: any) => {
           if (isMobile) return;
           e.currentTarget.style.transform = 'translateY(-8px)';
@@ -44,16 +52,18 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           e.currentTarget.style.borderColor = '#f0f0f0';
         }}
         cover={
-          <div style={{ position: 'relative', height: isMobile ? '220px' : '280px', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', height: isMobile ? '220px' : '280px', overflow: 'hidden', background: '#f3f4f6' }}>
             <img
               alt={property.address}
               src={property.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"}
               loading="lazy"
+              onLoad={() => setImageLoaded(true)}
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                transition: 'transform 0.3s ease'
+                transition: 'transform 0.3s ease, opacity 0.4s ease',
+                opacity: imageLoaded ? 1 : 0
               }}
               onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.05)'; }}
               onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
@@ -232,12 +242,15 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 <img
                   src={property.agent.imageUrl}
                   loading="lazy"
+                  onLoad={() => setAgentImgLoaded(true)}
                   style={{
                     width: 32,
                     height: 32,
                     borderRadius: '50%',
                     objectFit: 'cover',
-                    border: '2px solid #f3f4f6'
+                    border: '2px solid #f3f4f6',
+                    transition: 'opacity 0.3s ease',
+                    opacity: agentImgLoaded ? 1 : 0
                   }}
                 />
               )}

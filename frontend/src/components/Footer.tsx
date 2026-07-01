@@ -46,7 +46,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Twitter"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white/50"
               >
                 <Twitter className="w-4 h-4 text-gray-300" />
               </a>
@@ -55,7 +55,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white/50"
               >
                 <Instagram className="w-4 h-4 text-gray-300" />
               </a>
@@ -64,7 +64,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300"
+                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white/50"
               >
                 <Linkedin className="w-4 h-4 text-gray-300" />
               </a>
@@ -78,7 +78,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/properties" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Property Search
                 </Link>
@@ -86,7 +86,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/agents" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Find an Agent
                 </Link>
@@ -94,7 +94,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/open-houses" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Open Houses
                 </Link>
@@ -102,7 +102,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/blog" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Real Estate Insights
                 </Link>
@@ -117,7 +117,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/mortgage-calculator" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Mortgage Calculator
                 </Link>
@@ -125,7 +125,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/home-value" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Home Value Estimator
                 </Link>
@@ -133,7 +133,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/affordability-calculator" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Affordability Calculator
                 </Link>
@@ -141,7 +141,7 @@ export default function Footer() {
               <li>
                 <Link 
                   to="/become-agent" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200"
+                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
                 >
                   Become an Agent
                 </Link>
@@ -160,7 +160,7 @@ export default function Footer() {
                 <Check className="w-5 h-5" /> You're subscribed
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} className="relative border-b-2 border-gray-600 pb-3 flex items-center hover:border-brand-red transition-colors duration-300 group">
+              <form onSubmit={handleSubscribe} className="relative border-b-2 border-gray-600 pb-3 flex items-center hover:border-brand-red focus-within:border-brand-red transition-colors duration-300 group">
                 <input
                   type="email"
                   placeholder="YOUR EMAIL"

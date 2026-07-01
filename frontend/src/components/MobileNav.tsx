@@ -19,7 +19,7 @@ export default function MobileNav() {
           <Link 
             key={item.label}
             to={item.path}
-            className={`flex flex-col items-center justify-center w-16 h-full gap-1 transition-colors ${
+            className={`flex flex-col items-center justify-center w-16 h-full gap-1 transition-colors focus-visible:outline-2 focus-visible:outline-[#B40101] focus-visible:outline-offset-2 ${
               isActive ? 'text-[#b40101]' : 'text-gray-500 hover:text-gray-900'
             }`}
           >

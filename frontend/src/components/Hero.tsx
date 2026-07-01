@@ -97,7 +97,8 @@ export default function Hero() {
             border: 'none',
             padding: isMobile ? '4px' : '12px',
             background: 'rgba(255,255,255,0.98)',
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(10px)',
+            transition: 'box-shadow 0.3s ease, transform 0.3s ease'
           }}
           styles={{ body: { padding: isMobile ? '12px' : '20px' } }}
         >
@@ -155,7 +156,7 @@ export default function Hero() {
                     borderRadius: '20px',
                     background: 'rgba(255,255,255,0.1)',
                     backdropFilter: 'blur(10px)',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                   onMouseEnter={(e) => {
                     if (isMobile) return;

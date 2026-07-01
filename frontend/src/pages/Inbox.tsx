@@ -286,13 +286,20 @@ export default function Inbox() {
               <div 
                 key={conversation.id}
                 onClick={() => selectConversation(conversation)}
+                onKeyDown={(e) => { if (e.key === 'Enter') selectConversation(conversation); }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Conversation with ${conversation.lead.name}`}
+                onFocus={(e) => { e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #b40101'; }}
+                onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                 style={{ 
                   padding: '16px 20px', 
                   cursor: 'pointer', 
                   borderBottom: '1px solid #f5f5f5',
                   background: selectedConversation?.id === conversation.id ? '#fff1f0' : 'white',
                   borderLeft: selectedConversation?.id === conversation.id ? '4px solid #b40101' : '4px solid transparent',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  outline: 'none'
                 }}
               >
                 <div style={{ display: 'flex', gap: 12 }}>
@@ -371,7 +378,11 @@ export default function Inbox() {
             </div>
 
             {/* Messages */}
-            <div style={{ 
+            <div 
+              role="region"
+              aria-live="polite"
+              aria-label="Messages"
+              style={{ 
               flex: 1, 
               overflowY: 'auto', 
               padding: isMobile ? '16px' : '24px 32px',
@@ -477,6 +488,7 @@ export default function Inbox() {
                   placeholder="Type your message..."
                   autoSize={{ minRows: 1, maxRows: 4 }}
                   style={{ borderRadius: '8px 0 0 8px' }}
+                  aria-label="Message input"
                 />
                 <Button 
                   type="primary" 
@@ -484,6 +496,7 @@ export default function Inbox() {
                   onClick={handleSendMessage}
                   loading={sending}
                   disabled={!newMessage.trim()}
+                  aria-label="Send message"
                   style={{ 
                     background: '#b40101', 
                     borderColor: '#b40101',

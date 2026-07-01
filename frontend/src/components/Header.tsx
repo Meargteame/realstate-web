@@ -180,6 +180,7 @@ export default function Header() {
           {!isMobile && (
             <Button 
               type="text"
+              aria-label="Search properties"
               icon={<SearchOutlined style={{ fontSize: '20px' }} />}
               onClick={() => navigate('/properties')}
               style={{ 
@@ -260,6 +261,7 @@ export default function Header() {
           {isMobile && (
             <Button 
               type="text" 
+              aria-label="Open navigation menu"
               icon={<MenuOutlined style={{ fontSize: '20px' }} />} 
               onClick={() => setVisible(true)}
               style={{ 
@@ -279,6 +281,7 @@ export default function Header() {
           onClose={() => setVisible(false)}
           open={visible}
           width={isMobile ? '85%' : 320}
+          styles={{ mask: { backdropFilter: 'blur(4px)' } }}
         >
           <Menu 
             mode="vertical" 
