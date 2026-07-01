@@ -93,7 +93,7 @@ export default function BlogPost() {
 
   if (loading) {
     return (
-      <div style={{ padding: '200px', textAlign: 'center' }}>
+      <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}>
         <Text>Loading article...</Text>
       </div>
     );

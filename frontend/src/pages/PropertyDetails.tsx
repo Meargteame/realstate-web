@@ -184,13 +184,13 @@ export default function PropertyDetails() {
   }, [hasExistingChat, property?.id, agent?.id]);
 
   if (loading) return (
-    <div style={{ padding: '200px', textAlign: 'center', background: '#f8f9fa' }}>
+    <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center', background: '#f8f9fa' }}>
       <Title level={3}>Loading Property...</Title>
     </div>
   );
   
   if (!property) return (
-    <div style={{ padding: '200px', textAlign: 'center' }}>
+    <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}>
       <Result 
         status="404" 
         title="Property Not Found" 

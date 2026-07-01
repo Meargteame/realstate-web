@@ -478,7 +478,7 @@ export default function AdminUsers() {
       </Modal>
 
       {/* Activity Log Drawer */}
-      <Drawer title="Recent User Activity" placement="right" width={420} onClose={() => setShowActivity(false)} open={showActivity}>
+      <Drawer title="Recent User Activity" placement="right" width={isMobile ? '100%' : 420} onClose={() => setShowActivity(false)} open={showActivity}>
         <Timeline
           items={activityLog.map((a: any) => ({
             color: a.type === 'auth' ? '#b40101' : a.type === 'admin' ? '#373a4b' : a.type === 'listing' ? '#10b981' : '#6b7280',

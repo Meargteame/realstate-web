@@ -186,11 +186,13 @@ export default function Home() {
                     height: "100%",
                   }}
                   onMouseEnter={(e) => {
+                    if (isMobile) return;
                     e.currentTarget.style.transform = "translateY(-8px)";
                     e.currentTarget.style.boxShadow = "0 16px 40px rgba(180,1,1,0.12)";
                     e.currentTarget.style.borderColor = "#b40101";
                   }}
                   onMouseLeave={(e) => {
+                    if (isMobile) return;
                     e.currentTarget.style.transform = "translateY(0)";
                     e.currentTarget.style.boxShadow = "none";
                     e.currentTarget.style.borderColor = "#f0f0f0";
@@ -459,10 +461,12 @@ export default function Home() {
                         textAlign: "center",
                       }}
                       onMouseEnter={(e) => {
+                        if (isMobile) return;
                         e.currentTarget.style.background = "rgba(255,255,255,0.1)";
                         e.currentTarget.style.transform = "translateY(-4px)";
                       }}
                       onMouseLeave={(e) => {
+                        if (isMobile) return;
                         e.currentTarget.style.background = "rgba(255,255,255,0.05)";
                         e.currentTarget.style.transform = "translateY(0)";
                       }}
@@ -560,10 +564,12 @@ export default function Home() {
                   boxShadow: "0 8px 24px rgba(180,1,1,0.4)",
                 }}
                 onMouseEnter={(e) => {
+                  if (isMobile) return;
                   e.currentTarget.style.transform = "translateY(-3px)";
                   e.currentTarget.style.boxShadow = "0 12px 32px rgba(180,1,1,0.5)";
                 }}
                 onMouseLeave={(e) => {
+                  if (isMobile) return;
                   e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.boxShadow = "0 8px 24px rgba(180,1,1,0.4)";
                 }}
@@ -656,10 +662,12 @@ export default function Home() {
               background: "white",
             }}
             onMouseEnter={(e) => {
+              if (isMobile) return;
               e.currentTarget.style.background = "#111827";
               e.currentTarget.style.color = "white";
             }}
             onMouseLeave={(e) => {
+              if (isMobile) return;
               e.currentTarget.style.background = "white";
               e.currentTarget.style.color = "#111827";
             }}

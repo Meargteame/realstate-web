@@ -162,7 +162,7 @@ export default function CityPage() {
             </Col>
           ))}
           {!loading && properties.length === 0 && (
-            <Col span={24} style={{ textAlign: 'center', padding: '64px' }}>
+            <Col span={24} style={{ textAlign: 'center', padding: isMobile ? '32px 16px' : '64px' }}>
               <Text type="secondary">No listings found in {displayName}. Showing nearby properties.</Text>
             </Col>
           )}
