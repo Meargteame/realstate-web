@@ -25,14 +25,16 @@ export default function AgentDashboard() {
 
   const [appointments, setAppointments] = useState<any[]>([]);
 
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${parentAgent?.token || ''}`
+  });
+
   useEffect(() => {
     if (!parentAgent) return;
     
-    // Fetch this agent's properties and leads via dedicated endpoints
-    // (avoids pulling the full agent object with all nested relations).
     Promise.all([
-      fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`).then(r => r.json()),
-      fetch(`/api/agents/${parentAgent.id}/leads?limit=100`).then(r => r.json())
+      fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() }).then(r => r.json()),
+      fetch(`/api/leads?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() }).then(r => r.json())
     ])
       .then(([propsData, leadsData]) => {
         setActiveListings(Array.isArray(propsData) ? propsData : (propsData.data || []));

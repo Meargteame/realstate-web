@@ -21,6 +21,10 @@ export default function Opportunities() {
   const [draggedDeal, setDraggedDeal] = useState<any>(null);
   const [leads, setLeads] = useState<any[]>([]);
 
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${parentAgent?.token || ''}`
+  });
+
   useEffect(() => {
     if (!parentAgent) return;
     fetchOpportunities();
@@ -29,7 +33,7 @@ export default function Opportunities() {
   // Load this agent's leads once so opportunities can be linked to their source lead.
   useEffect(() => {
     if (!parentAgent) return;
-    fetch(`/api/agents/${parentAgent.id}/leads?limit=100`)
+    fetch(`/api/leads?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setLeads(Array.isArray(data?.leads) ? data.leads : (Array.isArray(data) ? data : [])))
       .catch(() => setLeads([]));
@@ -37,7 +41,7 @@ export default function Opportunities() {
 
   const fetchOpportunities = async () => {
     try {
-      const res = await fetch(`/api/opportunities?agentId=${parentAgent.id}&type=${activeSegment}`);
+      const res = await fetch(`/api/opportunities?agentId=${parentAgent.id}&type=${activeSegment}`, { headers: authHeaders() });
       const data = await res.json();
       
       // Check if response is an error
@@ -80,7 +84,7 @@ export default function Opportunities() {
       if (editingOpp) {
         const res = await fetch(`/api/opportunities/${editingOpp.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(values)
         });
         if (!res.ok) throw new Error('Failed to update');
@@ -88,7 +92,7 @@ export default function Opportunities() {
       } else {
         const res = await fetch('/api/opportunities', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ ...values, agentId: parentAgent.id, type: activeSegment })
         });
         if (!res.ok) throw new Error('Failed to create');
@@ -110,7 +114,7 @@ export default function Opportunities() {
       okType: 'danger',
       onOk: async () => {
         try {
-          await fetch(`/api/opportunities/${id}`, { method: 'DELETE' });
+          await fetch(`/api/opportunities/${id}`, { method: 'DELETE', headers: authHeaders() });
           message.success('Opportunity deleted');
           fetchOpportunities();
         } catch {
@@ -128,7 +132,7 @@ export default function Opportunities() {
     try {
       const res = await fetch(`/api/opportunities/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ status: newStatus })
       });
       if (!res.ok) throw new Error('Failed to update');

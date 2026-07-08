@@ -39,6 +39,10 @@ export default function Inbox() {
   const { agent } = useOutletContext<{ agent: any }>();
   const location = useLocation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${agent?.token || ''}`
+  });
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -72,7 +76,7 @@ export default function Inbox() {
 
   const fetchConversations = async () => {
     try {
-      const res = await fetch(`/api/messages/conversations/${agent.id}`);
+      const res = await fetch(`/api/messages/conversations/${agent.id}`, { headers: authHeaders() });
       const data = await res.json();
       
       // Handle error responses (429, 500, etc.)
@@ -111,7 +115,7 @@ export default function Inbox() {
     setSelectedConversation(conversation);
     setHasMoreMessages(false);
     try {
-      const res = await fetch(`/api/messages/conversation/${conversation.id}?limit=${MESSAGE_PAGE_SIZE}`);
+      const res = await fetch(`/api/messages/conversation/${conversation.id}?limit=${MESSAGE_PAGE_SIZE}`, { headers: authHeaders() });
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
       setMessages(list);
@@ -121,7 +125,8 @@ export default function Inbox() {
       // Mark as read
       if (conversation.unreadCount > 0) {
         await fetch(`/api/messages/conversation/${conversation.id}/read`, {
-          method: 'PATCH'
+          method: 'PATCH',
+          headers: authHeaders()
         });
         // Update local state
         setConversations(prev => prev.map(c =>
@@ -140,7 +145,8 @@ export default function Inbox() {
     try {
       const oldest = messages[0];
       const res = await fetch(
-        `/api/messages/conversation/${selectedConversation.id}?limit=${MESSAGE_PAGE_SIZE}&before=${encodeURIComponent(oldest.createdAt)}`
+        `/api/messages/conversation/${selectedConversation.id}?limit=${MESSAGE_PAGE_SIZE}&before=${encodeURIComponent(oldest.createdAt)}`,
+        { headers: authHeaders() }
       );
       const data = await res.json();
       const older = Array.isArray(data) ? data : [];
@@ -177,7 +183,7 @@ export default function Inbox() {
     try {
       const res = await fetch('/api/messages/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({
           conversationId: selectedConversation.id,
           senderId: agent.id,

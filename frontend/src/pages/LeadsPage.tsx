@@ -18,10 +18,13 @@ export default function LeadsPage() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${parentAgent?.token || ''}`
+  });
+
   useEffect(() => {
     if (!parentAgent) return;
-    // Use the dedicated paginated leads endpoint instead of the whole agent object.
-    fetch(`/api/agents/${parentAgent.id}/leads?limit=100`)
+    fetch(`/api/leads?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
         setLeads(Array.isArray(data?.leads) ? data.leads : (Array.isArray(data) ? data : []));
@@ -40,7 +43,7 @@ export default function LeadsPage() {
     try {
       const res = await fetch(`/api/leads/${leadId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ status })
       });
       if (!res.ok) throw new Error('Request failed');
@@ -54,7 +57,7 @@ export default function LeadsPage() {
 
   const handleExport = async () => {
     try {
-      const res = await fetch(`/api/leads/export?agentId=${parentAgent.id}`);
+      const res = await fetch(`/api/leads/export?agentId=${parentAgent.id}`, { headers: authHeaders() });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);

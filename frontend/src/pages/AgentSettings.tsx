@@ -12,6 +12,9 @@ const AntOption = (Select as any).Option;
 export default function AgentSettings() {
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [form] = Form.useForm();
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${parentAgent?.token || ''}`
+  });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -113,7 +116,7 @@ export default function AgentSettings() {
     try {
       const res = await fetch(`/api/agents/${parentAgent.id}/password`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ currentPassword: values.currentPassword, newPassword: values.newPassword })
       });
       if (!res.ok) {
@@ -141,7 +144,7 @@ export default function AgentSettings() {
     try {
       await fetch(`/api/agents/${parentAgent.id}/office-hours`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ officeHours })
       });
       message.success('Office hours saved');
@@ -153,7 +156,7 @@ export default function AgentSettings() {
     try {
       const res = await fetch(`/api/agents/${parentAgent.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(values)
       });
       

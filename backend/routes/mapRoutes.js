@@ -3,6 +3,13 @@ const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const geocodingService = require('../services/geocodingService');
 const prisma = require('../config/prisma');
+const { createLimiter } = require('../middleware/rateLimiter');
+
+const geocodeLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Too many geocode requests, please slow down' }
+});
 
 /**
  * GET /api/map/properties
@@ -151,9 +158,9 @@ router.post('/search-area', async (req, res) => {
       whereClause.propertyType = filters.propertyType;
     }
 
-    // Get all properties that could potentially be in the area
-    // We'll filter by geometry on the application side since Prisma doesn't have built-in geo queries
+    // Get properties that could potentially be in the area (limit to 2000 for performance)
     const allProperties = await prisma.property.findMany({
+      take: 2000,
       where: whereClause,
       select: {
         id: true,
@@ -211,7 +218,7 @@ router.post('/search-area', async (req, res) => {
  * POST /api/map/geocode-properties
  * Batch geocode properties that don't have coordinates
  */
-router.post('/geocode-properties', async (req, res) => {
+router.post('/geocode-properties', geocodeLimiter, async (req, res) => {
   try {
     const { limit = 50 } = req.body;
 

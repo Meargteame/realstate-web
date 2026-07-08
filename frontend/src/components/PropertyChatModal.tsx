@@ -24,6 +24,10 @@ interface PropertyChatModalProps {
 export default function PropertyChatModal({ visible, onClose, property, agent }: PropertyChatModalProps) {
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
+
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${agent?.token || ''}`
+  });
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);

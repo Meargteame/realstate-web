@@ -192,37 +192,10 @@ const validateApiKey = (req, res, next) => {
   next();
 };
 
-/**
- * CORS configuration for production
- */
-const corsOptions = {
-  origin: function(origin, callback) {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ];
-
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
-  exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
-  maxAge: 86400 // 24 hours
-};
-
 module.exports = {
   securityHeaders,
   additionalHeaders,
   sanitizeInput,
   preventParameterPollution,
-  validateApiKey,
-  corsOptions
+  validateApiKey
 };
