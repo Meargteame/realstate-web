@@ -23,13 +23,15 @@ export default function AgentListings() {
   const AntSelect = Select as any;
   const AntOption = (Select as any).Option;
 
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${parentAgent?.token || ''}`
+  });
+
   useEffect(() => {
     if (!parentAgent) return;
-    // Fetch only this agent's properties instead of the whole agent object.
-    fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`)
+    fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
-        // Endpoint returns an array (or a paginated envelope if page is passed).
         setListings(Array.isArray(data) ? data : (data.data || []));
         setLoading(false);
       })
@@ -48,7 +50,8 @@ export default function AgentListings() {
       onOk: async () => {
         try {
           const res = await fetch(`/api/properties/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: authHeaders()
           });
           if (!res.ok) throw new Error('Failed to delete');
           setListings(prev => prev.filter(p => p.id !== id));
@@ -91,10 +94,9 @@ export default function AgentListings() {
       let propertyId = editingProperty?.id;
       
       if (editingProperty) {
-        // Update existing property
         const res = await fetch(`/api/properties/${editingProperty.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(values)
         });
         if (!res.ok) throw new Error('Failed to update listing');
@@ -103,10 +105,9 @@ export default function AgentListings() {
         setListings(prev => prev.map(p => p.id === updated.id ? updated : p));
         message.success("Listing updated successfully!");
       } else {
-        // Create new property
         const res = await fetch('/api/properties', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ ...values, agentId: parentAgent.id })
         });
         if (!res.ok) throw new Error('Failed to create listing');
@@ -127,15 +128,14 @@ export default function AgentListings() {
 
         const uploadRes = await fetch(`/api/upload/property/${propertyId}/images`, {
           method: 'POST',
+          headers: authHeaders(),
           body: formData
         });
 
         if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
           message.success('Images uploaded successfully!');
-          // Refresh listings to show new images
-          const refreshRes = await fetch(`/api/agents/${parentAgent.id}`);
-          const data = await refreshRes.json();
-          setListings(data.properties || []);
+          setListings(prev => prev.map(p => p.id === propertyId ? { ...p, imageUrl: uploadData.imageUrls?.[0] || p.imageUrl } : p));
         }
       }
 
@@ -156,7 +156,7 @@ export default function AgentListings() {
       const updates = selectedRowKeys.map(id =>
         fetch(`/api/properties/${id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ status: bulkStatus })
         })
       );

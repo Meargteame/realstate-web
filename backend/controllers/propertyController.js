@@ -279,6 +279,12 @@ exports.createProperty = async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields: price, address, city, state, zip, agentId' });
   }
 
+  // Verify the authenticated user owns this agent (or is admin)
+  const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { agentId: true, role: true } });
+  if (agentId !== user.agentId && user.role !== 'admin') {
+    return res.status(403).json({ error: 'Not authorized to create properties for this agent' });
+  }
+
   try {
     const property = await prisma.property.create({
       data: {
@@ -319,6 +325,14 @@ exports.updateProperty = async (req, res) => {
     const { id } = req.params;
     const { price, bedrooms, bathrooms, sqft, address, city, state, zip, imageUrl, status, propertyType } = req.body;
     
+    // Ownership check
+    const existing = await prisma.property.findUnique({ where: { id }, select: { agentId: true } });
+    if (!existing) return res.status(404).json({ error: 'Property not found' });
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { agentId: true, role: true } });
+    if (existing.agentId !== user.agentId && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this property' });
+    }
+    
     const data = {};
     if (price !== undefined) data.price = parseInt(price);
     if (bedrooms !== undefined) data.beds = parseFloat(bedrooms);
@@ -357,6 +371,15 @@ exports.updateProperty = async (req, res) => {
 exports.deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Ownership check
+    const existing = await prisma.property.findUnique({ where: { id }, select: { agentId: true } });
+    if (!existing) return res.status(404).json({ error: 'Property not found' });
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { agentId: true, role: true } });
+    if (existing.agentId !== user.agentId && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this property' });
+    }
+    
     await prisma.property.delete({ where: { id } });
     
     // Invalidate caches

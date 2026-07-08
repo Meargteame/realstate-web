@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../middleware/auth');
 const { uploadSingle, uploadMultiple } = require('../middleware/upload');
 const {
   uploadAgentAvatar,
@@ -11,29 +12,29 @@ const {
 /**
  * @route   POST /api/upload/agent/:id/avatar
  * @desc    Upload agent profile picture
- * @access  Private (should add auth middleware)
+ * @access  Private
  */
-router.post('/agent/:id/avatar', uploadSingle('avatar'), uploadAgentAvatar);
+router.post('/agent/:id/avatar', authenticateToken, uploadSingle('avatar'), uploadAgentAvatar);
 
 /**
  * @route   POST /api/upload/property/:id/images
  * @desc    Upload property images
- * @access  Private (should add auth middleware)
+ * @access  Private
  */
-router.post('/property/:id/images', uploadMultiple('images', 10), uploadPropertyImages);
+router.post('/property/:id/images', authenticateToken, uploadMultiple('images', 10), uploadPropertyImages);
 
 /**
  * @route   POST /api/upload/image
  * @desc    Generic image upload
- * @access  Private (should add auth middleware)
+ * @access  Private
  */
-router.post('/image', uploadSingle('image'), uploadImage);
+router.post('/image', authenticateToken, uploadSingle('image'), uploadImage);
 
 /**
  * @route   DELETE /api/upload/:filename
  * @desc    Delete uploaded image
- * @access  Private (should add auth middleware)
+ * @access  Private
  */
-router.delete('/:filename', deleteImage);
+router.delete('/:filename', authenticateToken, deleteImage);
 
 module.exports = router;
