@@ -39,7 +39,7 @@ exports.getOpportunities = async (req, res) => {
     }
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -77,7 +77,7 @@ exports.createOpportunity = async (req, res) => {
     
     res.status(201).json(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -111,7 +111,7 @@ exports.updateOpportunity = async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -122,6 +122,6 @@ exports.deleteOpportunity = async (req, res) => {
     await prisma.opportunity.delete({ where: { id } });
     res.json({ message: 'Opportunity deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };

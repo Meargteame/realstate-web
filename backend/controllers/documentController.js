@@ -87,7 +87,7 @@ exports.getDocuments = async (req, res) => {
     res.json(documents);
   } catch (error) {
     console.error('Error fetching documents:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -152,7 +152,7 @@ exports.getDocumentById = async (req, res) => {
     res.json(document);
   } catch (error) {
     console.error('Error fetching document:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -232,7 +232,7 @@ exports.createDocument = async (req, res) => {
     res.status(201).json(document);
   } catch (error) {
     console.error('Error creating document:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -322,7 +322,7 @@ exports.updateDocument = async (req, res) => {
     res.json(document);
   } catch (error) {
     console.error('Error updating document:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -366,7 +366,7 @@ exports.deleteDocument = async (req, res) => {
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
     console.error('Error deleting document:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -419,7 +419,7 @@ exports.shareDocument = async (req, res) => {
     res.json(updatedDocument);
   } catch (error) {
     console.error('Error sharing document:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -458,7 +458,7 @@ exports.downloadDocument = async (req, res) => {
     res.json({ fileUrl: document.fileUrl, fileName: document.fileName });
   } catch (error) {
     console.error('Error downloading document:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -480,7 +480,7 @@ exports.getCategories = async (req, res) => {
     
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 

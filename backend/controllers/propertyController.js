@@ -174,7 +174,7 @@ exports.getProperties = async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('❌ Error fetching properties:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -209,7 +209,7 @@ exports.getPropertiesByCity = async (req, res) => {
     
     res.json(propertiesData);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -266,7 +266,7 @@ exports.getPropertyById = async (req, res) => {
     res.json(propertyData);
   } catch (error) {
     console.error('❌ Error fetching property:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -314,7 +314,7 @@ exports.createProperty = async (req, res) => {
     res.status(201).json(propertyData);
   } catch (error) {
     console.error('❌ Error creating property:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -363,7 +363,7 @@ exports.updateProperty = async (req, res) => {
 
     res.json(propertyData);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -388,7 +388,7 @@ exports.deleteProperty = async (req, res) => {
     
     res.json({ message: 'Property deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -462,7 +462,7 @@ exports.getSimilarProperties = async (req, res) => {
     res.json(propertiesData);
   } catch (error) {
     console.error('❌ Error fetching similar properties:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -482,7 +482,7 @@ exports.getPriceHistory = async (req, res) => {
     res.json(history);
   } catch (error) {
     console.error('❌ Error fetching price history:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -514,7 +514,7 @@ exports.addPriceChange = async (req, res) => {
     res.status(201).json(history);
   } catch (error) {
     console.error('❌ Error adding price change:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -543,7 +543,7 @@ exports.createComparison = async (req, res) => {
     res.status(201).json(comparison);
   } catch (error) {
     console.error('❌ Error creating comparison:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -579,7 +579,7 @@ exports.getComparisons = async (req, res) => {
     res.json(comparisonsWithProperties);
   } catch (error) {
     console.error('❌ Error fetching comparisons:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -614,7 +614,7 @@ exports.getComparisonById = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error fetching comparison:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -644,7 +644,7 @@ exports.deleteComparison = async (req, res) => {
     res.json({ message: 'Comparison deleted successfully' });
   } catch (error) {
     console.error('❌ Error deleting comparison:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -674,7 +674,7 @@ exports.getSavedProperties = async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('❌ Error fetching saved properties:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -696,6 +696,6 @@ exports.trackShare = async (req, res) => {
       return res.status(404).json({ error: 'Property not found' });
     }
     console.error('❌ Error tracking share:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };

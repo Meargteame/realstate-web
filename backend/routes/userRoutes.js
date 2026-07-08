@@ -29,6 +29,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // PATCH /api/users/:id - Update user profile
 router.patch('/:id', authenticateToken, async (req, res) => {
   try {
+    // Only allow updating your own profile (admins can update any)
+    if (req.params.id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this user' });
+    }
+
     const { name, email } = req.body;
     const data = {};
     if (name !== undefined) data.name = name;

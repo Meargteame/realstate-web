@@ -20,7 +20,7 @@ exports.sendSMS = async (req, res) => {
     res.status(201).json(smsMessage);
   } catch (error) {
     console.error('Error sending SMS:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -37,7 +37,7 @@ exports.getSMSHistory = async (req, res) => {
     res.json(messages);
   } catch (error) {
     console.error('Error fetching SMS history:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -48,7 +48,7 @@ exports.handleSMSWebhook = async (req, res) => {
     res.json({ success: true, message: smsMessage });
   } catch (error) {
     console.error('Error handling SMS webhook:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -74,7 +74,7 @@ exports.sendEmail = async (req, res) => {
     res.status(201).json(emailMessage);
   } catch (error) {
     console.error('Error sending email:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -98,7 +98,7 @@ exports.sendTemplateEmail = async (req, res) => {
     res.status(201).json(emailMessage);
   } catch (error) {
     console.error('Error sending template email:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -115,6 +115,6 @@ exports.getEmailHistory = async (req, res) => {
     res.json(messages);
   } catch (error) {
     console.error('Error fetching email history:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };

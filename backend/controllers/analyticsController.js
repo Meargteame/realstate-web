@@ -114,7 +114,7 @@ exports.getAgentAnalytics = async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('Error fetching agent analytics:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -205,7 +205,7 @@ exports.getLeadAnalytics = async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('Error fetching lead analytics:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -298,7 +298,7 @@ exports.getPropertyAnalytics = async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('Error fetching property analytics:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -365,7 +365,7 @@ exports.getSalesReports = async (req, res) => {
     res.json(payload);
   } catch (error) {
     console.error('Error fetching sales reports:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -420,7 +420,7 @@ exports.exportAnalytics = async (req, res) => {
     res.send(csv);
   } catch (error) {
     console.error('Error exporting analytics:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 

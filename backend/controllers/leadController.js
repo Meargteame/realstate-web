@@ -38,7 +38,7 @@ exports.createLead = async (req, res) => {
 
     res.status(201).json(lead);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -61,7 +61,7 @@ exports.getLeadsByAgent = async (req, res) => {
 
     res.json({ leads, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -82,7 +82,7 @@ exports.updateLeadStatus = async (req, res) => {
     });
     res.json(lead);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -111,7 +111,7 @@ exports.getAllLeads = async (req, res) => {
       limit: parseInt(limit) 
     }));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -123,7 +123,7 @@ exports.deleteLead = async (req, res) => {
     await prisma.lead.delete({ where: { id } });
     res.json({ message: 'Lead deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -144,7 +144,7 @@ exports.toggleFavorite = async (req, res) => {
     
     res.json(updated);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -170,7 +170,7 @@ exports.updateLead = async (req, res) => {
 
     res.json(lead);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -205,6 +205,6 @@ exports.exportLeads = async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
     res.send(csv);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };

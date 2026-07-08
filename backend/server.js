@@ -62,8 +62,8 @@ app.use(additionalHeaders);
 // =====================================================
 // BODY PARSING & INPUT SANITIZATION
 // =====================================================
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(sanitizeInput);
 app.use(preventParameterPollution);
 
@@ -85,10 +85,12 @@ const path = require('path');
 
 // Add CORS headers for static files
 app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
@@ -155,21 +157,10 @@ app.use('/api/stats', statsRoutes);
 // HEALTH & MONITORING ENDPOINTS
 // =====================================================
 app.get('/api/health', (req, res) => {
-  const uptime = process.uptime();
-  const memoryUsage = process.memoryUsage();
-  
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
-    uptimeSeconds: Math.floor(uptime),
-    memory: {
-      used: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
-      total: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
-      percentage: `${Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)}%`
-    },
-    environment: process.env.NODE_ENV || 'development',
-    cache: cacheService.isEnabled ? 'enabled' : 'disabled'
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -314,8 +305,8 @@ async function startServer() {
       }, 10000);
     });
 
-    // A hack to keep the event loop alive in this specific Node environment
-    setInterval(() => { }, 1000 * 60 * 60);
+    // Periodic cache clean-up to keep event loop alive
+    setInterval(() => cacheService.cleanup?.(), 1000 * 60 * 15);
 
   } catch (error) {
     console.error('❌ Failed to start server:', error);

@@ -15,16 +15,21 @@ export default function LeadInbox() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${parentAgent?.token || ''}`
+  });
+
   useEffect(() => {
     if (!parentAgent) return;
-    fetch(`/api/agents/${parentAgent.id}`)
+    fetch(`/api/leads?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
-        const sortedLeads = (data.leads || []).sort((a: any, b: any) => 
+        const allLeads = data.leads || data || [];
+        const sorted = (Array.isArray(allLeads) ? allLeads : []).sort((a: any, b: any) => 
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        setLeads(sortedLeads);
-        if (sortedLeads.length > 0) setSelectedLead(sortedLeads[0]);
+        setLeads(sorted);
+        if (sorted.length > 0) setSelectedLead(sorted[0]);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -39,7 +44,8 @@ export default function LeadInbox() {
     setSelectedLead(optimistic);
     try {
       const res = await fetch(`/api/leads/${target.id}/favorite`, {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: authHeaders()
       });
       if (!res.ok) throw new Error('Failed to toggle favorite');
       const updated = await res.json();
@@ -61,9 +67,9 @@ export default function LeadInbox() {
     setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, nextFollowUpDate } : l));
     setSelectedLead((prev: any) => prev ? { ...prev, nextFollowUpDate } : prev);
     try {
-      const res = await fetch(`/api/leads/${selectedLead.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        const res = await fetch(`/api/leads/${selectedLead.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ nextFollowUpDate })
       });
       if (!res.ok) throw new Error('failed');
@@ -84,7 +90,8 @@ export default function LeadInbox() {
       onOk: async () => {
         try {
           const res = await fetch(`/api/leads/${selectedLead.id}`, { 
-            method: 'DELETE' 
+            method: 'DELETE',
+            headers: authHeaders()
           });
           if (!res.ok) throw new Error('Failed to delete');
           const remainingLeads = leads.filter(l => l.id !== selectedLead.id);

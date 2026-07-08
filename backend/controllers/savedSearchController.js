@@ -58,7 +58,7 @@ const createSavedSearch = async (req, res) => {
     console.error('Create saved search error:', error);
     res.status(500).json({ 
       error: 'Failed to create saved search',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };
@@ -116,7 +116,7 @@ const getSavedSearches = async (req, res) => {
     console.error('Get saved searches error:', error);
     res.status(500).json({ 
       error: 'Failed to fetch saved searches',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };
@@ -174,7 +174,7 @@ const getSavedSearch = async (req, res) => {
     console.error('Get saved search error:', error);
     res.status(500).json({ 
       error: 'Failed to fetch saved search',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };
@@ -240,7 +240,7 @@ const updateSavedSearch = async (req, res) => {
     console.error('Update saved search error:', error);
     res.status(500).json({ 
       error: 'Failed to update saved search',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };
@@ -277,7 +277,7 @@ const deleteSavedSearch = async (req, res) => {
     console.error('Delete saved search error:', error);
     res.status(500).json({ 
       error: 'Failed to delete saved search',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };
@@ -375,7 +375,7 @@ const runSavedSearch = async (req, res) => {
     console.error('Run saved search error:', error);
     res.status(500).json({ 
       error: 'Failed to run saved search',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };
@@ -422,7 +422,7 @@ const markAlertsViewed = async (req, res) => {
     console.error('Mark alerts viewed error:', error);
     res.status(500).json({ 
       error: 'Failed to mark alerts as viewed',
-      message: error.message 
+      message: 'Failed to process request' 
     });
   }
 };

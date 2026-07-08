@@ -70,7 +70,7 @@ exports.getBlogPosts = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching blog posts:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -109,7 +109,7 @@ exports.getBlogPostBySlug = async (req, res) => {
     res.json(post);
   } catch (error) {
     console.error('Error fetching blog post:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -177,7 +177,7 @@ exports.createBlogPost = async (req, res) => {
     res.status(201).json(post);
   } catch (error) {
     console.error('Error creating blog post:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -242,7 +242,7 @@ exports.updateBlogPost = async (req, res) => {
     res.json(post);
   } catch (error) {
     console.error('Error updating blog post:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -254,7 +254,7 @@ exports.deleteBlogPost = async (req, res) => {
     res.json({ message: 'Blog post deleted successfully' });
   } catch (error) {
     console.error('Error deleting blog post:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -271,7 +271,7 @@ exports.getCategories = async (req, res) => {
     res.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -288,6 +288,6 @@ exports.getTags = async (req, res) => {
     res.json(tags);
   } catch (error) {
     console.error('Error fetching tags:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };

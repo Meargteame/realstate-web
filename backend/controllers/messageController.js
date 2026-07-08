@@ -5,6 +5,12 @@ exports.getConversations = async (req, res) => {
   try {
     const { agentId } = req.params;
     
+    // Ownership check
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { agentId: true, role: true } });
+    if (agentId !== user.agentId && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to view these conversations' });
+    }
+    
     const conversations = await prisma.conversation.findMany({
       where: { agentId },
       include: {
@@ -37,7 +43,7 @@ exports.getConversations = async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('Error fetching conversations:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -71,7 +77,7 @@ exports.getMessages = async (req, res) => {
     res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -133,7 +139,7 @@ exports.sendMessage = async (req, res) => {
     });
   } catch (error) {
     console.error('Error sending message:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -160,6 +166,6 @@ exports.markAsRead = async (req, res) => {
     res.json(conversation);
   } catch (error) {
     console.error('Error marking as read:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };

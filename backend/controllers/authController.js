@@ -66,7 +66,8 @@ exports.register = async (req, res) => {
       { 
         id: result.id, 
         email: result.email, 
-        role: result.role 
+        role: result.role,
+        agentId: result.agentId
       },
       JWT_SECRET,
       { expiresIn: '7d' }
@@ -147,7 +148,8 @@ exports.login = async (req, res) => {
         { 
           id: user.id, 
           email: user.email, 
-          role: user.role 
+          role: user.role,
+          agentId: agentId
         },
         JWT_SECRET,
         { expiresIn: '7d' }

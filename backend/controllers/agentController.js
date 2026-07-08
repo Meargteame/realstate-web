@@ -2,8 +2,9 @@ const prisma = require('../config/prisma');
 const bcrypt = require('bcryptjs');
 
 exports.getAgents = async (req, res) => {
-  const { q } = req.query;
+  const { q, page = 1, limit = 20 } = req.query;
   try {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     const where = q ? {
       OR: [
         { name: { contains: q, mode: 'insensitive' } },
@@ -12,16 +13,18 @@ exports.getAgents = async (req, res) => {
       ]
     } : {};
 
-    const agents = await prisma.agent.findMany({ where });
+    const [agents, total] = await Promise.all([
+      prisma.agent.findMany({ where, skip, take: parseInt(limit) }),
+      prisma.agent.count({ where })
+    ]);
 
-    // Convert BigInt fields to Number for JSON serialization
     const serialized = JSON.parse(JSON.stringify(agents, (key, value) =>
       typeof value === 'bigint' ? Number(value) : value
     ));
 
-    res.json(serialized);
+    res.json({ data: serialized, total, page: parseInt(page), limit: parseInt(limit) });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to fetch agents' });
   }
 };
 
@@ -58,7 +61,7 @@ exports.createAgent = async (req, res) => {
     res.status(201).json(agent);
   } catch (error) {
     console.error('Create agent error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -86,7 +89,7 @@ exports.getAgentById = async (req, res) => {
     res.json(agentData);
   } catch (error) {
     console.error('❌ Error fetching agent:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -96,6 +99,12 @@ exports.updateAgent = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, phone, email, bio, location, specialties, imageUrl } = req.body;
+    
+    // Ownership check: only the linked user or admin can update
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { agentId: true, role: true } });
+    if (id !== user.agentId && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this agent' });
+    }
     
     const data = {};
     if (name !== undefined) data.name = name;
@@ -111,14 +120,13 @@ exports.updateAgent = async (req, res) => {
       data
     });
 
-    // Convert BigInt fields to Number for JSON serialization
     const serialized = JSON.parse(JSON.stringify(agent, (key, value) =>
       typeof value === 'bigint' ? Number(value) : value
     ));
 
     res.json(serialized);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to update agent' });
   }
 };
 
@@ -142,7 +150,7 @@ exports.updateOfficeHours = async (req, res) => {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Agent not found' });
     }
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
 
@@ -178,6 +186,6 @@ exports.changePassword = async (req, res) => {
 
     res.json({ message: 'Password updated successfully.' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to process request' });
   }
 };
