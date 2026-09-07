@@ -1,6 +1,10 @@
 import React, { useState } from "react";
-import { Input, Button, Card, Typography, Space, Tabs } from "antd";
-import { SearchOutlined, HomeOutlined, BankOutlined, ShopOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { Input, Button, Card, Typography, Space, Select } from "antd";
+import { 
+  SearchOutlined, HomeOutlined, BankOutlined, ShopOutlined, 
+  CheckCircleOutlined, EnvironmentOutlined, DollarOutlined, AppstoreOutlined,
+  ArrowRightOutlined
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
 
@@ -9,15 +13,28 @@ const { Title, Text } = Typography;
 export default function Hero() {
   const [searchValue, setSearchValue] = useState("");
   const [activeTab, setActiveTab] = useState("buy");
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedPrice, setSelectedPrice] = useState<string>("any");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const handleSearch = () => {
     const query = searchValue.trim();
     let url = `/properties?status=${activeTab === 'rent' ? 'For Rent' : activeTab === 'sold' ? 'Sold' : 'Active'}`;
-    if (activeTab === 'commercial') {
-      url += '&type=Commercial';
+    
+    if (activeTab === 'commercial' || selectedType === 'commercial') {
+      url += '&propertyType=Commercial';
+    } else if (selectedType !== 'all') {
+      url += `&propertyType=${encodeURIComponent(selectedType)}`;
     }
+
+    if (selectedPrice !== 'any') {
+      const minPrice = selectedPrice.split('-')[0];
+      const maxPrice = selectedPrice.split('-')[1];
+      if (minPrice) url += `&minPrice=${minPrice}`;
+      if (maxPrice) url += `&maxPrice=${maxPrice}`;
+    }
+
     if (query) {
       url += `&q=${encodeURIComponent(query)}`;
     }
@@ -34,60 +51,61 @@ export default function Hero() {
   return (
     <section style={{ 
       position: 'relative', 
-      height: isMobile ? '90vh' : '85vh', 
-      minHeight: isMobile ? '580px' : '720px',
+      height: isMobile ? 'auto' : '88vh', 
+      minHeight: isMobile ? '620px' : '740px',
       width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      background: 'linear-gradient(135deg, #1e222d 0%, #373a4b 100%)'
+      background: '#111827',
+      padding: isMobile ? '60px 16px 40px' : '0 24px'
     }}>
-      {/* High-res Background Image with Subtle Animation */}
+      {/* Architectural Background Image */}
       <div 
         style={{ 
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=85")',
+          backgroundImage: 'url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=90")',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.38,
-          transform: 'scale(1.02)',
-          transition: 'transform 10s ease-out'
+          backgroundPosition: 'center 35%',
+          opacity: 0.45,
         }} 
       />
       
-      {/* Multi-layered Vignette Overlay */}
+      {/* Subtle Vignette Gradient Overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(circle at center, rgba(30, 34, 45, 0.4) 0%, rgba(17, 24, 39, 0.85) 100%)'
+        background: 'radial-gradient(ellipse at center, rgba(17, 24, 39, 0.4) 0%, rgba(17, 24, 39, 0.85) 100%)'
       }} />
 
       <div style={{ 
         position: 'relative', 
-        zIndex: 1, 
-        maxWidth: '1100px', 
+        zIndex: 2, 
+        maxWidth: '1180px', 
         width: '100%', 
-        padding: '0 20px',
         textAlign: 'center', 
         color: 'white' 
       }}>
         {/* Luxury Badge */}
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ marginBottom: '20px' }}>
           <span style={{
-            background: 'rgba(180, 1, 1, 0.2)',
-            border: '1px solid rgba(180, 1, 1, 0.5)',
-            color: '#ff6b6b',
-            padding: '6px 18px',
-            borderRadius: '20px',
+            background: 'rgba(180, 1, 1, 0.9)',
+            color: '#ffffff',
+            padding: '8px 20px',
+            borderRadius: '30px',
             fontSize: isMobile ? '11px' : '13px',
-            fontWeight: 700,
+            fontWeight: 800,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            backdropFilter: 'blur(8px)'
+            boxShadow: '0 4px 14px rgba(180, 1, 1, 0.4)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px'
           }}>
-            Torra Commercial & Residential Platform
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff', display: 'inline-block' }} />
+            TORRA Commercial & Residential Group
           </span>
         </div>
 
@@ -95,155 +113,197 @@ export default function Hero() {
         <Title 
           style={{ 
             color: 'white', 
-            fontSize: isMobile ? '36px' : '68px', 
+            fontSize: isMobile ? '38px' : '72px', 
             fontWeight: 900, 
-            marginBottom: isMobile ? '12px' : '20px', 
+            marginBottom: isMobile ? '16px' : '24px', 
             letterSpacing: '-0.03em',
-            lineHeight: 1.1,
-            textShadow: '0 4px 20px rgba(0,0,0,0.5)'
+            lineHeight: 1.08,
+            textShadow: '0 4px 24px rgba(0,0,0,0.6)'
           }}
         >
-          Discover Extraordinary Real Estate
+          Find Your Next <span style={{ color: '#ff4d4f', textDecoration: 'underline', textDecorationColor: '#b40101', textUnderlineOffset: '8px' }}>Extraordinary</span> Estate
         </Title>
         
         {/* Subheadline */}
         <Text 
           style={{ 
-            color: 'rgba(255,255,255,0.9)', 
-            fontSize: isMobile ? '15px' : '20px', 
+            color: 'rgba(255,255,255,0.92)', 
+            fontSize: isMobile ? '15px' : '21px', 
             display: 'block', 
             fontWeight: 400,
             lineHeight: 1.6,
-            maxWidth: '680px',
-            margin: '0 auto 36px'
+            maxWidth: '740px',
+            margin: '0 auto 40px',
+            textShadow: '0 2px 10px rgba(0,0,0,0.5)'
           }}
         >
-          Explore premier residential estates, commercial investments, and market insights tailored by top agents.
+          Search luxury residential properties, commercial developments, and prime land listings with top advisors.
         </Text>
 
-        {/* Clean Light Search Card */}
-        <Card 
-          style={{ 
-            borderRadius: '16px', 
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e5e7eb',
-            padding: isMobile ? '4px' : '8px',
-            background: '#ffffff',
-          }}
-          styles={{ body: { padding: isMobile ? '12px' : '20px' } }}
-        >
-          {/* Category Tabs */}
-          <div style={{ marginBottom: '16px', display: 'flex', justifyItems: 'center', justifyContent: 'center' }}>
-            <div style={{ 
-              display: 'inline-flex', 
-              gap: '4px', 
-              background: '#f1f3f5', 
-              padding: '4px', 
-              borderRadius: '10px' 
-            }}>
-              {tabs.map((t) => {
-                const isActive = activeTab === t.key;
-                return (
-                  <button
-                    key={t.key}
-                    onClick={() => setActiveTab(t.key)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: isMobile ? '6px 12px' : '8px 20px',
-                      borderRadius: '8px',
-                      fontSize: isMobile ? '12px' : '14px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: isActive ? '#b40101' : 'transparent',
-                      color: isActive ? '#ffffff' : '#4b5563',
-                      boxShadow: isActive ? '0 4px 12px rgba(180, 1, 1, 0.3)' : 'none',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                  >
-                    {t.icon}
-                    <span>{t.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+        {/* Multi-Field Search Card */}
+        <div style={{ 
+          background: '#ffffff',
+          borderRadius: '20px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+          padding: isMobile ? '16px' : '24px',
+          textAlign: 'left'
+        }}>
+          {/* Category Pill Tabs */}
+          <div style={{ marginBottom: '20px', display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+            {tabs.map((t) => {
+              const isActive = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: isMobile ? '8px 16px' : '10px 24px',
+                    borderRadius: '30px',
+                    fontSize: isMobile ? '13px' : '14px',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: isActive ? '#b40101' : '#f3f4f6',
+                    color: isActive ? '#ffffff' : '#374151',
+                    boxShadow: isActive ? '0 4px 12px rgba(180, 1, 1, 0.35)' : 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {t.icon}
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <Space.Compact style={{ width: '100%' }}>
-            <Input 
-              size="large" 
-              placeholder={activeTab === 'rent' ? "Search rentals by city, ZIP, or keyword..." : "Search properties by address, city, or neighborhood..."} 
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onPressEnter={handleSearch}
-              prefix={<SearchOutlined style={{ color: '#b40101', fontSize: '18px' }} />}
-              style={{ 
-                height: isMobile ? '46px' : '56px', 
-                borderRadius: '12px 0 0 12px',
-                fontSize: isMobile ? '14px' : '17px',
-                border: '2px solid #e5e7eb',
-                fontWeight: 500
-              }} 
-            />
-            <Button 
-              type="primary" 
-              size="large" 
-              onClick={handleSearch}
-              style={{ 
-                height: isMobile ? '46px' : '56px', 
-                borderRadius: '0 12px 12px 0',
-                background: '#b40101',
-                borderColor: '#b40101',
-                width: isMobile ? '90px' : '150px',
-                fontWeight: 700,
-                fontSize: isMobile ? '13px' : '16px',
-                letterSpacing: '0.05em'
-              }}
-            >
-              SEARCH
-            </Button>
-          </Space.Compact>
-        </Card>
-
-        {/* Trending Searches */}
-        <div style={{ marginTop: '28px' }}>
-           <Space size="small" wrap justify="center">
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: isMobile ? '11px' : '13px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Popular Locations:
+          {/* Search Inputs Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '2.2fr 1.2fr 1.2fr 1.4fr',
+            gap: '12px',
+            alignItems: 'center'
+          }}>
+            {/* Location Input */}
+            <div>
+              <Text style={{ fontSize: '11px', fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '6px' }}>
+                LOCATION
               </Text>
-              {['Austin, TX', 'Charlotte, NC', 'Miami, FL', 'Denver, CO'].map(city => (
-                <Text 
+              <Input 
+                size="large"
+                placeholder="City, ZIP, address, or neighborhood" 
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onPressEnter={handleSearch}
+                prefix={<EnvironmentOutlined style={{ color: '#b40101', fontSize: '16px' }} />}
+                style={{ 
+                  height: '52px', 
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  border: '1.5px solid #e5e7eb',
+                  fontWeight: 500
+                }} 
+              />
+            </div>
+
+            {/* Property Type */}
+            <div>
+              <Text style={{ fontSize: '11px', fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '6px' }}>
+                PROPERTY TYPE
+              </Text>
+              <Select
+                size="large"
+                value={selectedType}
+                onChange={(v) => setSelectedType(v)}
+                style={{ width: '100%', height: '52px' }}
+                options={[
+                  { value: 'all', label: 'All Property Types' },
+                  { value: 'Single Family', label: 'Single Family' },
+                  { value: 'Condo', label: 'Condo / Townhome' },
+                  { value: 'Commercial', label: 'Commercial Building' },
+                  { value: 'Land', label: 'Land / Lot' },
+                  { value: 'Multi-Family', label: 'Multi-Family' },
+                ]}
+              />
+            </div>
+
+            {/* Price Range */}
+            <div>
+              <Text style={{ fontSize: '11px', fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '6px' }}>
+                MAX PRICE
+              </Text>
+              <Select
+                size="large"
+                value={selectedPrice}
+                onChange={(v) => setSelectedPrice(v)}
+                style={{ width: '100%', height: '52px' }}
+                options={[
+                  { value: 'any', label: 'Any Price' },
+                  { value: '0-500000', label: 'Under $500,000' },
+                  { value: '500000-1000000', label: '$500k – $1,000,000' },
+                  { value: '1000000-2500000', label: '$1.0M – $2.5M' },
+                  { value: '2500000-5000000', label: '$2.5M – $5.0M' },
+                  { value: '5000000-100000000', label: '$5.0M+' },
+                ]}
+              />
+            </div>
+
+            {/* CTA Button */}
+            <div style={{ marginTop: isMobile ? '8px' : '22px' }}>
+              <Button 
+                type="primary" 
+                size="large" 
+                onClick={handleSearch}
+                icon={<SearchOutlined style={{ fontSize: '18px' }} />}
+                style={{ 
+                  height: '52px', 
+                  width: '100%',
+                  borderRadius: '12px',
+                  background: '#b40101',
+                  borderColor: '#b40101',
+                  fontWeight: 800,
+                  fontSize: '15px',
+                  letterSpacing: '0.05em',
+                  boxShadow: '0 4px 14px rgba(180, 1, 1, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                SEARCH NOW
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Popular Markets */}
+        <div style={{ marginTop: '28px' }}>
+           <Space size="middle" wrap justify="center">
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700, fontSize: isMobile ? '12px' : '14px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Featured Markets:
+              </Text>
+              {['Austin, TX', 'Miami, FL', 'Charlotte, NC', 'Denver, CO', 'Dallas, TX'].map(city => (
+                <button 
                   key={city}
                   style={{ 
                     color: 'white', 
                     cursor: 'pointer',
                     fontSize: isMobile ? '12px' : '14px',
                     fontWeight: 600,
-                    padding: isMobile ? '4px 10px' : '6px 14px',
+                    padding: '6px 16px',
                     borderRadius: '20px',
-                    background: 'rgba(255,255,255,0.12)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isMobile) return;
-                    e.currentTarget.style.background = '#b40101';
-                    e.currentTarget.style.borderColor = '#b40101';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (isMobile) return;
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                    e.currentTarget.style.transform = 'translateY(0)';
+                    background: 'rgba(255,255,255,0.15)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    transition: 'all 0.2s ease'
                   }}
                   onClick={() => navigate(`/properties?q=${city.split(',')[0]}`)}
                 >
-                  {city}
-                </Text>
+                  📍 {city}
+                </button>
               ))}
            </Space>
         </div>
@@ -251,4 +311,3 @@ export default function Hero() {
     </section>
   );
 }
-
