@@ -121,15 +121,14 @@ export default function Hero() {
           Explore premier residential estates, commercial investments, and market insights tailored by top agents.
         </Text>
 
-        {/* Glassmorphic Search Container */}
+        {/* Clean Light Search Card */}
         <Card 
           style={{ 
             borderRadius: '16px', 
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e5e7eb',
             padding: isMobile ? '4px' : '8px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
+            background: '#ffffff',
           }}
           styles={{ body: { padding: isMobile ? '12px' : '20px' } }}
         >

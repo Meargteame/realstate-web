@@ -1,6 +1,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const dotenv = require('dotenv');
 const notificationService = require('./services/notificationService');
 const cacheService = require('./services/cacheService');
@@ -13,6 +14,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// High-speed API Response Compression (Gzip / Brotli)
+app.use(compression());
 
 // =====================================================
 // TRUST PROXY — required behind Caddy / Nginx / load balancers
