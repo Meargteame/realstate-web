@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Card, Tag, Typography, Space, Button } from "antd";
-import { HomeOutlined, EnvironmentOutlined, ArrowRightOutlined, HeartOutlined, ClockCircleOutlined, EyeOutlined } from "@ant-design/icons";
+import { Card, Tag, Typography, Space } from "antd";
+import { EnvironmentOutlined, HeartOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
 
@@ -13,261 +13,134 @@ interface PropertyCardProps {
 export default function PropertyCard({ property }: PropertyCardProps) {
   const isMobile = useIsMobile();
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [agentImgLoaded, setAgentImgLoaded] = useState(false);
+
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
-  const AntCard = Card as any;
-
   return (
-    <Link to={`/properties/${property.id}`} style={{ display: 'block' }}>
-      <AntCard
-        hoverable
-        role="article"
-        tabIndex={0}
-        aria-label={`Property: ${property.address}`}
+    <Link to={`/properties/${property.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+      <div 
         style={{ 
-          width: '100%', 
-          borderRadius: '16px', 
-          overflow: 'hidden', 
-          border: '1px solid #f0f0f0',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          cursor: 'pointer',
-          background: 'white',
-          outline: 'none'
+          background: '#ffffff',
+          borderRadius: '14px',
+          border: '1px solid #e2e8f0',
+          overflow: 'hidden',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          cursor: 'pointer'
         }}
-        styles={{ body: { padding: 0 } }}
-        onFocus={(e: any) => { e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #b40101'; }}
-        onBlur={(e: any) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; }}
-        onMouseEnter={(e: any) => {
+        onMouseEnter={(e) => {
           if (isMobile) return;
-          e.currentTarget.style.transform = 'translateY(-8px)';
-          e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)';
-          e.currentTarget.style.borderColor = '#b40101';
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 12px 20px -5px rgba(0,0,0,0.1)';
+          e.currentTarget.style.borderColor = '#cbd5e1';
         }}
-        onMouseLeave={(e: any) => {
+        onMouseLeave={(e) => {
           if (isMobile) return;
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
-          e.currentTarget.style.borderColor = '#f0f0f0';
+          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.04)';
+          e.currentTarget.style.borderColor = '#e2e8f0';
         }}
-        cover={
-          <div style={{ position: 'relative', height: isMobile ? '220px' : '280px', overflow: 'hidden', background: '#f3f4f6' }}>
-            <img
-              alt={property.address}
-              src={property.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"}
-              loading="lazy"
-              onLoad={() => setImageLoaded(true)}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                transition: 'transform 0.3s ease, opacity 0.4s ease',
-                opacity: imageLoaded ? 1 : 0
-              }}
-              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.05)'; }}
-              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
-            />
-
-            {/* "New" / "Reduced" marketing badge based on real data */}
-            {typeof property.daysOnMarket === 'number' && property.daysOnMarket <= 7 && (
-              <div style={{ position: 'absolute', top: 16, left: 16, marginTop: 40 }}>
-                <Tag color="#10b981" style={{ fontWeight: 700, borderRadius: 6, border: 'none', padding: '4px 10px', fontSize: 11, textTransform: 'uppercase' }}>
-                  New
-                </Tag>
-              </div>
-            )}
-            
-            {/* Favorite Button */}
-            <div 
-              style={{ 
-                position: 'absolute', 
-                top: 16, 
-                right: 16,
-                background: 'rgba(255,255,255,0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onMouseEnter={(e) => {
-                if (isMobile) return;
-                e.currentTarget.style.background = '#b40101';
-                e.currentTarget.querySelector('svg')!.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                if (isMobile) return;
-                e.currentTarget.style.background = 'rgba(255,255,255,0.95)';
-                e.currentTarget.querySelector('svg')!.style.color = '#b40101';
-              }}
-            >
-              <HeartOutlined style={{ fontSize: '18px', color: '#b40101', transition: 'color 0.2s' }} />
-            </div>
-            
-            {/* Status Badge */}
-            <div style={{ position: 'absolute', top: 16, left: 16 }}>
-              <Tag 
-                color="#b40101" 
-                style={{ 
-                  fontWeight: 700, 
-                  borderRadius: '6px', 
-                  border: 'none',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  boxShadow: '0 2px 8px rgba(180,1,1,0.3)'
-                }}
-              >
-                {property.status || 'ACTIVE'}
-              </Tag>
-            </div>
-            
-            {/* Property Type Badge */}
-            {property.propertyType && (
-              <div style={{ position: 'absolute', bottom: 16, left: 16 }}>
-                <Tag 
-                  style={{ 
-                    background: 'rgba(0,0,0,0.7)', 
-                    color: 'white', 
-                    border: 'none', 
-                    fontWeight: 600,
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontSize: '11px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  {property.propertyType}
-                </Tag>
-              </div>
-            )}
-          </div>
-        }
       >
-        <div style={{ padding: isMobile ? '16px' : '24px' }}>
-          {/* Price */}
-          <Title 
-            level={3} 
-            style={{ 
-              margin: '0 0 12px', 
-              fontSize: isMobile ? '26px' : '32px', 
-              fontWeight: 900,
-              color: '#b40101',
-              letterSpacing: '-0.01em'
+        {/* Photo Container */}
+        <div style={{ position: 'relative', height: '220px', width: '100%', background: '#f1f5f9', overflow: 'hidden' }}>
+          <img
+            alt={property.address}
+            src={property.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"}
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: imageLoaded ? 1 : 0,
+              transition: 'opacity 0.3s ease'
             }}
-          >
-            {formatCurrency(property.price)}
-          </Title>
-          
-          {/* Address */}
-          <Paragraph 
-            style={{ 
-              color: '#374151', 
-              fontSize: '16px', 
-              marginBottom: '20px', 
-              fontWeight: 500,
-              lineHeight: 1.5
-            }} 
-            ellipsis={{ rows: 1 }}
-          >
-            <EnvironmentOutlined style={{ marginRight: '8px', color: '#6b7280' }} />
-            {property.address}, {property.city}
-          </Paragraph>
+          />
 
-          {/* Property Stats */}
-          <Space 
-            split={<div style={{ width: '1px', height: '16px', background: '#e5e7eb' }} />} 
-            size="large" 
-            style={{ marginBottom: '24px' }}
-          >
-            <Text style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
-              {property.beds} <span style={{ fontWeight: 400, color: '#6b7280' }}>beds</span>
-            </Text>
-            <Text style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
-              {property.baths} <span style={{ fontWeight: 400, color: '#6b7280' }}>baths</span>
-            </Text>
-            <Text style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>
-              {property.sqft?.toLocaleString()} <span style={{ fontWeight: 400, color: '#6b7280' }}>sqft</span>
-            </Text>
-          </Space>
+          {/* Status Badge */}
+          <div style={{ position: 'absolute', top: 12, left: 12 }}>
+            <span style={{ 
+              background: property.status === 'For Rent' ? '#1d4ed8' : '#b40101', 
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '11px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              {property.status || 'FOR SALE'}
+            </span>
+          </div>
 
-          {/* Key features (from real property.features data) */}
-          {Array.isArray(property.features) && property.features.length > 0 && (
-            <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {property.features.slice(0, 3).map((f: string) => (
-                <Tag key={f} style={{ borderRadius: 6, fontSize: 11, color: '#374151', background: '#f9fafb', border: '1px solid #f0f0f0' }}>
-                  {f}
-                </Tag>
-              ))}
+          {/* Property Type Badge */}
+          {property.propertyType && (
+            <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
+              <span style={{ 
+                background: 'rgba(15, 23, 42, 0.8)', 
+                color: '#ffffff',
+                fontWeight: 600,
+                fontSize: '11px',
+                padding: '4px 10px',
+                borderRadius: '6px'
+              }}>
+                {property.propertyType}
+              </span>
             </div>
           )}
 
-          {/* Engagement / freshness metrics */}
-          {(typeof property.daysOnMarket === 'number' || typeof property.viewCount === 'number') && (
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 12, color: '#6b7280' }}>
-              {typeof property.daysOnMarket === 'number' && (
-                <span><ClockCircleOutlined style={{ marginRight: 4 }} />{property.daysOnMarket}d on market</span>
-              )}
-              {typeof property.viewCount === 'number' && property.viewCount > 0 && (
-                <span><EyeOutlined style={{ marginRight: 4 }} />{property.viewCount.toLocaleString()} views</span>
-              )}
-            </div>
-          )}
-
-          {/* Agent Info */}
+          {/* Save Heart Button */}
           <div 
             style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              borderTop: '1px solid #f3f4f6', 
-              paddingTop: '20px' 
+              position: 'absolute', 
+              top: 12, 
+              right: 12,
+              background: '#ffffff',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
             }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {property.agent?.imageUrl && (
-                <img
-                  src={property.agent.imageUrl}
-                  loading="lazy"
-                  onLoad={() => setAgentImgLoaded(true)}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #f3f4f6',
-                    transition: 'opacity 0.3s ease',
-                    opacity: agentImgLoaded ? 1 : 0
-                  }}
-                />
-              )}
-              <Text type="secondary" style={{ fontSize: '13px', fontWeight: 500 }}>
-                {property.agent?.name || 'TORRA Expert'}
-              </Text>
-            </div>
-            <ArrowRightOutlined 
-              style={{ 
-                color: '#b40101', 
-                fontSize: 18,
-                transition: 'transform 0.2s'
-              }} 
-            />
+            <HeartOutlined style={{ fontSize: '16px', color: '#b40101' }} />
           </div>
         </div>
-      </AntCard>
+
+        {/* Content Body */}
+        <div style={{ padding: '18px 20px' }}>
+          {/* Price */}
+          <div style={{ fontSize: '24px', fontWeight: 900, color: '#0f172a', marginBottom: '6px', letterSpacing: '-0.02em' }}>
+            {formatCurrency(property.price)}
+          </div>
+
+          {/* Specs */}
+          <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>
+            <span><strong>{property.beds}</strong> bds</span>
+            <span style={{ color: '#cbd5e1' }}>|</span>
+            <span><strong>{property.baths}</strong> ba</span>
+            <span style={{ color: '#cbd5e1' }}>|</span>
+            <span><strong>{property.sqft?.toLocaleString()}</strong> sqft</span>
+          </div>
+
+          {/* Full Address */}
+          <div style={{ fontSize: '14px', color: '#64748b', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {property.address}, {property.city}, {property.state} {property.zip}
+          </div>
+
+          {/* Footer Line */}
+          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>
+              {property.agent?.name || 'TORRA Commercial Group'}
+            </span>
+            <ArrowRightOutlined style={{ color: '#b40101', fontSize: '14px' }} />
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Button, Space, Drawer, Typography, Badge, Dropdown, Avatar } from "antd";
-import { GlobalOutlined, MenuOutlined, UserOutlined, SearchOutlined, HeartOutlined, CalendarOutlined, LogoutOutlined, DashboardOutlined } from "@ant-design/icons";
+import { Layout, Menu, Button, Space, Drawer, Typography, Dropdown, Avatar } from "antd";
+import { MenuOutlined, UserOutlined, SearchOutlined, HeartOutlined, CalendarOutlined, LogoutOutlined, DashboardOutlined } from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
 import TorraLogo from "./TorraLogo";
@@ -18,7 +18,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -43,15 +43,14 @@ export default function Header() {
   const getUserMenuItems = () => {
     const items: any[] = [
       { key: 'account', icon: <UserOutlined />, label: 'My Account', onClick: () => navigate('/account') },
-      { key: 'saved', icon: <HeartOutlined />, label: 'Saved Properties', onClick: () => navigate('/saved-searches') },
-      { key: 'appointments', icon: <CalendarOutlined />, label: 'My Appointments', onClick: () => navigate('/account') },
+      { key: 'saved', icon: <HeartOutlined />, label: 'Saved Homes', onClick: () => navigate('/saved-searches') },
+      { key: 'appointments', icon: <CalendarOutlined />, label: 'Tours & Appointments', onClick: () => navigate('/account') },
     ];
-    // Show dashboard link for agents/admins
     if (currentUser?.role === 'agent' || currentUser?.agentId) {
-      items.push({ key: 'dashboard', icon: <DashboardOutlined />, label: 'Agent Dashboard', onClick: () => navigate('/command') });
+      items.push({ key: 'dashboard', icon: <DashboardOutlined />, label: 'Agent Command Center', onClick: () => navigate('/command') });
     }
     if (currentUser?.role === 'admin') {
-      items.push({ key: 'admin', icon: <DashboardOutlined />, label: 'Admin Panel', onClick: () => navigate('/admin') });
+      items.push({ key: 'admin', icon: <DashboardOutlined />, label: 'Admin Portal', onClick: () => navigate('/admin') });
     }
     items.push({ type: 'divider' });
     items.push({ key: 'logout', icon: <LogoutOutlined />, label: 'Log Out', onClick: handleLogout, danger: true });
@@ -59,102 +58,58 @@ export default function Header() {
   };
 
   const navItems = [
-    { key: '/properties', label: <Link to="/properties">Search</Link> },
-    { key: '/saved-searches', label: <Link to="/saved-searches">Saved</Link> },
-    { key: '/open-houses', label: <Link to="/open-houses">Open Houses</Link> },
-    { key: '/agents', label: <Link to="/agents">Find Agent</Link> },
-    { key: '/become-agent', label: <Link to="/become-agent">Become Agent</Link> }
+    { key: '/properties', label: <Link to="/properties">Buy</Link> },
+    { key: '/properties?status=For+Rent', label: <Link to="/properties?status=For+Rent">Rent</Link> },
+    { key: '/home-value', label: <Link to="/home-value">Sell / Home Value</Link> },
+    { key: '/mortgage-calculator', label: <Link to="/mortgage-calculator">Mortgage</Link> },
+    { key: '/agents', label: <Link to="/agents">Find an Agent</Link> },
   ];
 
   return (
     <div style={{ width: '100%', position: 'sticky', top: 0, zIndex: 1000 }}>
-      {/* Utility Bar - Hide on mobile */}
+      {/* Top Utility Announcement Bar */}
       {!isMobile && (
         <div style={{ 
-          background: '#373a4b', 
-          color: 'white', 
-          padding: '10px 64px', 
+          background: '#0f172a', 
+          color: '#e2e8f0', 
+          padding: '8px 48px', 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          fontSize: '11px', 
-          fontWeight: 700,
-          letterSpacing: '0.05em',
-          transition: 'all 0.3s'
+          fontSize: '12px', 
+          fontWeight: 600
         }}>
+          <Text style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 600 }}>
+            TORRA COMMERCIAL & RESIDENTIAL REAL ESTATE GROUP
+          </Text>
           <Space size="large">
-            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: 600 }}>
-              TORRA COMMERCIAL REAL ESTATE GROUP
-            </Text>
-          </Space>
-          <Space size="large">
-            <Link 
-              to="/properties?type=luxury" 
-              style={{ 
-                color: 'white', 
-                fontSize: '11px',
-                transition: 'color 0.2s'
-              }}
-              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.color = '#b40101'; }}
-              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.color = 'white'; }}
-            >
-              LUXURY
-            </Link>
-            <Link 
-              to="/properties?type=land" 
-              style={{ 
-                color: 'white', 
-                fontSize: '11px',
-                transition: 'color 0.2s'
-              }}
-              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.color = '#b40101'; }}
-              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.color = 'white'; }}
-            >
-              LAND
-            </Link>
-            <Link 
-              to="/properties?type=commercial" 
-              style={{ 
-                color: 'white', 
-                fontSize: '11px',
-                transition: 'color 0.2s'
-              }}
-              onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.color = '#b40101'; }}
-              onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.color = 'white'; }}
-            >
-              COMMERCIAL
-            </Link>
-            <Space size="small" style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.9)' }}>
-              <GlobalOutlined />
-              <span>EN</span>
-            </Space>
+            <Link to="/properties?type=Commercial" style={{ color: '#e2e8f0', fontSize: '12px' }}>Commercial Listings</Link>
+            <Link to="/properties?type=Land" style={{ color: '#e2e8f0', fontSize: '12px' }}>Land & Lots</Link>
+            <Link to="/open-houses" style={{ color: '#e2e8f0', fontSize: '12px' }}>Open Houses</Link>
+            <Text style={{ color: '#e2e8f0', fontSize: '12px' }}>📞 (469) 345-6868</Text>
           </Space>
         </div>
       )}
 
-      {/* Main Header */}
+      {/* Main Clean White Header */}
       <AntHeader style={{ 
-        background: isScrolled ? 'rgba(255,255,255,0.95)' : 'white',
-        backdropFilter: isScrolled ? 'blur(10px)' : 'none',
-        height: isMobile ? '64px' : '88px', 
-        padding: isMobile ? '0 16px' : '0 64px', 
+        background: '#ffffff',
+        height: isMobile ? '64px' : '76px', 
+        padding: isMobile ? '0 16px' : '0 48px', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between',
-        boxShadow: isScrolled ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
-        lineHeight: isMobile ? '64px' : '88px',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        borderBottom: isScrolled ? 'none' : '1px solid #f0f0f0'
+        boxShadow: isScrolled ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
+        borderBottom: '1px solid #e5e7eb',
+        lineHeight: isMobile ? '64px' : '76px',
+        transition: 'box-shadow 0.2s ease'
       }}>
         {/* Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
-          onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1.03)'; }}
-          onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.transform = 'scale(1)'; }}
-        >
-          <TorraLogo size={isMobile ? 36 : 48} color="#b40101" compact showText />
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <TorraLogo size={isMobile ? 36 : 44} color="#b40101" compact showText />
         </Link>
 
-        {/* Navigation - Desktop only */}
+        {/* Navigation Tabs - Desktop */}
         {!isMobile && (
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <Menu
@@ -164,63 +119,42 @@ export default function Header() {
               disabledOverflow
               style={{
                 border: 'none',
-                fontSize: '14px',
+                fontSize: '15px',
                 fontWeight: 700,
-                minWidth: '640px',
-                justifyContent: 'center',
                 background: 'transparent',
-                letterSpacing: '0.02em'
+                letterSpacing: '0.01em'
               }}
             />
           </div>
         )}
 
-        {/* Actions */}
-        <Space size={isMobile ? "small" : "middle"}>
+        {/* Action Buttons */}
+        <Space size="middle">
           {!isMobile && (
             <Button 
               type="text"
-              aria-label="Search properties"
-              icon={<SearchOutlined style={{ fontSize: '20px' }} />}
+              icon={<SearchOutlined style={{ fontSize: '18px', color: '#374151' }} />}
               onClick={() => navigate('/properties')}
-              style={{ 
-                height: '48px',
-                width: '48px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                if (isMobile) return;
-                e.currentTarget.style.background = '#f8f9fa';
-                e.currentTarget.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                if (isMobile) return;
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
+              style={{ height: '44px', width: '44px', borderRadius: '50%' }}
             />
           )}
           {currentUser ? (
             <Dropdown menu={{ items: getUserMenuItems() }} placement="bottomRight" trigger={['click']}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                 <Avatar 
-                  size={isMobile ? 36 : 44}
+                  size={isMobile ? 36 : 42}
                   src={currentUser.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'U')}&background=b40101&color=fff&size=128`}
                   style={{ backgroundColor: '#b40101', flexShrink: 0 }}
                 >
-                  {(currentUser.firstName || currentUser.name || 'U').charAt(0).toUpperCase()}
+                  {(currentUser.name || 'U').charAt(0).toUpperCase()}
                 </Avatar>
                 {!isMobile && (
                   <div style={{ lineHeight: 1.2 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#111827' }}>
-                      {currentUser.firstName || currentUser.name?.split(' ')[0] || 'User'}
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                      {currentUser.name?.split(' ')[0] || 'User'}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b7280', textTransform: 'capitalize' }}>
-                      {currentUser.role === 'agent' ? 'Agent' : currentUser.role === 'admin' ? 'Admin' : 'Member'}
+                    <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'capitalize' }}>
+                      {currentUser.role === 'agent' ? 'Realtor' : currentUser.role === 'admin' ? 'Admin' : 'Account'}
                     </div>
                   </div>
                 )}
@@ -229,48 +163,28 @@ export default function Header() {
           ) : (
             <Button 
               type="primary" 
-              size={isMobile ? "middle" : "large"}
               onClick={() => navigate('/login')}
               style={{ 
-                background: '#373a4b', 
-                borderColor: '#373a4b', 
+                background: '#b40101', 
+                borderColor: '#b40101', 
                 fontWeight: 700,
-                height: isMobile ? '40px' : '52px',
-                padding: isMobile ? '0 16px' : '0 32px',
-                borderRadius: isMobile ? '20px' : '26px',
-                fontSize: isMobile ? '12px' : '14px',
-                letterSpacing: '0.05em',
-                boxShadow: '0 2px 8px rgba(55,58,75,0.2)'
-              }}
-              onMouseEnter={(e) => {
-                if (isMobile) return;
-                e.currentTarget.style.background = '#2a2d3a';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(55,58,75,0.3)';
-              }}
-              onMouseLeave={(e) => {
-                if (isMobile) return;
-                e.currentTarget.style.background = '#373a4b';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(55,58,75,0.2)';
+                height: isMobile ? '38px' : '44px',
+                padding: isMobile ? '0 16px' : '0 24px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                letterSpacing: '0.02em',
+                boxShadow: '0 2px 6px rgba(180,1,1,0.25)'
               }}
             >
-              LOG IN
+              Sign In
             </Button>
           )}
           {isMobile && (
             <Button 
               type="text" 
-              aria-label="Open navigation menu"
               icon={<MenuOutlined style={{ fontSize: '20px' }} />} 
               onClick={() => setVisible(true)}
-              style={{ 
-                height: '44px',
-                width: '44px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              style={{ height: '44px', width: '44px' }}
             />
           )}
         </Space>
@@ -280,14 +194,13 @@ export default function Header() {
           placement="right"
           onClose={() => setVisible(false)}
           open={visible}
-          width={isMobile ? '85%' : 320}
-          styles={{ mask: { backdropFilter: 'blur(4px)' } }}
+          width={300}
         >
           <Menu 
             mode="vertical" 
             selectedKeys={[location.pathname]} 
-            items={[...navItems, { key: '/login', label: <Link to="/login">Log In / Sign Up</Link> }]}
-            style={{ border: 'none', fontSize: '15px', fontWeight: 600 }}
+            items={[...navItems, { key: '/login', label: <Link to="/login">Sign In / Register</Link> }]}
+            style={{ border: 'none', fontSize: '16px', fontWeight: 600 }}
             onClick={() => setVisible(false)}
           />
         </Drawer>

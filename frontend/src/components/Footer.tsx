@@ -11,7 +11,6 @@ export default function Footer() {
     e.preventDefault();
     const email = newsletterEmail.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-    // No newsletter backend yet — record intent locally and confirm to the user.
     try {
       const existing = JSON.parse(localStorage.getItem("torra_newsletter") || "[]");
       if (!existing.includes(email)) {
@@ -24,162 +23,116 @@ export default function Footer() {
     setSubscribed(true);
     setNewsletterEmail("");
   };
+
   return (
-    <footer className="bg-brand-dark text-white pt-12 md:pt-24 pb-16 md:pb-12 px-4 md:px-8 flex-shrink-0">
-      <div className="max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-16 mb-12 md:mb-20 border-b border-white/10 pb-12 md:pb-20">
-          {/* Logo & Address */}
+    <footer style={{ background: '#0f172a', color: '#cbd5e1', paddingTop: '64px', paddingBottom: '48px', paddingLeft: '32px', paddingRight: '32px' }}>
+      <div style={{ maxWidth: '1360px', margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '48px', marginBottom: '48px', paddingBottom: '48px', borderBottom: '1px solid #334155' }}>
+          {/* Brand Info */}
           <div>
-            <div className="mb-6">
-              <TorraLogo size={48} color="#b40101" compact showText />
+            <div style={{ marginBottom: '20px' }}>
+              <TorraLogo size={42} color="#ff4d4f" compact showText />
             </div>
-            <div className="text-[12px] text-gray-400 font-medium leading-relaxed uppercase tracking-wider mb-6">
-              <p className="mb-1 flex items-center gap-2"><MapPin className="w-3 h-3" /> Office</p>
-              <p className="mb-1">7945 FM 2757</p>
-              <p className="mb-1">Forney, TX 75126</p>
-              <p className="mt-3 flex items-center gap-2"><Phone className="w-3 h-3" /> (469) 345-6868</p>
-              <p className="mt-1 text-gray-500">Brokerage ID: 0751886</p>
-            </div>
-            <div className="flex gap-4">
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Twitter"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white/50"
-              >
-                <Twitter className="w-4 h-4 text-gray-300" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white/50"
-              >
-                <Instagram className="w-4 h-4 text-gray-300" />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn"
-                className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-brand-red hover:scale-110 transition-all duration-300 focus-visible:outline-2 focus-visible:outline-white/50"
-              >
-                <Linkedin className="w-4 h-4 text-gray-300" />
-              </a>
+            <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#94a3b8', marginBottom: '16px' }}>
+              TORRA Commercial & Residential Real Estate Group provides full-service real estate brokerage, property management, and investment advisory services across North America.
+            </p>
+            <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.6 }}>
+              <p style={{ margin: '4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}><MapPin style={{ width: 14, height: 14, color: '#ff4d4f' }} /> 7945 FM 2757, Forney, TX 75126</p>
+              <p style={{ margin: '4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}><Phone style={{ width: 14, height: 14, color: '#ff4d4f' }} /> (469) 345-6868</p>
+              <p style={{ margin: '4px 0', color: '#64748b' }}>Texas Brokerage License #0751886</p>
             </div>
           </div>
 
-          {/* Company Links */}
+          {/* Real Estate Links */}
           <div>
-            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Explore</h3>
-            <ul className="flex flex-col gap-5">
-              <li>
-                <Link 
-                  to="/properties" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Property Search
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/agents" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Find an Agent
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/open-houses" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Open Houses
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/blog" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Real Estate Insights
-                </Link>
-              </li>
+            <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>Real Estate</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <li><Link to="/properties" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Homes for Sale</Link></li>
+              <li><Link to="/properties?status=For+Rent" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Apartments & Rentals</Link></li>
+              <li><Link to="/properties?type=Commercial" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Commercial Properties</Link></li>
+              <li><Link to="/properties?type=Land" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Land & Lots</Link></li>
+              <li><Link to="/open-houses" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Open Houses Schedule</Link></li>
             </ul>
           </div>
 
-          {/* Tools */}
+          {/* Resources & Tools */}
           <div>
-            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Tools</h3>
-            <ul className="flex flex-col gap-5">
-              <li>
-                <Link 
-                  to="/mortgage-calculator" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Mortgage Calculator
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/home-value" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Home Value Estimator
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/affordability-calculator" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Affordability Calculator
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/become-agent" 
-                  className="text-[13px] text-gray-400 hover:text-brand-red uppercase tracking-wider font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-brand-red/50"
-                >
-                  Become an Agent
-                </Link>
-              </li>
+            <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>Resources & Tools</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <li><Link to="/home-value" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Instant Home Value Estimator</Link></li>
+              <li><Link to="/mortgage-calculator" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Mortgage Payment Calculator</Link></li>
+              <li><Link to="/affordability-calculator" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Home Affordability Calculator</Link></li>
+              <li><Link to="/agents" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Find a Top Realtor</Link></li>
+              <li><Link to="/blog" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: 600 }}>Real Estate News & Market Trends</Link></li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-[13px] font-black mb-8 text-white uppercase tracking-[0.15em]">Newsletter</h3>
-            <p className="text-[12px] text-gray-400 font-medium uppercase tracking-wider mb-8 leading-relaxed">
-              Subscribe to curated insights and exclusive listings
+            <h4 style={{ fontSize: '14px', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '20px' }}>Stay Informed</h4>
+            <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '20px' }}>
+              Get price drop alerts and new market listings delivered weekly to your inbox.
             </p>
             {subscribed ? (
-              <div className="flex items-center gap-2 text-[13px] text-brand-red font-bold uppercase tracking-wider py-3">
-                <Check className="w-5 h-5" /> You're subscribed
+              <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Check style={{ width: 18, height: 18 }} /> Subscribed to Market Alerts
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} className="relative border-b-2 border-gray-600 pb-3 flex items-center hover:border-brand-red focus-within:border-brand-red transition-colors duration-300 group">
+              <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '8px' }}>
                 <input
                   type="email"
-                  placeholder="YOUR EMAIL"
+                  placeholder="Enter your email"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   required
-                  className="bg-transparent border-none outline-none text-[13px] text-white w-full uppercase placeholder:text-gray-600 tracking-wider font-semibold"
+                  style={{
+                    background: '#1e293b',
+                    border: '1px solid #334155',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    width: '100%',
+                    outline: 'none'
+                  }}
                 />
-                <button type="submit" aria-label="Subscribe" className="text-gray-400 group-hover:text-brand-red transition-colors duration-300">
-                  <ArrowRight className="w-5 h-5" />
+                <button 
+                  type="submit" 
+                  style={{ 
+                    background: '#b40101', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    padding: '0 16px', 
+                    fontWeight: 700, 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  Join
                 </button>
               </form>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center text-[11px] text-gray-500 uppercase tracking-wider font-bold gap-2 text-center md:text-left">
-          <p>© 2026 TORRA COMMERCIAL REAL ESTATE GROUP. ALL RIGHTS RESERVED.</p>
-          <p className="text-gray-600">BROKERAGE ID: 0751886</p>
+        {/* US Real Estate Equal Housing & MLS Disclaimer */}
+        <div style={{ borderBottom: '1px solid #334155', paddingBottom: '32px', marginBottom: '32px', fontSize: '12px', color: '#64748b', lineHeight: 1.7 }}>
+          <p style={{ marginBottom: '8px' }}>
+            <strong>Equal Housing Opportunity:</strong> TORRA Commercial Real Estate Group fully supports the principles of the Fair Housing Act and the Equal Opportunity Act. Each office is independently owned and operated.
+          </p>
+          <p style={{ margin: 0 }}>
+            Listing information is deemed reliable but is not guaranteed and should be independently verified. Properties subject to prior sale, change, or withdrawal. Neither the listing broker nor TORRA Group shall be responsible for any typographical errors, misinformation, or misprints.
+          </p>
+        </div>
+
+        {/* Bottom Legal Copyright */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
+          <div>© 2026 TORRA Commercial Real Estate Group LLC. All rights reserved.</div>
+          <div style={{ display: 'flex', gap: '24px' }}>
+            <Link to="/terms" style={{ color: '#64748b', textDecoration: 'none' }}>Terms of Use</Link>
+            <Link to="/privacy" style={{ color: '#64748b', textDecoration: 'none' }}>Privacy Policy</Link>
+            <span style={{ color: '#64748b' }}>Equal Housing</span>
+          </div>
         </div>
       </div>
     </footer>
