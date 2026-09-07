@@ -256,7 +256,7 @@ const VideoCall: React.FC<VideoCallProps> = () => {
           <Button
             onClick={toggleScreenShare}
             className={`w-14 h-14 rounded-full ${
-              isScreenSharing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'
+              isScreenSharing ? 'bg-[#b40101] hover:bg-[#8b0000]' : 'bg-gray-700 hover:bg-gray-600'
             }`}
           >
             <Monitor className="w-6 h-6 text-white" />

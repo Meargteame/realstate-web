@@ -204,7 +204,7 @@ const BookAppointment: React.FC = () => {
             {agent.name} will review your request and confirm your appointment shortly.
             You'll receive a confirmation email at {formData.leadEmail}.
           </p>
-          <Button onClick={() => navigate('/')} className="bg-red-600 hover:bg-red-700">
+          <Button onClick={() => navigate('/')} className="bg-[#b40101] hover:bg-[#8b0000]">
             Back to Home
           </Button>
         </Card>
@@ -297,7 +297,7 @@ const BookAppointment: React.FC = () => {
               <select
                 value={formData.serviceType}
                 onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
                 <option value="showing">Property Showing</option>
                 <option value="consultation">Consultation</option>
@@ -344,8 +344,8 @@ const BookAppointment: React.FC = () => {
                         aria-label={`Select time slot ${formatTime(slot.startTime)}`}
                         className={`p-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
                           selectedSlot === slot
-                            ? 'border-red-600 bg-red-50 text-red-700 shadow-sm'
-                            : 'border-gray-200 hover:border-red-300 hover:bg-red-50/50 text-gray-700'
+                            ? 'border-[#b40101] bg-red-50 text-[#b40101] shadow-sm'
+                            : 'border-gray-200 hover:border-[#b40101] hover:bg-red-50/50 text-gray-700'
                         }`}
                       >
                         {formatTime(slot.startTime)}
@@ -379,7 +379,7 @@ const BookAppointment: React.FC = () => {
               type="submit"
               disabled={submitting || !selectedSlot}
               aria-label="Book appointment"
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 transition-all active:scale-[0.98] disabled:active:scale-100"
+              className="w-full bg-[#b40101] hover:bg-[#8b0000] disabled:bg-gray-300 transition-all active:scale-[0.98] disabled:active:scale-100"
             >
               {submitting ? 'Sending Request...' : 'Request Appointment'}
             </Button>

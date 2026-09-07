@@ -1,0 +1,86 @@
+name: CI/CD Pipeline - TORRA Real Estate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  ci:
+    name: Continuous Integration & Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Backend - Install dependencies & generate Prisma Client
+        run: |
+          cd backend
+          npm ci
+          npx prisma generate
+          npx prisma validate
+
+      - name: Frontend - Install dependencies & Type Check
+        run: |
+          cd frontend
+          npm ci
+          npm run lint
+
+      - name: Frontend - Build production bundle
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Docker - Verify Backend Dockerfile Build
+        run: |
+          docker build -t torra-backend:ci ./backend
+
+      - name: Docker - Verify Frontend Dockerfile Build
+        run: |
+          docker build -t torra-frontend:ci ./frontend
+
+  deploy:
+    name: Continuous Deployment to Hostinger VPS
+    needs: ci
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute Remote Deployment via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        if: secrets.SSH_HOST != ''
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER || 'root' }}
+          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            TARGET_DIR="${{ secrets.TARGET_DIR || '/opt/torra' }}"
+            echo "🚀 Deploying to ${TARGET_DIR}..."
+            if [ -d "$TARGET_DIR" ]; then
+              cd "$TARGET_DIR"
+              git pull origin ${{ github.ref_name }}
+              docker compose -f docker-compose.prod.yml up -d --build
+              docker exec torra_backend npx prisma generate
+              echo "✅ Deployment completed successfully!"
+            else
+              echo "❌ Directory $TARGET_DIR does not exist. Please run initial setup first."
+              exit 1
+            fi

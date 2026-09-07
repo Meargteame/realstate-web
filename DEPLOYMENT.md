@@ -54,6 +54,34 @@ docker exec torra_backend node prisma/seed.js              # seed demo data
 docker exec torra_backend wget -qO- http://localhost:5000/api/health
 ```
 
+## 🤖 Automated CI/CD Deployment (GitHub Actions)
+
+A GitHub Actions workflow is configured in `.github/workflows/ci-cd.yml`.
+
+### Continuous Integration (CI)
+On every `push` and `pull_request` to `main` or `master`:
+1. **Backend Check**: Installs dependencies, runs `npx prisma generate`, and validates Prisma schema.
+2. **Frontend Check**: Installs dependencies, runs TypeScript lint check (`npm run lint`), and builds production Vite bundle (`npm run build`).
+3. **Docker Check**: Builds production backend and frontend Docker images to ensure Docker build validity.
+
+### Continuous Deployment (CD)
+Automated deployment runs on push to `main` or `master` branch via SSH:
+1. SSHs into your target VPS host (`SSH_HOST`).
+2. Pulls the latest code into `/opt/torra`.
+3. Runs `docker compose -f docker-compose.prod.yml up -d --build`.
+4. Executes Prisma generate inside the backend container.
+
+### Setting up Repository Secrets
+To enable automated CD deployment, set the following secrets in GitHub (**Settings → Secrets and variables → Actions**):
+
+| Secret Name | Description | Example / Default |
+| --- | --- | --- |
+| `SSH_HOST` | IP address or domain of your VPS | `192.0.2.1` or `vps.yourdomain.com` |
+| `SSH_USER` | SSH username | `root` |
+| `SSH_KEY` | SSH Private Key (RSA or Ed25519) | `-----BEGIN OPENSSH PRIVATE KEY----- ...` |
+| `SSH_PASSWORD` | SSH Password (if not using SSH key) | `your_vps_password` |
+| `TARGET_DIR` | Directory on VPS where app is cloned | `/opt/torra` |
+
 ---
 
 ## ⚠️ Fixes applied this session (were blockers)

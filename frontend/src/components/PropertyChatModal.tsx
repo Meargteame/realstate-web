@@ -194,7 +194,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
       <div style={{ 
         padding: isMobile ? '16px' : '24px', 
         borderBottom: '1px solid #f0f0f0',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        background: 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <Avatar size={56} src={agent.imageUrl} icon={<UserOutlined />} />
@@ -269,7 +269,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
               style={{
                 height: 50,
                 borderRadius: 8,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)',
                 border: 'none',
                 fontSize: 16,
                 fontWeight: 600,
@@ -311,7 +311,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
                       padding: '12px 16px',
                       borderRadius: 12,
                       background: isLead 
-                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                        ? 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)'
                         : 'white',
                       color: isLead ? 'white' : '#262626',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
@@ -356,7 +356,7 @@ export default function PropertyChatModal({ visible, onClose, property, agent }:
                 style={{
                   height: 'auto',
                   borderRadius: '0 8px 8px 0',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  background: 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)',
                   border: 'none'
                 }}
               >

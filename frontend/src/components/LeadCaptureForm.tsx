@@ -77,7 +77,7 @@ export function LeadCaptureForm({
               placeholder="Full Name" 
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="h-11 rounded-sm border-gray-300 focus-visible:ring-black"
+              className="h-11 rounded-sm border-gray-300 focus-visible:ring-[#b40101]"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -87,7 +87,7 @@ export function LeadCaptureForm({
               placeholder="Email" 
               value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
-              className="h-11 rounded-sm border-gray-300 focus-visible:ring-black"
+              className="h-11 rounded-sm border-gray-300 focus-visible:ring-[#b40101]"
             />
             <Input 
               required
@@ -95,7 +95,7 @@ export function LeadCaptureForm({
               placeholder="Phone" 
               value={formData.phone}
               onChange={e => setFormData({ ...formData, phone: e.target.value })}
-              className="h-11 rounded-sm border-gray-300 focus-visible:ring-black"
+              className="h-11 rounded-sm border-gray-300 focus-visible:ring-[#b40101]"
             />
           </div>
           <div>
@@ -104,7 +104,7 @@ export function LeadCaptureForm({
               placeholder="Message" 
               value={formData.message}
               onChange={e => setFormData({ ...formData, message: e.target.value })}
-              className="min-h-[100px] resize-none rounded-sm border-gray-300 focus-visible:ring-black"
+              className="min-h-[100px] resize-none rounded-sm border-gray-300 focus-visible:ring-[#b40101]"
             />
           </div>
           

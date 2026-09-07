@@ -210,7 +210,7 @@ export default function LeadsPage() {
           <Button 
             type="primary" 
             size="small" 
-            style={{ background: '#111827' }} 
+            style={{ background: '#b40101' }} 
             icon={<MailOutlined />}
             onClick={() => navigate('/command/inbox', { state: { leadId: record.id } })}
           >

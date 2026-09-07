@@ -200,7 +200,7 @@ const OpenHouses: React.FC = () => {
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
                 aria-label="Filter by city"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101] transition-all duration-200"
               >
                 <option value="">All Cities</option>
                 {cities.map(city => (
@@ -218,7 +218,7 @@ const OpenHouses: React.FC = () => {
                 onChange={(e) => setSelectedDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
                 aria-label="Filter by date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101] transition-all duration-200"
               />
             </div>
             <div className="flex items-end">
@@ -313,7 +313,7 @@ const OpenHouses: React.FC = () => {
                       </div>
                       <button
                         onClick={() => handleRSVP(openHouse)}
-                        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 bg-[#b40101] text-white text-sm font-medium rounded-md hover:bg-[#8b0000] focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                       >
                         RSVP
                       </button>
@@ -359,7 +359,7 @@ const OpenHouses: React.FC = () => {
                   required
                   value={rsvpForm.name}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 />
               </div>
 
@@ -372,7 +372,7 @@ const OpenHouses: React.FC = () => {
                   required
                   value={rsvpForm.email}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 />
               </div>
 
@@ -384,7 +384,7 @@ const OpenHouses: React.FC = () => {
                   type="tel"
                   value={rsvpForm.phone}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 />
               </div>
 
@@ -395,7 +395,7 @@ const OpenHouses: React.FC = () => {
                 <select
                   value={rsvpForm.guests}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, guests: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 >
                   {[1, 2, 3, 4, 5, 6].map(num => (
                     <option key={num} value={num}>{num}</option>
@@ -411,7 +411,7 @@ const OpenHouses: React.FC = () => {
                   rows={3}
                   value={rsvpForm.message}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, message: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                   placeholder="Any questions or special requests..."
                 />
               </div>
@@ -428,7 +428,7 @@ const OpenHouses: React.FC = () => {
                   type="submit"
                   disabled={rsvpLoading}
                   aria-label="Submit RSVP"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000] focus:outline-none focus:ring-2 focus:ring-[#b40101] disabled:opacity-50"
                 >
                   {rsvpLoading ? 'Submitting...' : 'Submit RSVP'}
                 </button>

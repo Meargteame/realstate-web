@@ -533,9 +533,7 @@ export default function PropertyDetails() {
                           fontSize: 16,
                           fontWeight: 600,
                           borderRadius: 8,
-                          background: hasExistingChat 
-                            ? 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)'
-                            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          background: 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)',
                           border: 'none',
                           position: 'relative'
                         }}
@@ -546,7 +544,7 @@ export default function PropertyDetails() {
                             position: 'absolute',
                             top: -8,
                             right: -8,
-                            background: '#ff4d4f',
+                            background: '#b40101',
                             color: 'white',
                             borderRadius: '50%',
                             width: 24,
@@ -598,13 +596,13 @@ export default function PropertyDetails() {
                     <div>
                       <Row gutter={16}>
                         <Col span={12} style={{ textAlign: 'center' }}>
-                          <Title level={3} style={{ margin: 0, color: '#667eea' }}>
+                          <Title level={3} style={{ margin: 0, color: '#b40101' }}>
                             {agent.totalSales || 0}
                           </Title>
                           <Text type="secondary" style={{ fontSize: 12 }}>Sales</Text>
                         </Col>
                         <Col span={12} style={{ textAlign: 'center' }}>
-                          <Title level={3} style={{ margin: 0, color: '#667eea' }}>
+                          <Title level={3} style={{ margin: 0, color: '#b40101' }}>
                             {agent.rating || 5.0}★
                           </Title>
                           <Text type="secondary" style={{ fontSize: 12 }}>Rating</Text>

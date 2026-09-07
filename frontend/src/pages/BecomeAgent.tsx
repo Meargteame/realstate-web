@@ -116,7 +116,7 @@ export default function BecomeAgent() {
                       htmlType="submit" 
                       loading={loading}
                       disabled={loading}
-                      style={{ background: '#111827', borderColor: '#111827', height: isMobile ? '48px' : '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}
+                      style={{ background: '#b40101', borderColor: '#b40101', height: isMobile ? '48px' : '64px', fontWeight: 900, borderRadius: '32px', marginTop: '16px' }}
                     >
                       {loading ? 'SUBMITTING...' : 'SUBMIT INQUIRY'}
                     </Button>

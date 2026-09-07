@@ -200,7 +200,7 @@ export default function AffordabilityCalculator() {
           {/* Results */}
           <Col xs={24} lg={12}>
             {result ? (
-              <Card style={{ borderRadius: '16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+              <Card style={{ borderRadius: '16px', background: 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)', border: 'none' }}>
                 <Title level={3} style={{ color: 'white', marginBottom: 32 }}>
                   You Can Afford
                 </Title>

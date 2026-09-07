@@ -112,9 +112,9 @@ export default function SignUp() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA]">
       {/* Premium Visual Sidebar */}
-      <div className="hidden md:flex md:w-1/2 bg-[#111827] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
+      <div className="hidden md:flex md:w-1/2 bg-[#B40101] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
         <div aria-hidden="true" className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#111827] via-transparent to-[#111827]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#B40101] via-transparent to-[#B40101]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
         <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
           <div className="text-[#B40101] text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
           <div className="text-white/60 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>

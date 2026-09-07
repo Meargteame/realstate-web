@@ -127,7 +127,7 @@ const MarketReports: React.FC<MarketReportsProps> = ({ zipCode, city, state }) =
                 {data.avgPrice ? formatPrice(data.avgPrice) : 'N/A'}
               </p>
             </div>
-            <DollarSign className="h-8 w-8 text-blue-600" />
+            <DollarSign className="h-8 w-8 text-[#b40101]" />
           </div>
           {data.priceChange !== undefined && (
             <div className="mt-2 flex items-center">
@@ -185,7 +185,7 @@ const MarketReports: React.FC<MarketReportsProps> = ({ zipCode, city, state }) =
                 {data.inventoryCount || cityTrends?.totalInventory || 'N/A'}
               </p>
             </div>
-            <Home className="h-8 w-8 text-blue-600" />
+            <Home className="h-8 w-8 text-[#b40101]" />
           </div>
         </div>
 
@@ -216,7 +216,7 @@ const MarketReports: React.FC<MarketReportsProps> = ({ zipCode, city, state }) =
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-[#b40101]">
                 {formatPrice(cityTrends.avgPrice)}
               </p>
               <p className="text-sm text-gray-600">Average Home Price</p>
@@ -325,7 +325,7 @@ const MarketReports: React.FC<MarketReportsProps> = ({ zipCode, city, state }) =
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-[#b40101]">
                 {neighborhoodStats.totalProperties}
               </p>
               <p className="text-sm text-gray-600">Total Properties</p>
@@ -381,7 +381,7 @@ const MarketReports: React.FC<MarketReportsProps> = ({ zipCode, city, state }) =
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {Object.entries(neighborhoodStats.priceRanges).map(([range, count]) => (
                 <div key={range} className="text-center">
-                  <p className="text-lg font-bold text-blue-600">{count}</p>
+                  <p className="text-lg font-bold text-[#b40101]">{count}</p>
                   <p className="text-xs text-gray-600">{range}</p>
                 </div>
               ))}
@@ -430,7 +430,7 @@ const MarketReports: React.FC<MarketReportsProps> = ({ zipCode, city, state }) =
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-[#b40101] text-[#b40101]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >

@@ -171,7 +171,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
             {showSubmitForm && (
               <button
                 onClick={() => setShowReviewForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-[#b40101] text-white text-sm font-medium rounded-md hover:bg-[#8b0000]"
               >
                 Write Review
               </button>
@@ -223,7 +223,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
             onClick={() => setFilter(filterType)}
             className={`px-3 py-1 text-sm rounded-full ${
               filter === filterType
-                ? 'bg-blue-600 text-white'
+                ? 'bg-[#b40101] text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -254,7 +254,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
                         Verified
                       </span>
                     )}
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-[#b40101]">
                       {review.transactionType}
                     </span>
                   </div>
@@ -279,7 +279,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
               {review.agentResponse && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-2">
-                    <MessageCircle className="h-4 w-4 text-blue-600" />
+                    <MessageCircle className="h-4 w-4 text-[#b40101]" />
                     <span className="text-sm font-medium text-gray-900">Agent Response</span>
                   </div>
                   <p className="text-sm text-gray-700">{review.agentResponse}</p>
@@ -308,7 +308,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
                   required
                   value={reviewForm.reviewerName}
                   onChange={(e) => setReviewForm({ ...reviewForm, reviewerName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 />
               </div>
 
@@ -321,7 +321,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
                   required
                   value={reviewForm.reviewerEmail}
                   onChange={(e) => setReviewForm({ ...reviewForm, reviewerEmail: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 />
               </div>
 
@@ -332,7 +332,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
                 <select
                   value={reviewForm.transactionType}
                   onChange={(e) => setReviewForm({ ...reviewForm, transactionType: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 >
                   <option value="buyer">Buyer</option>
                   <option value="seller">Seller</option>
@@ -373,7 +373,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
                   required
                   value={reviewForm.comment}
                   onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                   placeholder="Share your experience working with this agent..."
                 />
               </div>
@@ -389,7 +389,7 @@ const AgentReviews: React.FC<AgentReviewsProps> = ({ agentId, showSubmitForm = t
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000] disabled:opacity-50"
                 >
                   {submitting ? 'Submitting...' : 'Submit Review'}
                 </button>

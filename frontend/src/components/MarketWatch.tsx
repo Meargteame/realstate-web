@@ -11,8 +11,8 @@ const marketData = [
     change: "+12.4%",
     isPositive: true,
     Icon: TrendingUp,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
+    iconBg: "bg-red-100",
+    iconColor: "text-[#b40101]",
   },
   {
     title: "Singapore Central",

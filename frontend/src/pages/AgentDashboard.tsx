@@ -79,7 +79,7 @@ export default function AgentDashboard() {
   const statusData = useMemo(() => [
     { name: 'New', value: leads.filter((l: any) => l.status === 'New').length, color: '#b40101' },
     { name: 'Contacted', value: leads.filter((l: any) => l.status === 'Contacted').length, color: '#373a4b' },
-    { name: 'Qualified', value: leads.filter((l: any) => l.status === 'Qualified').length, color: '#667eea' },
+    { name: 'Qualified', value: leads.filter((l: any) => l.status === 'Qualified').length, color: '#b40101' },
     { name: 'Closed', value: leads.filter((l: any) => l.status === 'Closed').length, color: '#10b981' },
     { name: 'Lost', value: leads.filter((l: any) => l.status === 'Lost').length, color: '#9ca3af' },
   ].filter(d => d.value > 0), [leads]);
@@ -142,7 +142,7 @@ export default function AgentDashboard() {
       key: 'action',
       render: (_: any, record: any) => (
         <a href={`mailto:${record.email}`}>
-          <Button type="primary" size="small" style={{ background: '#111827' }}>Reply</Button>
+          <Button type="primary" size="small" style={{ background: '#b40101' }}>Reply</Button>
         </a>
       ),
     },
@@ -341,11 +341,11 @@ export default function AgentDashboard() {
         </Col>
         <Col xs={24} md={8}>
           <AntCard bordered={false} style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-            <ClockCircleOutlined style={{ fontSize: 32, color: '#667eea', marginBottom: 12 }} />
+            <ClockCircleOutlined style={{ fontSize: 32, color: '#b40101', marginBottom: 12 }} />
             <Title level={5} style={{ marginBottom: 16 }}>Response Rate</Title>
             <Progress 
               percent={leads.length > 0 ? Math.round(((leads.length - newLeads) / leads.length) * 100) : 0}
-              strokeColor="#667eea"
+              strokeColor="#b40101"
               format={(pct) => `${pct}%`}
             />
           </AntCard>

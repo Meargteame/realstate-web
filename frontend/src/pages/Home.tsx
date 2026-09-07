@@ -123,8 +123,8 @@ export default function Home() {
             size={btnSm}
             onClick={() => navigate("/properties")}
             style={{
-              borderColor: "#111827",
-              color: "#111827",
+              borderColor: "#b40101",
+              color: "#b40101",
               fontWeight: 700,
               height: btnH,
               padding: btnP,
@@ -353,8 +353,8 @@ export default function Home() {
             size={btnSm}
             onClick={() => navigate("/agents")}
             style={{
-              borderColor: "#111827",
-              color: "#111827",
+              borderColor: "#b40101",
+              color: "#b40101",
               fontWeight: 700,
               height: btnH,
               padding: btnP,
@@ -651,8 +651,8 @@ export default function Home() {
             onClick={() => navigate("/mortgage-calculator")}
             style={{
               marginTop: isMobile ? "16px" : "40px",
-              borderColor: "#111827",
-              color: "#111827",
+              borderColor: "#b40101",
+              color: "#b40101",
               fontWeight: 700,
               height: isMobile ? "44px" : "56px",
               padding: isMobile ? "0 24px" : "0 40px",
@@ -663,13 +663,13 @@ export default function Home() {
             }}
             onMouseEnter={(e) => {
               if (isMobile) return;
-              e.currentTarget.style.background = "#111827";
+              e.currentTarget.style.background = "#b40101";
               e.currentTarget.style.color = "white";
             }}
             onMouseLeave={(e) => {
               if (isMobile) return;
               e.currentTarget.style.background = "white";
-              e.currentTarget.style.color = "#111827";
+              e.currentTarget.style.color = "#b40101";
             }}
           >
             Learn More About Loans

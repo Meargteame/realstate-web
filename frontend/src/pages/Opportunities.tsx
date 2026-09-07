@@ -196,14 +196,14 @@ export default function Opportunities() {
             <Button 
                type={activeSegment === 'listing' ? 'primary' : 'text'} 
                onClick={() => setActiveSegment('listing')}
-               style={activeSegment === 'listing' ? { background: '#111827', borderColor: '#111827' } : {}}
+               style={activeSegment === 'listing' ? { background: '#b40101', borderColor: '#b40101' } : {}}
             >
               Listings
             </Button>
             <Button 
                type={activeSegment === 'buyer' ? 'primary' : 'text'} 
                onClick={() => setActiveSegment('buyer')}
-               style={activeSegment === 'buyer' ? { background: '#111827', borderColor: '#111827' } : {}}
+               style={activeSegment === 'buyer' ? { background: '#b40101', borderColor: '#b40101' } : {}}
             >
               Buyers
             </Button>

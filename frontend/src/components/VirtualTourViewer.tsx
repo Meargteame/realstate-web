@@ -191,7 +191,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
               </p>
               <button
                 onClick={() => window.open(tour.url, '_blank')}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="mt-2 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000]"
               >
                 <ExternalLink className="h-4 w-4 inline mr-1" />
                 Open 360° View
@@ -278,7 +278,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
             {isAgent && (
               <button
                 onClick={() => setShowAddForm(true)}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="mt-2 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000]"
               >
                 Add Virtual Tour
               </button>
@@ -295,7 +295,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
             {isAgent && (
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="flex items-center px-3 py-1 text-sm bg-[#b40101] text-white rounded-md hover:bg-[#8b0000]"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Tour
@@ -308,7 +308,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
               <div
                 key={tour.id}
                 className={`flex-shrink-0 relative group cursor-pointer ${
-                  selectedTour?.id === tour.id ? 'ring-2 ring-blue-500' : ''
+                  selectedTour?.id === tour.id ? 'ring-2 ring-[#b40101]' : ''
                 }`}
                 onClick={() => setSelectedTour(tour)}
               >
@@ -322,7 +322,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
 
                 {tour.isPrimary && (
                   <div className="absolute top-1 left-1">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-600 text-white">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-[#b40101] text-white">
                       Primary
                     </span>
                   </div>
@@ -389,7 +389,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
                 <select
                   value={tourForm.type}
                   onChange={(e) => setTourForm({ ...tourForm, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                 >
                   <option value="matterport">Matterport 3D Tour</option>
                   <option value="youtube">YouTube Video</option>
@@ -407,7 +407,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
                   required
                   value={tourForm.url}
                   onChange={(e) => setTourForm({ ...tourForm, url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                   placeholder={
                     tourForm.type === 'matterport' ? 'https://my.matterport.com/show/?m=...' :
                     tourForm.type === 'youtube' ? 'https://youtube.com/watch?v=...' :
@@ -424,7 +424,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
                   type="text"
                   value={tourForm.title}
                   onChange={(e) => setTourForm({ ...tourForm, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                   placeholder="e.g., Living Room 360° View"
                 />
               </div>
@@ -437,7 +437,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
                   rows={2}
                   value={tourForm.description}
                   onChange={(e) => setTourForm({ ...tourForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
                   placeholder="Brief description of the tour..."
                 />
               </div>
@@ -448,7 +448,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
                   id="isPrimary"
                   checked={tourForm.isPrimary}
                   onChange={(e) => setTourForm({ ...tourForm, isPrimary: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-[#b40101] focus:ring-[#b40101] border-gray-300 rounded"
                 />
                 <label htmlFor="isPrimary" className="ml-2 block text-sm text-gray-900">
                   Set as primary tour
@@ -466,7 +466,7 @@ const VirtualTourViewer: React.FC<VirtualTourViewerProps> = ({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000] disabled:opacity-50"
                 >
                   {submitting ? 'Adding...' : 'Add Tour'}
                 </button>

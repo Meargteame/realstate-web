@@ -321,7 +321,7 @@ export default function CommandLayout() {
       <Layout style={{ marginLeft: isMobile ? 0 : 260, background: '#f9fafb' }}>
         <Header style={{ 
           background: '#fff', 
-          padding: isMobile ? '0 12px' : '0 24px', 
+          padding: isMobile ? '0 16px' : '0 32px', 
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
           borderBottom: '1px solid #e5e7eb', 
           position: 'sticky', top: 0, zIndex: 10, 

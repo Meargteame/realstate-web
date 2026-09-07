@@ -215,7 +215,7 @@ const Calendar: React.FC = () => {
   };
 
   const eventTypeColors: Record<string, string> = {
-    showing: 'bg-blue-100 text-blue-800 border-blue-300',
+    showing: 'bg-red-100 text-[#b40101] border-red-300',
     appointment: 'bg-green-100 text-green-800 border-green-300',
     open_house: 'bg-purple-100 text-purple-800 border-purple-300',
     meeting: 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -275,7 +275,7 @@ const Calendar: React.FC = () => {
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Calendar</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your appointments and showings</p>
         </div>
-        <Button onClick={() => setShowEventModal(true)} aria-label="Create new event" className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
+        <Button onClick={() => setShowEventModal(true)} aria-label="Create new event" className="bg-[#b40101] hover:bg-[#8b0000] w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           New Event
         </Button>
@@ -324,7 +324,7 @@ const Calendar: React.FC = () => {
                           variant="outline"
                           aria-label="Reject booking"
                           onClick={() => handleRejectBooking(request.id)}
-                          className="border-red-300 text-red-600 hover:bg-red-50"
+                          className="border-red-300 text-[#b40101] hover:bg-red-50"
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -379,7 +379,7 @@ const Calendar: React.FC = () => {
               variant={view === v ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setView(v)}
-              className={`flex-1 sm:flex-none transition-all duration-150 active:scale-95 ${view === v ? 'bg-red-600 hover:bg-red-700 text-white' : 'text-gray-600 hover:bg-gray-200'}`}
+              className={`flex-1 sm:flex-none transition-all duration-150 active:scale-95 ${view === v ? 'bg-[#b40101] hover:bg-[#8b0000] text-white' : 'text-gray-600 hover:bg-gray-200'}`}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
             </Button>
@@ -422,11 +422,11 @@ const Calendar: React.FC = () => {
                     key={index}
                     className={`min-h-[60px] sm:min-h-[100px] md:min-h-[120px] p-1 sm:p-2 border rounded-lg transition-all duration-150 ${
                       date ? 'bg-white hover:bg-gray-100 hover:shadow-sm' : 'bg-gray-50'
-                    } ${isToday ? 'border-red-500 border-2' : 'border-gray-200'}`}
+                    } ${isToday ? 'border-[#b40101] border-2' : 'border-gray-200'}`}
                   >
                     {date && (
                       <>
-                        <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${isToday ? 'text-red-600' : 'text-gray-700'}`}>
+                        <div className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${isToday ? 'text-[#b40101]' : 'text-gray-700'}`}>
                           {date.getDate()}
                         </div>
                         <div className="space-y-0.5 sm:space-y-1">
@@ -466,7 +466,7 @@ const Calendar: React.FC = () => {
               {getWeekDays().map((day, di) => {
                 const isToday = day.getDate() === new Date().getDate() && day.getMonth() === new Date().getMonth();
                 return (
-                  <div key={di} className={`text-center py-2 border-r border-gray-200 ${isToday ? 'text-red-600 font-bold' : 'text-gray-700 font-semibold'}`}>
+                  <div key={di} className={`text-center py-2 border-r border-gray-200 ${isToday ? 'text-[#b40101] font-bold' : 'text-gray-700 font-semibold'}`}>
                     <div className="text-xs">{dayNames[di]}</div>
                     <div className="text-lg">{day.getDate()}</div>
                   </div>
@@ -555,22 +555,22 @@ const Calendar: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                  <input name="title" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Event title" />
+                  <input name="title" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101] focus:border-[#b40101]" placeholder="Event title" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Start *</label>
-                    <input name="startDate" type="datetime-local" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                    <input name="startDate" type="datetime-local" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101] focus:border-[#b40101]" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">End *</label>
-                    <input name="endDate" type="datetime-local" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" />
+                    <input name="endDate" type="datetime-local" required className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101] focus:border-[#b40101]" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    <select name="eventType" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white">
+                    <select name="eventType" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101] focus:border-[#b40101] bg-white">
                       <option value="appointment">Appointment</option>
                       <option value="showing">Showing</option>
                       <option value="open_house">Open House</option>
@@ -580,15 +580,15 @@ const Calendar: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <input name="location" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Optional" />
+                    <input name="location" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101] focus:border-[#b40101]" placeholder="Optional" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea name="description" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Optional" />
+                  <textarea name="description" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101] focus:border-[#b40101]" placeholder="Optional" />
                 </div>
                 <div className="flex items-center gap-2">
-                  <input name="allDay" type="checkbox" id="allDay" className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" />
+                  <input name="allDay" type="checkbox" id="allDay" className="w-4 h-4 text-[#b40101] border-gray-300 rounded focus:ring-[#b40101]" />
                   <label htmlFor="allDay" className="text-sm text-gray-700">All day event</label>
                 </div>
               </div>
@@ -596,7 +596,7 @@ const Calendar: React.FC = () => {
                 <button type="button" onClick={() => setShowEventModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#b40101] rounded-lg hover:bg-[#8b0000]">
                   Create Event
                 </button>
               </div>

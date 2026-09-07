@@ -121,7 +121,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
     <>
       <button
         onClick={handleNativeShare}
-        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex items-center space-x-2 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000] focus:outline-none focus:ring-2 focus:ring-[#b40101]"
       >
         <Share2 className="h-4 w-4" />
         <span>Share</span>
@@ -158,7 +158,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
                     {title}
                   </h4>
                   {price && (
-                    <p className="text-sm font-semibold text-blue-600">
+                    <p className="text-sm font-semibold text-[#b40101]">
                       {formatPrice(price)}
                     </p>
                   )}
@@ -175,9 +175,9 @@ const SocialShare: React.FC<SocialShareProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => handleShare('facebook')}
-                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 bg-[#b40101] rounded-full flex items-center justify-center">
                   <Facebook className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-sm font-medium text-gray-900">Facebook</span>
@@ -185,7 +185,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
 
               <button
                 onClick={() => handleShare('twitter')}
-                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
                 <div className="flex-shrink-0 w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
                   <Twitter className="h-4 w-4 text-white" />
@@ -195,9 +195,9 @@ const SocialShare: React.FC<SocialShareProps> = ({
 
               <button
                 onClick={() => handleShare('linkedin')}
-                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 bg-[#8b0000] rounded-full flex items-center justify-center">
                   <Linkedin className="h-4 w-4 text-white" />
                 </div>
                 <span className="text-sm font-medium text-gray-900">LinkedIn</span>
@@ -205,7 +205,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
 
               <button
                 onClick={() => handleShare('whatsapp')}
-                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
                 <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                   <MessageCircle className="h-4 w-4 text-white" />
@@ -215,7 +215,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
 
               <button
                 onClick={() => handleShare('email')}
-                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
                 <div className="flex-shrink-0 w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
                   <Mail className="h-4 w-4 text-white" />
@@ -225,7 +225,7 @@ const SocialShare: React.FC<SocialShareProps> = ({
 
               <button
                 onClick={() => handleShare('copy')}
-                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#b40101]"
               >
                 <div className="flex-shrink-0 w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
                   {copied ? (

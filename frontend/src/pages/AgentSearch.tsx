@@ -74,7 +74,7 @@ export default function AgentSearch() {
                size="large" 
                onClick={handleSearch}
                loading={loading}
-               style={{ background: '#373a4b', borderColor: '#373a4b', fontWeight: 'bold' }}
+               style={{ background: '#b40101', borderColor: '#b40101', fontWeight: 'bold' }}
             >
               Search
             </Button>
