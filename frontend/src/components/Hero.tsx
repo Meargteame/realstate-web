@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Input, Button, Card, Typography, Space } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Input, Button, Card, Typography, Space, Tabs } from "antd";
+import { SearchOutlined, HomeOutlined, BankOutlined, ShopOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
 
@@ -8,46 +8,60 @@ const { Title, Text } = Typography;
 
 export default function Hero() {
   const [searchValue, setSearchValue] = useState("");
+  const [activeTab, setActiveTab] = useState("buy");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const handleSearch = () => {
-    if (searchValue.trim()) {
-      navigate(`/properties?q=${encodeURIComponent(searchValue)}`);
-    } else {
-      navigate('/properties');
+    const query = searchValue.trim();
+    let url = `/properties?status=${activeTab === 'rent' ? 'For Rent' : activeTab === 'sold' ? 'Sold' : 'Active'}`;
+    if (activeTab === 'commercial') {
+      url += '&type=Commercial';
     }
+    if (query) {
+      url += `&q=${encodeURIComponent(query)}`;
+    }
+    navigate(url);
   };
+
+  const tabs = [
+    { key: "buy", label: "Buy", icon: <HomeOutlined /> },
+    { key: "rent", label: "Rent", icon: <BankOutlined /> },
+    { key: "commercial", label: "Commercial", icon: <ShopOutlined /> },
+    { key: "sold", label: "Recently Sold", icon: <CheckCircleOutlined /> },
+  ];
 
   return (
     <section style={{ 
       position: 'relative', 
-      height: isMobile ? '100vh' : '85vh', 
-      minHeight: isMobile ? '600px' : '700px',
+      height: isMobile ? '90vh' : '85vh', 
+      minHeight: isMobile ? '580px' : '720px',
       width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      background: 'linear-gradient(135deg, #1a1d2e 0%, #2a2d3a 100%)'
+      background: 'linear-gradient(135deg, #1e222d 0%, #373a4b 100%)'
     }}>
-      {/* Background Image with Overlay */}
+      {/* High-res Background Image with Subtle Animation */}
       <div 
         style={{ 
           position: 'absolute',
           inset: 0,
-          backgroundImage: 'url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")',
+          backgroundImage: 'url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2000&q=85")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          opacity: 0.4
+          opacity: 0.38,
+          transform: 'scale(1.02)',
+          transition: 'transform 10s ease-out'
         }} 
       />
       
-      {/* Gradient Overlay */}
+      {/* Multi-layered Vignette Overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%)'
+        background: 'radial-gradient(circle at center, rgba(30, 34, 45, 0.4) 0%, rgba(17, 24, 39, 0.85) 100%)'
       }} />
 
       <div style={{ 
@@ -55,66 +69,122 @@ export default function Hero() {
         zIndex: 1, 
         maxWidth: '1100px', 
         width: '100%', 
-        padding: '0 16px',
+        padding: '0 20px',
         textAlign: 'center', 
         color: 'white' 
       }}>
+        {/* Luxury Badge */}
+        <div style={{ marginBottom: '16px' }}>
+          <span style={{
+            background: 'rgba(180, 1, 1, 0.2)',
+            border: '1px solid rgba(180, 1, 1, 0.5)',
+            color: '#ff6b6b',
+            padding: '6px 18px',
+            borderRadius: '20px',
+            fontSize: isMobile ? '11px' : '13px',
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            backdropFilter: 'blur(8px)'
+          }}>
+            Torra Commercial & Residential Platform
+          </span>
+        </div>
+
         {/* Main Headline */}
         <Title 
           style={{ 
             color: 'white', 
-            fontSize: isMobile ? '36px' : '72px', 
+            fontSize: isMobile ? '36px' : '68px', 
             fontWeight: 900, 
-            marginBottom: isMobile ? '12px' : '24px', 
+            marginBottom: isMobile ? '12px' : '20px', 
             letterSpacing: '-0.03em',
             lineHeight: 1.1,
-            textShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            textShadow: '0 4px 20px rgba(0,0,0,0.5)'
           }}
         >
-          Find Your Dream Home
+          Discover Extraordinary Real Estate
         </Title>
         
         {/* Subheadline */}
         <Text 
           style={{ 
             color: 'rgba(255,255,255,0.9)', 
-            fontSize: isMobile ? '16px' : '22px', 
+            fontSize: isMobile ? '15px' : '20px', 
             display: 'block', 
             fontWeight: 400,
             lineHeight: 1.6,
-            maxWidth: '700px',
-            margin: '0 auto 32px'
+            maxWidth: '680px',
+            margin: '0 auto 36px'
           }}
         >
-          Discover exceptional properties with TORRA Commercial Real Estate Group
+          Explore premier residential estates, commercial investments, and market insights tailored by top agents.
         </Text>
 
-        {/* Enhanced Search Card */}
+        {/* Glassmorphic Search Container */}
         <Card 
           style={{ 
-            borderRadius: '12px', 
-            boxShadow: '0 32px 64px rgba(0,0,0,0.3)',
-            border: 'none',
-            padding: isMobile ? '4px' : '12px',
-            background: 'rgba(255,255,255,0.98)',
-            backdropFilter: 'blur(10px)',
-            transition: 'box-shadow 0.3s ease, transform 0.3s ease'
+            borderRadius: '16px', 
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: isMobile ? '4px' : '8px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
           }}
           styles={{ body: { padding: isMobile ? '12px' : '20px' } }}
         >
+          {/* Category Tabs */}
+          <div style={{ marginBottom: '16px', display: 'flex', justifyItems: 'center', justifyContent: 'center' }}>
+            <div style={{ 
+              display: 'inline-flex', 
+              gap: '4px', 
+              background: '#f1f3f5', 
+              padding: '4px', 
+              borderRadius: '10px' 
+            }}>
+              {tabs.map((t) => {
+                const isActive = activeTab === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: isMobile ? '6px 12px' : '8px 20px',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '12px' : '14px',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: isActive ? '#b40101' : 'transparent',
+                      color: isActive ? '#ffffff' : '#4b5563',
+                      boxShadow: isActive ? '0 4px 12px rgba(180, 1, 1, 0.3)' : 'none',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    {t.icon}
+                    <span>{t.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <Space.Compact style={{ width: '100%' }}>
             <Input 
               size="large" 
-              placeholder="Search by city, ZIP, or address" 
+              placeholder={activeTab === 'rent' ? "Search rentals by city, ZIP, or keyword..." : "Search properties by address, city, or neighborhood..."} 
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onPressEnter={handleSearch}
-              prefix={<SearchOutlined style={{ color: '#b40101', fontSize: '16px' }} />}
+              prefix={<SearchOutlined style={{ color: '#b40101', fontSize: '18px' }} />}
               style={{ 
-                height: '48px', 
+                height: isMobile ? '46px' : '56px', 
                 borderRadius: '12px 0 0 12px',
-                fontSize: isMobile ? '14px' : '18px',
-                border: '2px solid #f0f0f0',
+                fontSize: isMobile ? '14px' : '17px',
+                border: '2px solid #e5e7eb',
                 fontWeight: 500
               }} 
             />
@@ -123,13 +193,13 @@ export default function Hero() {
               size="large" 
               onClick={handleSearch}
               style={{ 
-                height: '48px', 
+                height: isMobile ? '46px' : '56px', 
                 borderRadius: '0 12px 12px 0',
                 background: '#b40101',
                 borderColor: '#b40101',
-                width: isMobile ? '80px' : '140px',
+                width: isMobile ? '90px' : '150px',
                 fontWeight: 700,
-                fontSize: isMobile ? '12px' : '16px',
+                fontSize: isMobile ? '13px' : '16px',
                 letterSpacing: '0.05em'
               }}
             >
@@ -139,10 +209,10 @@ export default function Hero() {
         </Card>
 
         {/* Trending Searches */}
-        <div style={{ marginTop: '24px' }}>
-           <Space size="small" wrap>
-              <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: isMobile ? '11px' : '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Trending:
+        <div style={{ marginTop: '28px' }}>
+           <Space size="small" wrap justify="center">
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: isMobile ? '11px' : '13px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Popular Locations:
               </Text>
               {['Austin, TX', 'Charlotte, NC', 'Miami, FL', 'Denver, CO'].map(city => (
                 <Text 
@@ -150,22 +220,25 @@ export default function Hero() {
                   style={{ 
                     color: 'white', 
                     cursor: 'pointer',
-                    fontSize: isMobile ? '12px' : '15px',
-                    fontWeight: 500,
-                    padding: isMobile ? '4px 10px' : '8px 16px',
+                    fontSize: isMobile ? '12px' : '14px',
+                    fontWeight: 600,
+                    padding: isMobile ? '4px 10px' : '6px 14px',
                     borderRadius: '20px',
-                    background: 'rgba(255,255,255,0.1)',
+                    background: 'rgba(255,255,255,0.12)',
                     backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    transition: 'all 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
                     if (isMobile) return;
-                    e.currentTarget.style.background = 'rgba(180,1,1,0.9)';
+                    e.currentTarget.style.background = '#b40101';
+                    e.currentTarget.style.borderColor = '#b40101';
                     e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
                     if (isMobile) return;
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                   onClick={() => navigate(`/properties?q=${city.split(',')[0]}`)}
@@ -179,3 +252,4 @@ export default function Hero() {
     </section>
   );
 }
+
