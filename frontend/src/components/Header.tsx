@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Button, Space, Drawer, Typography, Dropdown, Avatar } from "antd";
-import { MenuOutlined, UserOutlined, SearchOutlined, HeartOutlined, CalendarOutlined, LogoutOutlined, DashboardOutlined } from "@ant-design/icons";
+import { Layout, Menu, Button, Space, Drawer, Typography, Dropdown, Avatar, Badge } from "antd";
+import { 
+  MenuOutlined, 
+  UserOutlined, 
+  SearchOutlined, 
+  HeartOutlined, 
+  CalendarOutlined, 
+  LogoutOutlined, 
+  DashboardOutlined,
+  CompassOutlined,
+  PhoneOutlined
+} from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "../hooks/useBreakpoint";
 import TorraLogo from "./TorraLogo";
@@ -12,13 +22,14 @@ export default function Header() {
   const [visible, setVisible] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [savedCount, setSavedCount] = useState<number>(0);
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 15);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -31,7 +42,12 @@ export default function Header() {
         setCurrentUser(JSON.parse(stored));
       } catch { setCurrentUser(null); }
     }
-  }, []);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('torra_saved_properties') || '[]');
+      if (Array.isArray(saved)) setSavedCount(saved.length);
+    } catch {}
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem('torra_user');
@@ -70,43 +86,50 @@ export default function Header() {
       {/* Top Utility Announcement Bar */}
       {!isMobile && (
         <div style={{ 
-          background: '#0f172a', 
-          color: '#e2e8f0', 
-          padding: '8px 48px', 
+          background: '#090d16', 
+          color: '#cbd5e1', 
+          padding: '7px 48px', 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
           fontSize: '12px', 
-          fontWeight: 600
+          fontWeight: 600,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
         }}>
-          <Text style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 600 }}>
-            TORRA COMMERCIAL & RESIDENTIAL REAL ESTATE GROUP
-          </Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+            <Text style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>
+              TORRA COMMERCIAL & LUXURY RESIDENTIAL BROKERAGE
+            </Text>
+          </div>
           <Space size="large">
-            <Link to="/properties?type=Commercial" style={{ color: '#e2e8f0', fontSize: '12px' }}>Commercial Listings</Link>
-            <Link to="/properties?type=Land" style={{ color: '#e2e8f0', fontSize: '12px' }}>Land & Lots</Link>
-            <Link to="/open-houses" style={{ color: '#e2e8f0', fontSize: '12px' }}>Open Houses</Link>
-            <Text style={{ color: '#e2e8f0', fontSize: '12px' }}>📞 (469) 345-6868</Text>
+            <Link to="/properties?type=Commercial" style={{ color: '#cbd5e1', fontSize: '12px', textDecoration: 'none' }}>Commercial</Link>
+            <Link to="/properties?type=Land" style={{ color: '#cbd5e1', fontSize: '12px', textDecoration: 'none' }}>Land & Lots</Link>
+            <Link to="/open-houses" style={{ color: '#cbd5e1', fontSize: '12px', textDecoration: 'none' }}>Open Houses</Link>
+            <span style={{ color: '#ffffff', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <PhoneOutlined style={{ color: '#ef4444' }} /> (469) 345-6868
+            </span>
           </Space>
         </div>
       )}
 
-      {/* Main Clean White Header */}
+      {/* Main Glassmorphic Header */}
       <AntHeader style={{ 
-        background: '#ffffff',
+        background: isScrolled ? 'rgba(255, 255, 255, 0.95)' : '#ffffff',
+        backdropFilter: isScrolled ? 'blur(16px)' : 'none',
         height: isMobile ? '64px' : '76px', 
         padding: isMobile ? '0 16px' : '0 48px', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between',
-        boxShadow: isScrolled ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
-        borderBottom: '1px solid #e5e7eb',
+        boxShadow: isScrolled ? '0 10px 25px -5px rgba(15, 23, 42, 0.08)' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+        borderBottom: isScrolled ? '1px solid rgba(226, 232, 240, 0.8)' : '1px solid #e2e8f0',
         lineHeight: isMobile ? '64px' : '76px',
-        transition: 'box-shadow 0.2s ease'
+        transition: 'all 0.25s ease'
       }}>
         {/* Logo */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <TorraLogo size={isMobile ? 36 : 44} color="#b40101" compact showText />
+          <TorraLogo size={isMobile ? 36 : 42} color="#b40101" compact showText />
         </Link>
 
         {/* Navigation Tabs - Desktop */}
@@ -129,31 +152,45 @@ export default function Header() {
         )}
 
         {/* Action Buttons */}
-        <Space size="middle">
+        <Space size="middle" align="center">
           {!isMobile && (
             <Button 
               type="text"
-              icon={<SearchOutlined style={{ fontSize: '18px', color: '#374151' }} />}
+              icon={<SearchOutlined style={{ fontSize: '18px', color: '#334155' }} />}
               onClick={() => navigate('/properties')}
-              style={{ height: '44px', width: '44px', borderRadius: '50%' }}
+              style={{ height: '42px', width: '42px', borderRadius: '50%' }}
+              title="Search Properties"
             />
           )}
+
+          {!isMobile && (
+            <Badge count={savedCount} size="small" offset={[-2, 4]} color="#b40101">
+              <Button 
+                type="text"
+                icon={<HeartOutlined style={{ fontSize: '18px', color: '#334155' }} />}
+                onClick={() => navigate('/saved-searches')}
+                style={{ height: '42px', width: '42px', borderRadius: '50%' }}
+                title="Saved Homes"
+              />
+            </Badge>
+          )}
+
           {currentUser ? (
             <Dropdown menu={{ items: getUserMenuItems() }} placement="bottomRight" trigger={['click']}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px 8px', borderRadius: '24px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                 <Avatar 
-                  size={isMobile ? 36 : 42}
+                  size={isMobile ? 32 : 36}
                   src={currentUser.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'U')}&background=b40101&color=fff&size=128`}
                   style={{ backgroundColor: '#b40101', flexShrink: 0 }}
                 >
                   {(currentUser.name || 'U').charAt(0).toUpperCase()}
                 </Avatar>
                 {!isMobile && (
-                  <div style={{ lineHeight: 1.2 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                  <div style={{ lineHeight: 1.2, paddingRight: '6px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
                       {currentUser.name?.split(' ')[0] || 'User'}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'capitalize' }}>
+                    <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'capitalize', fontWeight: 600 }}>
                       {currentUser.role === 'agent' ? 'Realtor' : currentUser.role === 'admin' ? 'Admin' : 'Account'}
                     </div>
                   </div>
@@ -169,16 +206,17 @@ export default function Header() {
                 borderColor: '#b40101', 
                 fontWeight: 700,
                 height: isMobile ? '38px' : '44px',
-                padding: isMobile ? '0 16px' : '0 24px',
-                borderRadius: '8px',
+                padding: isMobile ? '0 18px' : '0 24px',
+                borderRadius: '10px',
                 fontSize: '14px',
                 letterSpacing: '0.02em',
-                boxShadow: '0 2px 6px rgba(180,1,1,0.25)'
+                boxShadow: '0 4px 12px rgba(180,1,1,0.25)'
               }}
             >
               Sign In
             </Button>
           )}
+
           {isMobile && (
             <Button 
               type="text" 
@@ -199,7 +237,7 @@ export default function Header() {
           <Menu 
             mode="vertical" 
             selectedKeys={[location.pathname]} 
-            items={[...navItems, { key: '/login', label: <Link to="/login">Sign In / Register</Link> }]}
+            items={[...navItems, { key: '/saved-searches', label: <Link to="/saved-searches">Saved Homes ({savedCount})</Link> }, { key: '/login', label: <Link to="/login">Sign In / Register</Link> }]}
             style={{ border: 'none', fontSize: '16px', fontWeight: 600 }}
             onClick={() => setVisible(false)}
           />
