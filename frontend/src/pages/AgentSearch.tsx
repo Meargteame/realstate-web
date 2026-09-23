@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Input, Button, Space, Typography, Select, Breadcrumb, Empty, notification } from "antd";
-import { SearchOutlined, GlobalOutlined, StarOutlined } from "@ant-design/icons";
+import { notification } from "antd";
+import {
+  Search,
+  Globe,
+  Award,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  ChevronDown,
+  UserCheck
+} from "lucide-react";
 import AgentCard from "@/components/AgentCard";
 import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Text } = Typography;
 
 export default function AgentSearch() {
   const isMobile = useIsMobile();
@@ -19,15 +26,15 @@ export default function AgentSearch() {
     setLoading(true);
     const url = q ? `/api/agents?q=${encodeURIComponent(q)}` : "/api/agents";
     fetch(url)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setAgents(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         setLoading(false);
-        notification.error({ message: 'Error', description: 'Could not fetch agents.' });
+        notification.error({ message: "Network Error", description: "Could not retrieve licensed advisor roster." });
       });
   };
 
@@ -35,17 +42,15 @@ export default function AgentSearch() {
     fetchAgents();
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
     fetchAgents(searchQuery);
   };
 
-  // Filter agents based on language and luxury
-  const filteredAgents = agents.filter(agent => {
-    // Language filter
+  const filteredAgents = agents.filter((agent) => {
     if (selectedLanguage && !agent.languages?.includes(selectedLanguage)) {
       return false;
     }
-    // Luxury filter
     if (showLuxuryOnly && !agent.isLuxury) {
       return false;
     }
@@ -53,119 +58,245 @@ export default function AgentSearch() {
   });
 
   return (
-    <div style={{ background: '#f0f2f5', minHeight: 'calc(100vh - 80px)' }}>
-      {/* Top Filter Bar */}
-      <div style={{ background: 'white', borderBottom: '1px solid #d9d9d9', padding: isMobile ? '16px' : '24px 64px', position: 'sticky', top: isMobile ? '64px' : '80px', zIndex: 100 }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: isMobile ? '12px' : '24px' }}>
-          
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, minWidth: isMobile ? 'auto' : '300px' }}>
-            <Input 
-              placeholder={isMobile ? "Search agents..." : "Find an agent by name, email or bio"} 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onPressEnter={handleSearch}
-              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-              style={{ height: '44px', borderRadius: '22px', flex: 1, maxWidth: '500px', fontSize: isMobile ? '14px' : '15px' }}
-              aria-label="Search agents"
-            />
-            <Button 
-               type="primary" 
-               shape="round" 
-               size="large" 
-               onClick={handleSearch}
-               loading={loading}
-               style={{ background: '#b40101', borderColor: '#b40101', fontWeight: 'bold' }}
+    <div style={{ background: "#fbfbfb", minHeight: "100vh" }}>
+      {/* ── EDITORIAL HEADER & ROSTER HERO ── */}
+      <section
+        style={{
+          background: "#ffffff",
+          borderBottom: "1px solid #eaeaea",
+          padding: isMobile ? "36px 16px 32px" : "56px 32px 48px",
+        }}
+      >
+        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginBottom: 14,
+              borderLeft: "3px solid #b40101",
+              paddingLeft: 12,
+            }}
+          >
+            <span
+              style={{
+                color: "#666",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
             >
-              Search
-            </Button>
+              Private Client Advisory
+            </span>
           </div>
 
-          <Space size={isMobile ? "small" : "middle"}>
-            <Select 
-               placeholder="Languages" 
-               style={{ width: isMobile ? 120 : 150 }} 
-               suffixIcon={<GlobalOutlined />}
-               value={selectedLanguage}
-               onChange={setSelectedLanguage}
-               allowClear
-               aria-label="Filter by language"
-               options={[
-                 { value: 'English', label: 'English' }, 
-                 { value: 'Spanish', label: 'Spanish' },
-                 { value: 'Mandarin', label: 'Mandarin' },
-                 { value: 'French', label: 'French' }
-               ]} 
-            />
-            <Button 
-              icon={<StarOutlined />} 
-              shape="round"
-              type={showLuxuryOnly ? 'primary' : 'default'}
-              style={showLuxuryOnly ? { background: '#faad14', borderColor: '#faad14' } : {}}
-              onClick={() => setShowLuxuryOnly(!showLuxuryOnly)}
-              aria-label="Toggle luxury expert filter"
+          <h1
+            style={{
+              fontFamily: '"DM Serif Display", Georgia, serif',
+              fontSize: isMobile ? 32 : 52,
+              fontWeight: 400,
+              color: "#111",
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              margin: "0 0 12px",
+            }}
+          >
+            The Torra Licensed Specialists
+          </h1>
+
+          <p style={{ color: "#666", fontSize: 16, margin: "0 0 32px", maxWidth: 640 }}>
+            Connect with Texas' foremost real estate advisors specializing in commercial acquisition, trophy residential estates, and discrete off-market transactions.
+          </p>
+
+          {/* Search Bar & Filter Controls */}
+          <form
+            onSubmit={handleSearch}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            {/* Search Input Box */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: "#f4f4f4",
+                borderRadius: 8,
+                padding: "0 16px",
+                flex: isMobile ? "1 1 100%" : "0 1 440px",
+                height: 46,
+              }}
             >
-              Luxury Expert
-            </Button>
-          </Space>
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '24px 16px' : '64px' }}>
-        <div style={{ marginBottom: isMobile ? '24px' : '40px' }}>
-          <Breadcrumb items={[{ title: <Link to="/">Home</Link> }, { title: 'Agents' }]} />
-          <Title level={1} style={{ margin: '12px 0 8px', fontWeight: 900, fontSize: isMobile ? 24 : 38 }}>All Agents</Title>
-          <Text type="secondary" strong>
-            {filteredAgents.length} Result{filteredAgents.length !== 1 ? 's' : ''}
-            {(selectedLanguage || showLuxuryOnly) && ` (filtered from ${agents.length} total)`}
-          </Text>
-        </div>
-
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', 
-          gap: isMobile ? '16px' : '32px' 
-        }}>
-          {filteredAgents.map((agent) => (
-            <div key={agent.id}>
-              <AgentCard agent={agent} />
+              <Search size={18} color="#777" style={{ flexShrink: 0, marginRight: 10 }} />
+              <input
+                type="text"
+                placeholder="Find specialist by name, city, or specialty..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  width: "100%",
+                  fontSize: 14,
+                  outline: "none",
+                  color: "#111",
+                }}
+              />
             </div>
-          ))}
 
-          {!loading && filteredAgents.length === 0 && agents.length > 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: isMobile ? '40px 16px' : '80px' }}>
-              <Empty description="No agents found matching your filters. Try adjusting your search criteria." />
+            {/* Language Selector */}
+            <div style={{ position: "relative" }}>
+              <select
+                value={selectedLanguage || ""}
+                onChange={(e) => setSelectedLanguage(e.target.value || null)}
+                style={{
+                  height: 46,
+                  padding: "0 32px 0 14px",
+                  borderRadius: 8,
+                  border: selectedLanguage ? "1.5px solid #111" : "1px solid #d5d5d5",
+                  background: selectedLanguage ? "#111" : "#fff",
+                  color: selectedLanguage ? "#fff" : "#111",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  appearance: "none",
+                  outline: "none",
+                }}
+              >
+                <option value="" style={{ color: "#111", background: "#fff" }}>All Languages</option>
+                <option value="English" style={{ color: "#111", background: "#fff" }}>English</option>
+                <option value="Spanish" style={{ color: "#111", background: "#fff" }}>Spanish</option>
+                <option value="Mandarin" style={{ color: "#111", background: "#fff" }}>Mandarin</option>
+                <option value="French" style={{ color: "#111", background: "#fff" }}>French</option>
+              </select>
+              <ChevronDown
+                size={14}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                  color: selectedLanguage ? "#fff" : "#666",
+                }}
+              />
             </div>
+
+            {/* Luxury Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowLuxuryOnly(!showLuxuryOnly)}
+              style={{
+                height: 46,
+                padding: "0 18px",
+                borderRadius: 8,
+                border: showLuxuryOnly ? "1.5px solid #b40101" : "1px solid #d5d5d5",
+                background: showLuxuryOnly ? "#fff5f5" : "#fff",
+                color: showLuxuryOnly ? "#b40101" : "#333",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                transition: "all 0.15s",
+              }}
+            >
+              <Award size={16} />
+              <span>Luxury Certified</span>
+            </button>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              style={{
+                height: 46,
+                padding: "0 24px",
+                borderRadius: 8,
+                border: "none",
+                background: "#b40101",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#910101")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#b40101")}
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      </section>
+
+      {/* ── AGENT DIRECTORY GRID ── */}
+      <section style={{ maxWidth: 1320, margin: "0 auto", padding: isMobile ? "32px 16px 80px" : "48px 32px 96px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#777", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            {filteredAgents.length} {filteredAgents.length === 1 ? "Specialist" : "Specialists"} Available
+          </span>
+          {(selectedLanguage || showLuxuryOnly || searchQuery) && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedLanguage(null);
+                setShowLuxuryOnly(false);
+                fetchAgents("");
+              }}
+              style={{
+                border: "none",
+                background: "none",
+                color: "#b40101",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Reset Filters
+            </button>
           )}
-
-          {!loading && agents.length === 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: isMobile ? '40px 16px' : '80px' }}>
-              <Empty description="No agents found matching your query." />
-            </div>
-          )}
         </div>
 
-        {loading && <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', 
-          gap: isMobile ? '16px' : '32px' 
-        }}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} style={{ 
-              background: 'white', borderRadius: 16, padding: 24,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-            }}>
-              <div className="animate-pulse">
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#e5e7eb', margin: '0 auto 16px' }} />
-                <div style={{ height: 16, background: '#e5e7eb', borderRadius: 8, width: '60%', margin: '0 auto 8px' }} />
-                <div style={{ height: 12, background: '#e5e7eb', borderRadius: 8, width: '40%', margin: '0 auto 16px' }} />
-                <div style={{ height: 12, background: '#e5e7eb', borderRadius: 8, marginBottom: 8 }} />
-                <div style={{ height: 12, background: '#e5e7eb', borderRadius: 8, width: '70%' }} />
-              </div>
-            </div>
-          ))}
-        </div>}
-      </div>
+        {loading ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 28,
+            }}
+          >
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} style={{ height: 380, background: "#f0f0f0", borderRadius: 12 }} />
+            ))}
+          </div>
+        ) : filteredAgents.length === 0 ? (
+          <div style={{ padding: "80px 20px", textAlign: "center", maxWidth: 440, margin: "0 auto" }}>
+            <UserCheck size={40} color="#999" style={{ margin: "0 auto 16px" }} />
+            <h3 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 24, margin: "0 0 8px" }}>
+              No Specialists Found
+            </h3>
+            <p style={{ color: "#666", fontSize: 14, margin: "0 0 20px" }}>
+              We couldn't find any advisors matching your criteria. Try adjusting your query or resetting language filters.
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 28,
+            }}
+          >
+            {filteredAgents.map((agent) => (
+              <AgentCard key={agent.id} agent={agent} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

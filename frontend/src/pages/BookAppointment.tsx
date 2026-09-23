@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, Mail, Phone, MessageSquare, CheckCircle } from 'lucide-react';
-import { Card } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  User,
+  Mail,
+  Phone,
+  MessageSquare,
+  CheckCircle,
+  ArrowLeft,
+  ShieldCheck,
+  Building,
+  Check
+} from "lucide-react";
+import { notification } from "antd";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 interface Agent {
   id: string;
@@ -21,12 +31,13 @@ interface TimeSlot {
   available: boolean;
 }
 
-const BookAppointment: React.FC = () => {
+export default function BookAppointment() {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
-  
+  const isMobile = useIsMobile();
+
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,11 +45,11 @@ const BookAppointment: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    leadName: '',
-    leadEmail: '',
-    leadPhone: '',
-    message: '',
-    serviceType: 'showing'
+    leadName: "",
+    leadEmail: "",
+    leadPhone: "",
+    message: "",
+    serviceType: "showing",
   });
 
   useEffect(() => {
@@ -61,7 +72,7 @@ const BookAppointment: React.FC = () => {
         setAgent(data);
       }
     } catch (error) {
-      console.error('Error fetching agent:', error);
+      console.error("Error fetching agent:", error);
     } finally {
       setLoading(false);
     }
@@ -77,40 +88,33 @@ const BookAppointment: React.FC = () => {
         setAvailableSlots(data.slots || []);
       }
     } catch (error) {
-      console.error('Error fetching available slots:', error);
+      console.error("Error fetching available slots:", error);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation (mirrors the server checks for fast feedback).
     if (!formData.leadName || formData.leadName.trim().length < 2) {
-      alert('Please enter your full name.');
+      notification.error({ message: "Incomplete Field", description: "Please enter your full legal name." });
       return;
     }
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.leadEmail);
     if (!emailOk) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-    if (formData.leadPhone && formData.leadPhone.replace(/[^\d]/g, '').length < 7) {
-      alert('Please enter a valid phone number, or leave it blank.');
+      notification.error({ message: "Invalid Email", description: "Please enter a valid email address." });
       return;
     }
     if (!selectedSlot) {
-      alert('Please select a time slot');
+      notification.error({ message: "Time Required", description: "Please select an available appointment time slot." });
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const response = await fetch('/api/calendar/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+      const response = await fetch("/api/calendar/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           agentId,
           leadName: formData.leadName.trim(),
@@ -121,198 +125,259 @@ const BookAppointment: React.FC = () => {
           duration: 60,
           message: formData.message,
           serviceType: formData.serviceType,
-          // Pass the browser's timezone so the agent sees the request in context.
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        })
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       });
 
       if (response.ok) {
         setSuccess(true);
       } else {
-        // Surface the server's specific message (e.g. duplicate slot, past date).
         const err = await response.json().catch(() => ({}));
-        alert(err.error || 'Failed to book appointment. Please try again.');
+        notification.error({ message: "Booking Conflict", description: err.error || "Failed to reserve slot." });
       }
     } catch (error) {
-      console.error('Error booking appointment:', error);
-      alert('Failed to book appointment. Please try again.');
+      notification.error({ message: "Network Error", description: "Failed to schedule appointment." });
     } finally {
       setSubmitting(false);
     }
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
   const getMinDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    return tomorrow.toISOString().split("T")[0];
   };
 
   const getMaxDate = () => {
     const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 60); // 60 days in advance
-    return maxDate.toISOString().split('T')[0];
+    maxDate.setDate(maxDate.getDate() + 60);
+    return maxDate.toISOString().split("T")[0];
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-2xl px-4">
-          <div className="animate-pulse" role="status" aria-label="Loading content">
-            <div className="h-8 bg-gray-200 rounded-lg w-1/3 mb-6" />
-            <div className="h-4 bg-gray-200 rounded w-2/3 mb-8" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="h-40 bg-gray-200 rounded-xl" />
-              <div className="h-40 bg-gray-200 rounded-xl" />
-            </div>
-            <div className="h-48 bg-gray-200 rounded-xl" />
-          </div>
-        </div>
+      <div style={{ maxWidth: 800, margin: "80px auto", padding: "0 24px" }}>
+        <div style={{ height: 180, background: "#f5f5f5", borderRadius: 12, marginBottom: 24 }} />
+        <div style={{ height: 380, background: "#f5f5f5", borderRadius: 12 }} />
       </div>
     );
   }
 
   if (!agent) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-8 text-center">
-          <p className="text-gray-600">Agent not found</p>
-          <Button onClick={() => navigate('/')} className="mt-4">
-            Go Home
-          </Button>
-        </Card>
+      <div style={{ padding: "120px 24px", textAlign: "center", maxWidth: 440, margin: "0 auto" }}>
+        <h2 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 32, marginBottom: 12 }}>Specialist Unavailable</h2>
+        <p style={{ color: "#666", marginBottom: 24 }}>The selected advisor calendar is currently offline.</p>
+        <Link
+          to="/agents"
+          style={{
+            padding: "10px 20px",
+            background: "#111",
+            color: "#fff",
+            borderRadius: 8,
+            textDecoration: "none",
+            fontWeight: 700,
+          }}
+        >
+          View All Specialists
+        </Link>
       </div>
     );
   }
 
   if (success) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Card className="max-w-md w-full p-8 text-center" role="alert">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+      <div style={{ background: "#fbfbfb", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: 16,
+            maxWidth: 520,
+            width: "100%",
+            padding: "48px 36px",
+            textAlign: "center",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.06)",
+            border: "1px solid #eee",
+          }}
+        >
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "#dcfce7",
+              color: "#166534",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+            }}
+          >
+            <CheckCircle size={28} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Booking Request Sent!</h2>
-          <p className="text-gray-600 mb-6">
-            {agent.name} will review your request and confirm your appointment shortly.
-            You'll receive a confirmation email at {formData.leadEmail}.
+
+          <h2 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 32, fontWeight: 400, margin: "0 0 12px", color: "#111" }}>
+            Showing Requested
+          </h2>
+          <p style={{ color: "#555", fontSize: 15, lineHeight: 1.6, margin: "0 0 32px" }}>
+            {agent.name} has received your reservation request for {selectedDate}. A formal confirmation and digital calendar link has been sent to <strong>{formData.leadEmail}</strong>.
           </p>
-          <Button onClick={() => navigate('/')} className="bg-[#b40101] hover:bg-[#8b0000]">
-            Back to Home
-          </Button>
-        </Card>
+
+          <Link
+            to={`/agents/${agent.id}`}
+            style={{
+              display: "inline-block",
+              height: 46,
+              lineHeight: "46px",
+              padding: "0 28px",
+              background: "#111",
+              color: "#fff",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: "none",
+            }}
+          >
+            Return to Specialist Profile
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Agent Info */}
-        <Card className="p-6 mb-8">
-          <div className="flex items-center gap-4">
-            <img
-              src={agent.imageUrl}
-              alt={agent.name}
-              className="w-20 h-20 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{agent.name}</h1>
-              <p className="text-gray-600">{agent.brokerage}</p>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                <span className="flex items-center gap-1">
-                  <Phone className="w-4 h-4" />
-                  {agent.phone}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Mail className="w-4 h-4" />
-                  {agent.email}
-                </span>
-              </div>
+    <div style={{ background: "#fbfbfb", minHeight: "100vh", padding: isMobile ? "24px 16px 80px" : "48px 32px 96px" }}>
+      <div style={{ maxWidth: 840, margin: "0 auto" }}>
+        {/* Back Link */}
+        <Link
+          to={`/agents/${agent.id}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            color: "#666",
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: "none",
+            marginBottom: 24,
+          }}
+        >
+          <ArrowLeft size={15} />
+          <span>Back to {agent.name}</span>
+        </Link>
+
+        {/* Advisor Showcase Card */}
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: 16,
+            border: "1px solid #ebebeb",
+            padding: "24px 28px",
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            marginBottom: 32,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.02)",
+          }}
+        >
+          <img
+            src={agent.imageUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80"}
+            alt={agent.name}
+            style={{ width: 64, height: 64, borderRadius: "50%", objectFit: "cover" }}
+          />
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "#111" }}>{agent.name}</h2>
+              <ShieldCheck size={16} color="#166534" />
+            </div>
+            <p style={{ fontSize: 13, color: "#666", margin: "0 0 6px" }}>
+              {agent.brokerage || "Torra Commercial & Luxury Real Estate"}
+            </p>
+            <div style={{ display: "flex", gap: 16, fontSize: 12, color: "#444" }}>
+              {agent.phone && <span>Tel: {agent.phone}</span>}
+              {agent.email && <span>{agent.email}</span>}
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Booking Form */}
-        <Card className="p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Book an Appointment</h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Information */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="w-4 h-4 inline mr-1" />
-                  Your Name *
-                </label>
-                <Input
-                  type="text"
-                  required
-                  value={formData.leadName}
-                  onChange={(e) => setFormData({ ...formData, leadName: e.target.value })}
-                  placeholder="John Doe"
-                />
+        {/* Appointment Reservation Suite */}
+        <div
+          style={{
+            background: "#ffffff",
+            borderRadius: 16,
+            border: "1px solid #ebebeb",
+            padding: isMobile ? "28px 20px" : "36px 36px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: '"DM Serif Display", Georgia, serif',
+              fontSize: isMobile ? 26 : 34,
+              fontWeight: 400,
+              color: "#111",
+              margin: "0 0 8px",
+            }}
+          >
+            Schedule Private Appointment
+          </h1>
+          <p style={{ color: "#666", fontSize: 14, margin: "0 0 32px" }}>
+            Select your consultation requirements and choose a verified availability window.
+          </p>
+
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            {/* Step 1: Appointment Category */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: 8 }}>
+                Consultation Type
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10 }}>
+                {[
+                  { id: "showing", label: "Property Showing" },
+                  { id: "consultation", label: "Private Advisory" },
+                  { id: "appraisal", label: "Home Valuation" },
+                  { id: "inspection", label: "Commercial Review" },
+                ].map((t) => {
+                  const active = formData.serviceType === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, serviceType: t.id })}
+                      style={{
+                        height: 44,
+                        padding: "0 12px",
+                        borderRadius: 8,
+                        border: active ? "1.5px solid #111" : "1px solid #d5d5d5",
+                        background: active ? "#111" : "#fff",
+                        color: active ? "#fff" : "#333",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all 0.12s",
+                      }}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Mail className="w-4 h-4 inline mr-1" />
-                  Email *
-                </label>
-                <Input
-                  type="email"
-                  required
-                  value={formData.leadEmail}
-                  onChange={(e) => setFormData({ ...formData, leadEmail: e.target.value })}
-                  placeholder="john@example.com"
-                />
-              </div>
             </div>
 
+            {/* Step 2: Date Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Phone className="w-4 h-4 inline mr-1" />
-                Phone Number
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: 8 }}>
+                Select Desired Date *
               </label>
-              <Input
-                type="tel"
-                value={formData.leadPhone}
-                onChange={(e) => setFormData({ ...formData, leadPhone: e.target.value })}
-                placeholder="(555) 123-4567"
-              />
-            </div>
-
-            {/* Service Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Appointment Type
-              </label>
-              <select
-                value={formData.serviceType}
-                onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b40101]"
-              >
-                <option value="showing">Property Showing</option>
-                <option value="consultation">Consultation</option>
-                <option value="appraisal">Appraisal</option>
-                <option value="inspection">Inspection</option>
-              </select>
-            </div>
-
-            {/* Date Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Calendar className="w-4 h-4 inline mr-1" />
-                Select Date *
-              </label>
-              <Input
+              <input
                 type="date"
                 required
                 min={getMinDate()}
@@ -322,76 +387,147 @@ const BookAppointment: React.FC = () => {
                   setSelectedDate(e.target.value);
                   setSelectedSlot(null);
                 }}
-                className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
+                style={{
+                  width: "100%",
+                  height: 46,
+                  padding: "0 16px",
+                  borderRadius: 8,
+                  border: "1px solid #d0d0d0",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  outline: "none",
+                }}
               />
             </div>
 
-            {/* Time Slot Selection */}
+            {/* Step 3: Available Time Slots */}
             {selectedDate && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Clock className="w-4 h-4 inline mr-1" />
-                  Select Time *
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: 8 }}>
+                  Available Time Windows *
                 </label>
                 {availableSlots.length > 0 ? (
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
-                    {availableSlots.map((slot, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => setSelectedSlot(slot)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSlot(slot); } }}
-                        aria-label={`Select time slot ${formatTime(slot.startTime)}`}
-                        className={`p-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
-                          selectedSlot === slot
-                            ? 'border-[#b40101] bg-red-50 text-[#b40101] shadow-sm'
-                            : 'border-gray-200 hover:border-[#b40101] hover:bg-red-50/50 text-gray-700'
-                        }`}
-                      >
-                        {formatTime(slot.startTime)}
-                      </button>
-                    ))}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+                      gap: 10,
+                    }}
+                  >
+                    {availableSlots.map((slot, index) => {
+                      const active = selectedSlot === slot;
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => setSelectedSlot(slot)}
+                          style={{
+                            height: 42,
+                            borderRadius: 8,
+                            border: active ? "1.5px solid #b40101" : "1px solid #d5d5d5",
+                            background: active ? "#fff5f5" : "#fff",
+                            color: active ? "#b40101" : "#111",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            transition: "all 0.12s",
+                          }}
+                        >
+                          {formatTime(slot.startTime)}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-sm">
-                    No available time slots for this date. Please select another date.
-                  </p>
+                  <div style={{ padding: "16px", background: "#fafafa", borderRadius: 8, fontSize: 13, color: "#666" }}>
+                    No available public slots on this date. Select another date or contact advisor directly.
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Message */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MessageSquare className="w-4 h-4 inline mr-1" />
-                Message (Optional)
-              </label>
-              <Textarea
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Tell us what you're looking for..."
-                rows={4}
-              />
+            {/* Step 4: Contact Info */}
+            <div style={{ borderTop: "1px solid #eee", paddingTop: 24 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Your Contact Details</h3>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14, marginBottom: 14 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#555", marginBottom: 4 }}>
+                    Full Legal Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="John Doe"
+                    value={formData.leadName}
+                    onChange={(e) => setFormData({ ...formData, leadName: e.target.value })}
+                    style={{ width: "100%", height: 42, padding: "0 12px", borderRadius: 6, border: "1px solid #d0d0d0", fontSize: 14, outline: "none" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#555", marginBottom: 4 }}>
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="john@example.com"
+                    value={formData.leadEmail}
+                    onChange={(e) => setFormData({ ...formData, leadEmail: e.target.value })}
+                    style={{ width: "100%", height: 42, padding: "0 12px", borderRadius: 6, border: "1px solid #d0d0d0", fontSize: 14, outline: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#555", marginBottom: 4 }}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  placeholder="(469) 000-0000"
+                  value={formData.leadPhone}
+                  onChange={(e) => setFormData({ ...formData, leadPhone: e.target.value })}
+                  style={{ width: "100%", height: 42, padding: "0 12px", borderRadius: 6, border: "1px solid #d0d0d0", fontSize: 14, outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#555", marginBottom: 4 }}>
+                  Inquiry Notes / Specific Property (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  placeholder="Specify property address or confidential investment requirements..."
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #d0d0d0", fontSize: 14, outline: "none" }}
+                />
+              </div>
             </div>
 
-            {/* Submit Button */}
-            <Button
+            {/* Submit CTA */}
+            <button
               type="submit"
-              disabled={submitting || !selectedSlot}
-              aria-label="Book appointment"
-              className="w-full bg-[#b40101] hover:bg-[#8b0000] disabled:bg-gray-300 transition-all active:scale-[0.98] disabled:active:scale-100"
+              disabled={submitting || (selectedDate && !selectedSlot)}
+              style={{
+                height: 50,
+                background: "#b40101",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: submitting ? "not-allowed" : "pointer",
+                opacity: submitting || (selectedDate && !selectedSlot) ? 0.7 : 1,
+                transition: "background 0.15s",
+              }}
             >
-              {submitting ? 'Sending Request...' : 'Request Appointment'}
-            </Button>
-
-            <p className="text-sm text-gray-500 text-center">
-              * Required fields. Your appointment will be confirmed by the agent.
-            </p>
+              {submitting ? "Confirming Reservation..." : "Confirm Showing Reservation"}
+            </button>
           </form>
-        </Card>
+        </div>
       </div>
     </div>
   );
-};
-
-export default BookAppointment;
+}
