@@ -91,11 +91,14 @@ export default function Header() {
                   key={l.href}
                   to={l.href}
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    height: 34,
                     fontSize: 15,
                     fontWeight: active ? 800 : 700,
                     color: active ? "#111" : "#444",
                     textDecoration: "none",
-                    padding: "6px 14px",
+                    padding: "0 14px",
                     borderRadius: 6,
                     transition: "all 0.15s ease",
                     background: active ? "#f5f5f5" : "transparent",
