@@ -66,22 +66,22 @@ export default function Header() {
             margin: "0 auto",
             padding: "0 32px",
             height: 68,
-            display: "flex",
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
             alignItems: "center",
-            gap: 40,
           }}
         >
           {/* Logo */}
           <Link
             to="/"
-            style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}
+            style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", justifySelf: "start" }}
           >
             <TorraLogo size={38} color="#b40101" compact showText />
           </Link>
 
           {/* Desktop nav */}
           <nav
-            style={{ display: "flex", gap: 4, flex: 1, alignItems: "center" }}
+            style={{ display: "flex", gap: 8, alignItems: "center", justifySelf: "center" }}
             className="hidden-mobile"
           >
             {navLinks.map((l) => {
@@ -92,7 +92,7 @@ export default function Header() {
                   to={l.href}
                   style={{
                     fontSize: 15,
-                    fontWeight: active ? 700 : 500,
+                    fontWeight: active ? 800 : 700,
                     color: active ? "#111" : "#444",
                     textDecoration: "none",
                     padding: "6px 14px",
@@ -118,7 +118,7 @@ export default function Header() {
           </nav>
 
           {/* Right side actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, justifySelf: "end" }}>
             {/* Search icon */}
             <button
               onClick={() => navigate("/properties")}
