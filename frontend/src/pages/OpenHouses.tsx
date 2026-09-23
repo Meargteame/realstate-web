@@ -1,5 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Users, Phone, Mail } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  Users,
+  X,
+  Check,
+  ChevronDown,
+  Sparkles,
+  ArrowRight,
+  Bed,
+  Bath,
+  Maximize2
+} from "lucide-react";
+import { useIsMobile } from "../hooks/useBreakpoint";
 
 interface OpenHouse {
   id: string;
@@ -40,22 +55,23 @@ interface RSVPForm {
   message: string;
 }
 
-const OpenHouses: React.FC = () => {
+export default function OpenHouses() {
   const [openHouses, setOpenHouses] = useState<OpenHouse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCity, setSelectedCity] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
   const [showRSVPModal, setShowRSVPModal] = useState(false);
   const [selectedOpenHouse, setSelectedOpenHouse] = useState<OpenHouse | null>(null);
   const [rsvpForm, setRSVPForm] = useState<RSVPForm>({
-    name: '',
-    email: '',
-    phone: '',
+    name: "",
+    email: "",
+    phone: "",
     guests: 1,
-    message: ''
+    message: "",
   });
   const [rsvpLoading, setRSVPLoading] = useState(false);
-  const [rsvpFeedback, setRsvpFeedback] = useState<{type:'success'|'error', message:string}|null>(null);
+  const [rsvpFeedback, setRsvpFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchOpenHouses();
@@ -64,21 +80,22 @@ const OpenHouses: React.FC = () => {
   const fetchOpenHouses = async () => {
     try {
       const params = new URLSearchParams();
-      if (selectedCity) params.append('city', selectedCity);
-      if (selectedDate) params.append('date', selectedDate);
+      if (selectedCity) params.append("city", selectedCity);
+      if (selectedDate) params.append("date", selectedDate);
 
       const response = await fetch(`/api/open-houses?${params}`);
       const data = await response.json();
-      setOpenHouses(data);
+      setOpenHouses(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching open houses:', error);
+      console.error("Error fetching open houses:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRSVP = async (openHouse: OpenHouse) => {
+  const handleRSVP = (openHouse: OpenHouse) => {
     setSelectedOpenHouse(openHouse);
+    setRsvpFeedback(null);
     setShowRSVPModal(true);
   };
 
@@ -89,348 +106,538 @@ const OpenHouses: React.FC = () => {
     setRSVPLoading(true);
     try {
       const response = await fetch(`/api/open-houses/${selectedOpenHouse.id}/rsvp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rsvpForm),
       });
 
       if (response.ok) {
-        setRsvpFeedback({type:'success', message:'RSVP submitted successfully! Check your email for confirmation.'});
-        setShowRSVPModal(false);
-        setRSVPForm({
-          name: '',
-          email: '',
-          phone: '',
-          guests: 1,
-          message: ''
+        setRsvpFeedback({
+          type: "success",
+          message: "Your attendance is confirmed. A calendar invitation has been sent to your email.",
         });
-        fetchOpenHouses(); // Refresh to update RSVP count
+        setRSVPForm({ name: "", email: "", phone: "", guests: 1, message: "" });
+        fetchOpenHouses();
       } else {
         const error = await response.json();
-        setRsvpFeedback({type:'error', message:error.error || 'Failed to submit RSVP'});
+        setRsvpFeedback({ type: "error", message: error.error || "Failed to confirm RSVP" });
       }
     } catch (error) {
-      console.error('Error submitting RSVP:', error);
-      setRsvpFeedback({type:'error', message:'Failed to submit RSVP'});
+      setRsvpFeedback({ type: "error", message: "Network error submitting RSVP" });
     } finally {
       setRSVPLoading(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       maximumFractionDigits: 0,
     }).format(price);
   };
 
-  const cities = [...new Set(openHouses.map(oh => oh.property.city))];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="animate-pulse" role="status" aria-label="Loading content">
-              <div className="h-8 bg-gray-200 rounded w-48 mb-2" />
-              <div className="h-4 bg-gray-200 rounded w-80" />
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-label="Loading content">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm">
-                <div className="h-48 bg-gray-200" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
-                  <div className="h-3 bg-gray-200 rounded w-2/3" />
-                  <div className="h-8 bg-gray-200 rounded w-24 mt-4" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const cities = [...new Set(openHouses.map((oh) => oh.property?.city).filter(Boolean))];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-900">Open Houses</h1>
-          <p className="mt-2 text-gray-600">
-            Browse upcoming open houses and RSVP to visit properties
-          </p>
-        </div>
-      </div>
+    <div style={{ background: "#fbfbfb", minHeight: "100vh" }}>
+      {/* ── EDITORIAL HEADER ── */}
+      <section
+        style={{
+          background: "#ffffff",
+          borderBottom: "1px solid #eaeaea",
+          padding: isMobile ? "36px 16px 28px" : "56px 32px 40px",
+        }}
+      >
+        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginBottom: 14,
+              borderLeft: "3px solid #b40101",
+              paddingLeft: 12,
+            }}
+          >
+            <span
+              style={{
+                color: "#666",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Private &amp; Public Showings
+            </span>
+          </div>
 
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                City
-              </label>
+          <h1
+            style={{
+              fontFamily: '"DM Serif Display", Georgia, serif',
+              fontSize: isMobile ? 32 : 52,
+              fontWeight: 400,
+              color: "#111",
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              margin: "0 0 12px",
+            }}
+          >
+            Curated Open House Showings
+          </h1>
+
+          <p style={{ color: "#666", fontSize: 16, margin: 0, maxWidth: 640 }}>
+            Experience Texas' most prestigious properties in person. RSVP for a scheduled open house or connect with a dedicated listing specialist.
+          </p>
+
+          {/* Quick Filters */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+              marginTop: 28,
+            }}
+          >
+            {/* City Filter */}
+            <div style={{ position: "relative" }}>
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                aria-label="Filter by city"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101] transition-all duration-200"
+                style={{
+                  height: 40,
+                  padding: "0 32px 0 14px",
+                  borderRadius: 20,
+                  border: "1px solid #d5d5d5",
+                  background: selectedCity ? "#111" : "#fff",
+                  color: selectedCity ? "#fff" : "#111",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  appearance: "none",
+                  outline: "none",
+                }}
               >
-                <option value="">All Cities</option>
-                {cities.map(city => (
-                  <option key={city} value={city}>{city}</option>
+                <option value="" style={{ color: "#111", background: "#fff" }}>All Cities</option>
+                {cities.map((c) => (
+                  <option key={c} value={c} style={{ color: "#111", background: "#fff" }}>
+                    {c}
+                  </option>
                 ))}
               </select>
+              <ChevronDown
+                size={14}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none",
+                  color: selectedCity ? "#fff" : "#666",
+                }}
+              />
             </div>
+
+            {/* Date Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date
-              </label>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                aria-label="Filter by date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101] transition-all duration-200"
+                min={new Date().toISOString().split("T")[0]}
+                style={{
+                  height: 40,
+                  padding: "0 14px",
+                  borderRadius: 20,
+                  border: "1px solid #d5d5d5",
+                  background: selectedDate ? "#111" : "#fff",
+                  color: selectedDate ? "#fff" : "#111",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  outline: "none",
+                }}
               />
             </div>
-            <div className="flex items-end">
+
+            {(selectedCity || selectedDate) && (
               <button
                 onClick={() => {
-                  setSelectedCity('');
-                  setSelectedDate('');
+                  setSelectedCity("");
+                  setSelectedDate("");
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                style={{
+                  border: "none",
+                  background: "none",
+                  color: "#b40101",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  padding: "6px 10px",
+                }}
               >
                 Clear Filters
               </button>
-            </div>
+            )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Open Houses List */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {openHouses.length === 0 ? (
-          <div className="text-center py-12">
-            <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No open houses found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Try adjusting your filters or check back later for new open houses.
+      {/* ── SHOWINGS FEED ── */}
+      <section style={{ maxWidth: 1320, margin: "0 auto", padding: isMobile ? "32px 16px 80px" : "48px 32px 96px" }}>
+        {loading ? (
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24 }}>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} style={{ height: 260, background: "#f0f0f0", borderRadius: 12 }} />
+            ))}
+          </div>
+        ) : openHouses.length === 0 ? (
+          <div style={{ padding: "80px 20px", textAlign: "center", maxWidth: 440, margin: "0 auto" }}>
+            <CalendarIcon size={40} color="#999" style={{ margin: "0 auto 16px" }} />
+            <h3 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 24, margin: "0 0 8px" }}>
+              No Open Houses Scheduled
+            </h3>
+            <p style={{ color: "#666", fontSize: 14, margin: "0 0 20px" }}>
+              There are currently no public showings matching your filters. You can book a private walkthrough on any listing directly.
             </p>
+            <Link
+              to="/properties"
+              style={{
+                display: "inline-flex",
+                padding: "10px 20px",
+                background: "#111",
+                color: "#fff",
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 700,
+                textDecoration: "none",
+              }}
+            >
+              Browse All Listings
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {openHouses.map((openHouse) => (
-              <div key={openHouse.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <img
-                      className="h-48 w-48 object-cover"
-                      src={openHouse.property.imageUrl}
-                      alt={openHouse.property.address}
-                    />
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 24 }}>
+            {openHouses.map((oh) => (
+              <div
+                key={oh.id}
+                style={{
+                  background: "#ffffff",
+                  borderRadius: 12,
+                  border: "1px solid #ebebeb",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: isMobile ? "column" : "row",
+                  transition: "box-shadow 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.06)";
+                  e.currentTarget.style.borderColor = "#ddd";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.borderColor = "#ebebeb";
+                }}
+              >
+                {/* Photo with Date Badge */}
+                <div
+                  style={{
+                    width: isMobile ? "100%" : 240,
+                    height: isMobile ? 200 : "auto",
+                    position: "relative",
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src={oh.property.imageUrl || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"}
+                    alt={oh.property.address}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    loading="lazy"
+                  />
+                  {/* Event Time Pill */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      left: 12,
+                      background: "rgba(0,0,0,0.8)",
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: "4px 8px",
+                      borderRadius: 4,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      backdropFilter: "blur(4px)",
+                    }}
+                  >
+                    {formatDate(oh.startTime)}
                   </div>
-                  <div className="flex-1 p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {formatPrice(openHouse.property.price)}
-                        </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {openHouse.property.beds} bed • {openHouse.property.baths} bath • {openHouse.property.sqft.toLocaleString()} sqft
-                        </p>
-                        <div className="flex items-center mt-2 text-sm text-gray-600">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {openHouse.property.address}, {openHouse.property.city}, {openHouse.property.state}
-                        </div>
-                      </div>
-                    </div>
+                </div>
 
-                    <div className="mt-4 space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {formatDate(openHouse.startTime)}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="h-4 w-4 mr-2" />
-                        {formatTime(openHouse.startTime)} - {formatTime(openHouse.endTime)}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2" />
-                        {openHouse._count.rsvps} people attending
-                      </div>
-                    </div>
-
-                    {openHouse.description && (
-                      <p className="mt-3 text-sm text-gray-600">
-                        {openHouse.description}
-                      </p>
-                    )}
-
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center">
-                        <img
-                          className="h-8 w-8 rounded-full"
-                          src={openHouse.agent.imageUrl}
-                          alt={openHouse.agent.name}
-                        />
-                        <div className="ml-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            {openHouse.agent.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {openHouse.agent.brokerage}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleRSVP(openHouse)}
-                        className="px-4 py-2 bg-[#b40101] text-white text-sm font-medium rounded-md hover:bg-[#8b0000] focus:outline-none focus:ring-2 focus:ring-[#b40101]"
+                {/* Details */}
+                <div style={{ padding: 20, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span
+                        style={{
+                          fontFamily: '"DM Serif Display", Georgia, serif',
+                          fontSize: 22,
+                          fontWeight: 400,
+                          color: "#111",
+                        }}
                       >
-                        RSVP
-                      </button>
+                        {formatPrice(oh.property.price)}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase" }}>
+                        {oh.property.propertyType || "Residence"}
+                      </span>
                     </div>
+
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111", margin: "0 0 2px" }}>
+                      {oh.property.address}
+                    </h3>
+                    <p style={{ fontSize: 12, color: "#666", margin: "0 0 12px" }}>
+                      {oh.property.city}, {oh.property.state}
+                    </p>
+
+                    {/* Schedule Time Box */}
+                    <div
+                      style={{
+                        background: "#fafafa",
+                        padding: "8px 12px",
+                        borderRadius: 6,
+                        border: "1px solid #f0f0f0",
+                        fontSize: 12,
+                        color: "#444",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginBottom: 12,
+                      }}
+                    >
+                      <Clock size={13} color="#b40101" />
+                      <span>
+                        {formatTime(oh.startTime)} – {formatTime(oh.endTime)}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 14, fontSize: 12, color: "#555" }}>
+                      <span><strong>{oh.property.beds}</strong> Beds</span>
+                      <span><strong>{oh.property.baths}</strong> Baths</span>
+                      <span><strong>{oh.property.sqft?.toLocaleString()}</strong> Sq Ft</span>
+                    </div>
+                  </div>
+
+                  {/* Host & RSVP CTA */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginTop: 16,
+                      paddingTop: 12,
+                      borderTop: "1px solid #f0f0f0",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <img
+                        src={oh.agent.imageUrl || "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=120&q=80"}
+                        alt={oh.agent.name}
+                        style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+                      />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#444" }}>{oh.agent.name}</span>
+                    </div>
+
+                    <button
+                      onClick={() => handleRSVP(oh)}
+                      style={{
+                        height: 34,
+                        padding: "0 16px",
+                        background: "#b40101",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#910101")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#b40101")}
+                    >
+                      RSVP for Tour
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* RSVP Modal */}
+      {/* ── RSVP MODAL ── */}
       {showRSVPModal && selectedOpenHouse && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-label="RSVP for open house">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              RSVP for Open House
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 16,
+              maxWidth: 480,
+              width: "100%",
+              padding: "28px 24px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              position: "relative",
+            }}
+          >
+            <button
+              onClick={() => setShowRSVPModal(false)}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 4,
+                color: "#666",
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            <h3 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 24, margin: "0 0 6px" }}>
+              Confirm Showing Attendance
             </h3>
-            
+            <p style={{ fontSize: 13, color: "#666", margin: "0 0 16px" }}>
+              {selectedOpenHouse.property.address} · {formatDate(selectedOpenHouse.startTime)} at {formatTime(selectedOpenHouse.startTime)}
+            </p>
+
             {rsvpFeedback && (
-              <div className={`p-4 rounded-xl mb-4 ${rsvpFeedback.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`} role="alert">
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: rsvpFeedback.type === "success" ? "#dcfce7" : "#fee2e2",
+                  color: rsvpFeedback.type === "success" ? "#166534" : "#991b1b",
+                }}
+              >
                 {rsvpFeedback.message}
               </div>
             )}
-            
-            <div className="mb-4 p-3 bg-gray-50 rounded-md">
-              <p className="font-medium text-gray-900">
-                {selectedOpenHouse.property.address}
-              </p>
-              <p className="text-sm text-gray-600">
-                {formatDate(selectedOpenHouse.startTime)} • {formatTime(selectedOpenHouse.startTime)} - {formatTime(selectedOpenHouse.endTime)}
-              </p>
-            </div>
 
-            <form onSubmit={submitRSVP} className="space-y-4">
+            <form onSubmit={submitRSVP} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name *
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#666", marginBottom: 4 }}>
+                  Full Name *
                 </label>
                 <input
                   type="text"
                   required
                   value={rsvpForm.name}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
+                  style={{ width: "100%", height: 42, padding: "0 12px", borderRadius: 6, border: "1px solid #d5d5d5", fontSize: 14, outline: "none" }}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#666", marginBottom: 4 }}>
+                  Email Address *
                 </label>
                 <input
                   type="email"
                   required
                   value={rsvpForm.email}
                   onChange={(e) => setRSVPForm({ ...rsvpForm, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
+                  style={{ width: "100%", height: 42, padding: "0 12px", borderRadius: 6, border: "1px solid #d5d5d5", fontSize: 14, outline: "none" }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={rsvpForm.phone}
-                  onChange={(e) => setRSVPForm({ ...rsvpForm, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
-                />
+              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 10 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#666", marginBottom: 4 }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={rsvpForm.phone}
+                    onChange={(e) => setRSVPForm({ ...rsvpForm, phone: e.target.value })}
+                    style={{ width: "100%", height: 42, padding: "0 12px", borderRadius: 6, border: "1px solid #d5d5d5", fontSize: 14, outline: "none" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#666", marginBottom: 4 }}>
+                    Party Size
+                  </label>
+                  <select
+                    value={rsvpForm.guests}
+                    onChange={(e) => setRSVPForm({ ...rsvpForm, guests: parseInt(e.target.value) })}
+                    style={{ width: "100%", height: 42, padding: "0 10px", borderRadius: 6, border: "1px solid #d5d5d5", fontSize: 14, outline: "none" }}
+                  >
+                    {[1, 2, 3, 4, 5, 6].map((num) => (
+                      <option key={num} value={num}>{num} Guest{num > 1 ? "s" : ""}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Number of Guests
-                </label>
-                <select
-                  value={rsvpForm.guests}
-                  onChange={(e) => setRSVPForm({ ...rsvpForm, guests: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
-                >
-                  {[1, 2, 3, 4, 5, 6].map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Message (Optional)
-                </label>
-                <textarea
-                  rows={3}
-                  value={rsvpForm.message}
-                  onChange={(e) => setRSVPForm({ ...rsvpForm, message: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#b40101]"
-                  placeholder="Any questions or special requests..."
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
+              <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
                 <button
                   type="button"
-                  onClick={() => { setShowRSVPModal(false); setRsvpFeedback(null); }}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  onClick={() => setShowRSVPModal(false)}
+                  style={{ flex: 1, height: 44, borderRadius: 8, border: "1px solid #d5d5d5", background: "#fff", color: "#333", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={rsvpLoading}
-                  aria-label="Submit RSVP"
-                  className="flex-1 px-4 py-2 bg-[#b40101] text-white rounded-md hover:bg-[#8b0000] focus:outline-none focus:ring-2 focus:ring-[#b40101] disabled:opacity-50"
+                  style={{
+                    flex: 1,
+                    height: 44,
+                    borderRadius: 8,
+                    border: "none",
+                    background: "#b40101",
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: rsvpLoading ? "not-allowed" : "pointer",
+                    opacity: rsvpLoading ? 0.7 : 1,
+                  }}
                 >
-                  {rsvpLoading ? 'Submitting...' : 'Submit RSVP'}
+                  {rsvpLoading ? "Submitting..." : "Confirm RSVP"}
                 </button>
               </div>
             </form>
@@ -439,6 +646,4 @@ const OpenHouses: React.FC = () => {
       )}
     </div>
   );
-};
-
-export default OpenHouses;
+}
