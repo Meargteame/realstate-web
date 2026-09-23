@@ -270,14 +270,21 @@ const Calendar: React.FC = () => {
   return (
     <div className="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 md:mb-8 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 mb-6 border-b border-stone-200">
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Calendar</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your appointments and showings</p>
+          <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+            Private Showing Protocol
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+            Consultation & Showing Schedule
+          </h1>
+          <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+            Coordinate private client tours, open residences, and valuation appointments.
+          </p>
         </div>
-        <Button onClick={() => setShowEventModal(true)} aria-label="Create new event" className="bg-[#b40101] hover:bg-[#8b0000] w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          New Event
+        <Button onClick={() => setShowEventModal(true)} aria-label="Create new event" className="bg-[#b40101] hover:bg-[#900101] text-white text-xs px-4 py-2 w-full sm:w-auto">
+          <Plus className="w-3.5 h-3.5 mr-1.5" />
+          Schedule Showing
         </Button>
       </div>
 

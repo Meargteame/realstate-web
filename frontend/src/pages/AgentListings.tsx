@@ -1,27 +1,48 @@
 import React, { useState, useEffect } from "react";
-import { Table, Tag, Space, Button, Typography, Input, message, Modal, Form, Select, Row, Col, InputNumber, Upload, Empty } from "antd";
 import { useOutletContext, Link } from "react-router-dom";
-import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Text } = Typography;
+import {
+  Home,
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  ExternalLink,
+  Bed,
+  Bath,
+  Square,
+  Upload,
+  X,
+  Check,
+  Building,
+  DollarSign
+} from "lucide-react";
 
 export default function AgentListings() {
-  const isMobile = useIsMobile();
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
-  const [imageFileList, setImageFileList] = useState<any[]>([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [bulkStatus, setBulkStatus] = useState<string | null>(null);
-  const [form] = Form.useForm();
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
 
-  const AntSelect = Select as any;
-  const AntOption = (Select as any).Option;
+  // Form state
+  const [formData, setFormData] = useState({
+    address: "",
+    city: "Austin",
+    state: "TX",
+    zip: "",
+    price: "",
+    propertyType: "Single Family",
+    bedrooms: "3",
+    bathrooms: "2.5",
+    sqft: "2400",
+    status: "Active",
+    description: "",
+    imageUrl: ""
+  });
 
   const authHeaders = () => ({
     'Authorization': `Bearer ${parentAgent?.token || ''}`
@@ -29,6 +50,10 @@ export default function AgentListings() {
 
   useEffect(() => {
     if (!parentAgent) return;
+    fetchListings();
+  }, [parentAgent]);
+
+  const fetchListings = () => {
     fetch(`/api/properties?agentId=${parentAgent.id}&limit=100`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
@@ -37,297 +62,538 @@ export default function AgentListings() {
       })
       .catch(() => {
         setLoading(false);
-        message.error('Could not load your listings. Please refresh to try again.');
       });
-  }, [parentAgent]);
-
-  const handleDelete = (id: string) => {
-    Modal.confirm({
-      title: 'Are you sure you want to delete this listing?',
-      content: 'This action cannot be undone.',
-      okText: 'Yes, Delete',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          const res = await fetch(`/api/properties/${id}`, {
-            method: 'DELETE',
-            headers: authHeaders()
-          });
-          if (!res.ok) throw new Error('Failed to delete');
-          setListings(prev => prev.filter(p => p.id !== id));
-          message.success("Listing deleted successfully.");
-        } catch {
-          message.error("Failed to delete listing. Please try again.");
-        }
-      }
-    });
   };
 
-  const handleEdit = (property: any) => {
-    setEditingProperty(property);
-    setImageFileList([]); // Reset image list for editing
-    form.setFieldsValue({
-      address: property.address,
-      city: property.city,
-      state: property.state,
-      zip: property.zip,
-      price: property.price,
-      propertyType: property.propertyType,
-      bedrooms: property.beds,
-      bathrooms: property.baths,
-      sqft: property.sqft,
-      status: property.status
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/properties/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders()
+      });
+      if (!res.ok) throw new Error('Failed to delete');
+      setListings(prev => prev.filter(p => p.id !== id));
+      setDeleteCandidate(null);
+    } catch {
+      alert("Failed to delete listing. Please try again.");
+    }
+  };
+
+  const handleOpenAdd = () => {
+    setEditingProperty(null);
+    setFormData({
+      address: "",
+      city: "Austin",
+      state: "TX",
+      zip: "",
+      price: "",
+      propertyType: "Single Family",
+      bedrooms: "4",
+      bathrooms: "3.5",
+      sqft: "3200",
+      status: "Active",
+      description: "",
+      imageUrl: ""
     });
     setIsModalOpen(true);
   };
 
-  const handleImageChange = (info: any) => {
-    let fileList = [...info.fileList];
-    // Limit to 10 images
-    fileList = fileList.slice(-10);
-    setImageFileList(fileList);
+  const handleOpenEdit = (property: any) => {
+    setEditingProperty(property);
+    setFormData({
+      address: property.address || "",
+      city: property.city || "",
+      state: property.state || "TX",
+      zip: property.zip || "",
+      price: String(property.price || ""),
+      propertyType: property.propertyType || "Single Family",
+      bedrooms: String(property.beds || property.bedrooms || 3),
+      bathrooms: String(property.baths || property.bathrooms || 2.5),
+      sqft: String(property.sqft || 2000),
+      status: property.status || "Active",
+      description: property.description || "",
+      imageUrl: property.imageUrl || property.images?.[0] || ""
+    });
+    setIsModalOpen(true);
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSubmitting(true);
+
+    const payload = {
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zip,
+      price: Number(formData.price),
+      propertyType: formData.propertyType,
+      beds: Number(formData.bedrooms),
+      baths: Number(formData.bathrooms),
+      sqft: Number(formData.sqft),
+      status: formData.status,
+      description: formData.description,
+      imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=80',
+      agentId: parentAgent.id
+    };
+
     try {
-      let propertyId = editingProperty?.id;
-      
       if (editingProperty) {
         const res = await fetch(`/api/properties/${editingProperty.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify(values)
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed to update listing');
         const updated = await res.json();
-        propertyId = updated.id;
         setListings(prev => prev.map(p => p.id === updated.id ? updated : p));
-        message.success("Listing updated successfully!");
       } else {
         const res = await fetch('/api/properties', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ ...values, agentId: parentAgent.id })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed to create listing');
         const newProperty = await res.json();
-        propertyId = newProperty.id;
         setListings(prev => [newProperty, ...prev]);
-        message.success("Listing published successfully!");
-      }
-
-      // Upload images if any
-      if (imageFileList.length > 0 && propertyId) {
-        const formData = new FormData();
-        imageFileList.forEach(file => {
-          if (file.originFileObj) {
-            formData.append('images', file.originFileObj);
-          }
-        });
-
-        const uploadRes = await fetch(`/api/upload/property/${propertyId}/images`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: formData
-        });
-
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          message.success('Images uploaded successfully!');
-          setListings(prev => prev.map(p => p.id === propertyId ? { ...p, imageUrl: uploadData.imageUrls?.[0] || p.imageUrl } : p));
-        }
       }
 
       setIsModalOpen(false);
       setEditingProperty(null);
-      setImageFileList([]);
-      form.resetFields();
     } catch {
-      message.error(`Failed to ${editingProperty ? 'update' : 'publish'} listing. Please try again.`);
+      alert(`Failed to ${editingProperty ? 'update' : 'publish'} listing.`);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleBulkStatusUpdate = async () => {
-    if (!bulkStatus || selectedRowKeys.length === 0) return;
-    try {
-      const updates = selectedRowKeys.map(id =>
-        fetch(`/api/properties/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
-          body: JSON.stringify({ status: bulkStatus })
-        })
-      );
-      await Promise.all(updates);
-      setListings(prev => prev.map(p => selectedRowKeys.includes(p.id) ? { ...p, status: bulkStatus } : p));
-      message.success(`Updated ${selectedRowKeys.length} listing(s) to ${bulkStatus}`);
-      setSelectedRowKeys([]);
-      setBulkStatus(null);
-    } catch {
-      message.error('Failed to update some listings');
-    }
-  };
-
   const formatCurrency = (val: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);
 
-  const columns = [
-    {
-      title: 'PROPERTY', key: 'property',
-      render: (record: any) => (
-        <Space size="middle">
-          <img src={record.imageUrl} alt={record.address} style={{ width: 60, height: 40, objectFit: 'cover', borderRadius: '4px' }} />
-          <div>
-            <div style={{ fontWeight: 'bold' }}>{record.address}</div>
-            <div style={{ fontSize: '11px', color: '#888' }}>{record.city}, {record.propertyType}</div>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: 'PRICE', dataIndex: 'price', key: 'price',
-      render: (price: number) => <span style={{ fontWeight: 'bold' }}>{formatCurrency(price)}</span>,
-      sorter: (a: any, b: any) => a.price - b.price,
-    },
-    {
-      title: 'STATUS', dataIndex: 'status', key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'Active' ? 'success' : 'orange'} style={{ borderRadius: '4px' }}>
-          {status?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: 'BED/BATH', key: 'stats',
-      render: (record: any) => <Text style={{ fontSize: '13px' }}>{record.beds} bds | {record.baths} ba</Text>,
-    },
-    {
-      title: 'ACTION', key: 'action',
-      render: (record: any) => (
-        <Space size="small">
-          <Link to={`/properties/${record.id}`}><Button size="small">View</Button></Link>
-          <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
-          <Button icon={<DeleteOutlined />} size="small" danger onClick={() => handleDelete(record.id)} />
-        </Space>
-      ),
-    },
-  ];
+  const filteredListings = listings.filter(item => {
+    if (filterStatus !== 'ALL' && item.status !== filterStatus) return false;
+    if (searchText) {
+      const q = searchText.toLowerCase();
+      const addrMatch = (item.address || '').toLowerCase().includes(q);
+      const cityMatch = (item.city || '').toLowerCase().includes(q);
+      if (!addrMatch && !cityMatch) return false;
+    }
+    return true;
+  });
+
+  const totalValue = listings.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 
   return (
-    <div style={{ padding: isMobile ? '12px' : '16px', minHeight: 'calc(100vh - 64px)' }}>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-end', marginBottom: '24px', gap: '12px' }}>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-stone-200">
         <div>
-          <Title level={2} style={{ margin: 0, fontSize: isMobile ? '20px' : '24px', fontWeight: 500, color: '#111827' }}>My Listings</Title>
-          {!isMobile && <Text type="secondary">Manage your active and pending property inventory.</Text>}
+          <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+            Exclusive Inventory Desk
+          </div>
+          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+            Represented Residences
+          </h2>
+          <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+            Active brokerage representations totaling <span className="font-mono text-stone-900 font-semibold">{formatCurrency(totalValue)}</span> across {listings.length} residences.
+          </p>
         </div>
-        <Space wrap style={{ justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-          <Input prefix={<SearchOutlined />} placeholder="Filter listings..." style={{ width: isMobile ? '100%' : 250 }} onChange={e => setSearchText(e.target.value)} />
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingProperty(null); setImageFileList([]); form.resetFields(); setIsModalOpen(true); }} style={{ background: '#b40101', borderColor: '#b40101' }}>
-            Create New
-          </Button>
-        </Space>
+
+        <button
+          onClick={handleOpenAdd}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded transition-colors shadow-xs"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Publish Residence</span>
+        </button>
       </div>
 
-      {selectedRowKeys.length > 0 && (
-        <div style={{ background: '#f0f5ff', padding: '12px 24px', borderRadius: '8px 8px 0 0', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Text strong>{selectedRowKeys.length} selected</Text>
-          <Select placeholder="Bulk Status" value={bulkStatus} onChange={setBulkStatus} style={{ width: 150 }}>
-            <AntOption value="Active">Active</AntOption>
-            <AntOption value="Pending">Pending</AntOption>
-            <AntOption value="Sold">Sold</AntOption>
-          </Select>
-          <Button type="primary" size="small" onClick={handleBulkStatusUpdate} disabled={!bulkStatus} style={{ background: '#b40101' }}>Apply</Button>
-          <Button size="small" onClick={() => setSelectedRowKeys([])}>Clear</Button>
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 rounded-lg border border-stone-200/90 shadow-xs">
+        {/* Status Filters */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {['ALL', 'Active', 'Pending', 'Sold'].map(st => {
+            const count = st === 'ALL' ? listings.length : listings.filter(l => l.status === st).length;
+            const isSelected = filterStatus === st;
+            return (
+              <button
+                key={st}
+                onClick={() => setFilterStatus(st)}
+                className={`px-3 py-1.5 rounded text-xs font-medium tracking-wide whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                <span>{st === 'ALL' ? 'All Residences' : st}</span>
+                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                  isSelected ? 'bg-stone-700 text-stone-200' : 'bg-stone-200 text-stone-600'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search */}
+        <div className="relative shrink-0 md:w-72">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search address or city..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Listings Table */}
+      <div className="bg-white rounded-lg border border-stone-200/90 shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-stone-400 text-xs">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-[#b40101] rounded-full animate-spin mx-auto mb-3" />
+            Loading residence inventory...
+          </div>
+        ) : filteredListings.length === 0 ? (
+          <div className="p-16 text-center text-stone-400">
+            <Home className="w-10 h-10 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm font-medium text-stone-700 mb-1">No residences found</p>
+            <p className="text-xs text-stone-400 max-w-sm mx-auto mb-4">
+              Add your exclusive client listings to showcase on the market and receive private showing requests.
+            </p>
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded transition-colors shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create First Listing</span>
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-stone-50/80 border-b border-stone-200/80 text-[10px] uppercase tracking-wider text-stone-500 font-semibold">
+                  <th className="py-3 px-5">Residence</th>
+                  <th className="py-3 px-4">Price</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Specifications</th>
+                  <th className="py-3 px-4">Property Type</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {filteredListings.map((prop) => {
+                  const statusBadges: Record<string, string> = {
+                    Active: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                    Pending: 'bg-amber-50 text-amber-800 border-amber-200',
+                    Sold: 'bg-stone-100 text-stone-700 border-stone-200'
+                  };
+                  return (
+                    <tr key={prop.id} className="hover:bg-stone-50/70 transition-colors">
+                      {/* Image & Address */}
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={prop.imageUrl || prop.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&q=80'}
+                            alt={prop.address}
+                            className="w-14 h-11 object-cover rounded border border-stone-200 shrink-0"
+                          />
+                          <div>
+                            <div className="font-medium text-stone-900 text-sm">{prop.address}</div>
+                            <div className="text-[11px] text-stone-400">{prop.city}, {prop.state} {prop.zip}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Price */}
+                      <td className="py-4 px-4 font-serif text-sm font-normal text-stone-900 whitespace-nowrap">
+                        {formatCurrency(prop.price)}
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-4 px-4">
+                        <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold border ${statusBadges[prop.status] || 'bg-stone-100 text-stone-700 border-stone-200'}`}>
+                          {(prop.status || 'Active').toUpperCase()}
+                        </span>
+                      </td>
+
+                      {/* Specs */}
+                      <td className="py-4 px-4 text-stone-600 whitespace-nowrap">
+                        <div className="flex items-center gap-3 text-[11px]">
+                          <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5 text-stone-400" />{prop.beds || prop.bedrooms || 0} Beds</span>
+                          <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5 text-stone-400" />{prop.baths || prop.bathrooms || 0} Baths</span>
+                          <span className="flex items-center gap-1"><Square className="w-3.5 h-3.5 text-stone-400" />{Number(prop.sqft || 0).toLocaleString()} Sq Ft</span>
+                        </div>
+                      </td>
+
+                      {/* Type */}
+                      <td className="py-4 px-4 text-stone-500 whitespace-nowrap">
+                        {prop.propertyType || 'Single Family'}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-2">
+                          <Link
+                            to={`/properties/${prop.id}`}
+                            target="_blank"
+                            className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+                            title="View Public Presentation"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => handleOpenEdit(prop)}
+                            className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+                            title="Edit Listing Details"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteCandidate(prop.id)}
+                            className="p-1.5 text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                            title="Delete Representation"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <h3 className="font-serif text-lg text-stone-900">Remove Representation</h3>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              Are you sure you wish to remove this property mandate from the Torra brokerage register? This action cannot be reversed.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteCandidate(null)}
+                className="px-3.5 py-1.5 text-xs text-stone-600 hover:text-stone-900 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteCandidate)}
+                className="px-4 py-2 text-xs font-medium text-white bg-rose-700 hover:bg-rose-800 rounded transition-colors"
+              >
+                Confirm Removal
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      <div style={{ background: 'white', padding: '24px', borderRadius: selectedRowKeys.length > 0 ? '0 0 12px 12px' : '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-        <Table
-          columns={columns}
-          dataSource={listings.filter(l => l.address?.toLowerCase().includes(searchText.toLowerCase()))}
-          loading={loading}
-          rowKey="id"
-          onRow={() => ({
-            style: { transition: 'background 0.2s ease', cursor: 'pointer' },
-            onMouseEnter: (e) => { e.currentTarget.style.background = '#fef2f2'; },
-            onMouseLeave: (e) => { e.currentTarget.style.background = 'transparent'; }
-          })}
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (keys) => setSelectedRowKeys(keys),
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} listings` }}
-          locale={{ emptyText: <div style={{padding:'40px 0'}}><Empty description={<div><Text strong style={{fontSize:15}}>No listings yet</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>Create your first listing to start showcasing properties.</div></div>}><Button type="primary" icon={<PlusOutlined />} style={{background:'#b40101',borderColor:'#b40101',marginTop:16}} onClick={()=>{setIsModalOpen(true)}}>Add Listing</Button></Empty></div> }}
-        />
-      </div>
+      {/* Create / Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-2xl w-full p-6 my-8 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+              <div>
+                <h3 className="font-serif text-xl text-stone-900">
+                  {editingProperty ? "Edit Representation" : "New Property Mandate"}
+                </h3>
+                <p className="text-xs text-stone-500">
+                  Fill in property specifications to publish to the market.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-stone-400 hover:text-stone-700 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-      <Modal title={editingProperty ? "Edit Listing" : "Add New Listing"} open={isModalOpen} onCancel={() => { setIsModalOpen(false); setEditingProperty(null); setImageFileList([]); form.resetFields(); }} footer={null} width={isMobile ? '95%' : 680}>
-        <Form layout="vertical" form={form} onFinish={handleSubmit} style={{ marginTop: 20 }}>
-          <Form.Item label="Property Address" name="address" rules={[{ required: true }]}>
-            <Input placeholder="e.g. 123 Luxury Ave" />
-          </Form.Item>
-          <Row gutter={12}>
-            <Col span={8}><Form.Item label="City" name="city" rules={[{ required: true }]}><Input placeholder="Austin" /></Form.Item></Col>
-            <Col span={8}><Form.Item label="State" name="state" rules={[{ required: true }]}><Input placeholder="TX" maxLength={2} /></Form.Item></Col>
-            <Col span={8}><Form.Item label="ZIP" name="zip" rules={[{ required: true }]}><Input placeholder="78701" /></Form.Item></Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item label="Listing Price ($)" name="price" rules={[{ required: true }]}>
-                <InputNumber style={{ width: '100%' }} min={1000} placeholder="950000" formatter={v => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Property Type" name="propertyType">
-                <AntSelect defaultValue="Single Family">
-                  <AntOption value="Single Family">Single Family</AntOption>
-                  <AntOption value="Condo">Condo</AntOption>
-                  <AntOption value="Townhouse">Townhouse</AntOption>
-                  <AntOption value="Land">Land</AntOption>
-                  <AntOption value="Multi-Family">Multi-Family</AntOption>
-                </AntSelect>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row gutter={12}>
-            <Col span={8}><Form.Item label="Bedrooms" name="bedrooms"><InputNumber style={{ width: '100%' }} min={0} /></Form.Item></Col>
-            <Col span={8}><Form.Item label="Bathrooms" name="bathrooms"><InputNumber style={{ width: '100%' }} min={0} step={0.5} /></Form.Item></Col>
-            <Col span={8}><Form.Item label="Sq. Footage" name="sqft"><InputNumber style={{ width: '100%' }} min={100} /></Form.Item></Col>
-          </Row>
-          <Form.Item label="Property Images" help="Upload up to 10 images (max 5MB each)">
-            <Upload
-              listType="picture-card"
-              fileList={imageFileList}
-              onChange={handleImageChange}
-              beforeUpload={() => false}
-              accept="image/*"
-              multiple
-            >
-              {imageFileList.length >= 10 ? null : (
+            <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                  Street Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="e.g. 2400 Stratford Drive"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>Upload</div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    City *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
                 </div>
-              )}
-            </Upload>
-          </Form.Item>
-          <Form.Item label="Status" name="status">
-            <AntSelect defaultValue="Active">
-              <AntOption value="Active">Active</AntOption>
-              <AntOption value="Pending">Pending</AntOption>
-              <AntOption value="Sold">Sold</AntOption>
-            </AntSelect>
-          </Form.Item>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-            <Button onClick={() => { setIsModalOpen(false); setEditingProperty(null); setImageFileList([]); form.resetFields(); }}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={submitting} style={{ background: '#b40101', borderColor: '#b40101' }}>
-              {editingProperty ? 'Update Listing' : 'Publish Listing'}
-            </Button>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    State *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={2}
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    ZIP Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.zip}
+                    onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Listing Price ($ USD) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1000}
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="2500000"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Property Type
+                  </label>
+                  <select
+                    value={formData.propertyType}
+                    onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  >
+                    <option value="Single Family">Single Family Residence</option>
+                    <option value="Condo">Luxury Penthouse / Condo</option>
+                    <option value="Townhouse">Architectural Townhome</option>
+                    <option value="Land">Estate Grounds / Land</option>
+                    <option value="Multi-Family">Multi-Family Asset</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Bedrooms
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={formData.bedrooms}
+                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Bathrooms
+                  </label>
+                  <input
+                    type="number"
+                    step={0.5}
+                    min={0}
+                    value={formData.bathrooms}
+                    onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Square Feet
+                  </label>
+                  <input
+                    type="number"
+                    min={100}
+                    value={formData.sqft}
+                    onChange={(e) => setFormData({ ...formData, sqft: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Listing Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  >
+                    <option value="Active">Active Presentation</option>
+                    <option value="Pending">Pending Contract</option>
+                    <option value="Sold">Sold / Settled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+                    Primary Cover Photo URL
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-200">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-xs font-medium text-stone-600 hover:text-stone-900"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] disabled:opacity-50 rounded transition-colors shadow-xs"
+                >
+                  {submitting ? "Saving..." : editingProperty ? "Save Changes" : "Publish Mandate"}
+                </button>
+              </div>
+            </form>
           </div>
-        </Form>
-      </Modal>
+        </div>
+      )}
     </div>
   );
 }

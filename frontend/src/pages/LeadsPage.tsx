@@ -1,22 +1,30 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Table, Typography, Tag, Input, Button, Space, Breadcrumb, Avatar, Select, message, Drawer, Empty } from "antd";
-import { SearchOutlined, MailOutlined, PhoneOutlined, FilterOutlined, StarFilled, MessageOutlined } from "@ant-design/icons";
 import { Link, useOutletContext, useNavigate } from "react-router-dom";
-import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Text } = Typography;
-const AntSelect = Select as any;
-const AntOption = (Select as any).Option;
+import {
+  Users,
+  Search,
+  Filter,
+  Download,
+  Phone,
+  Mail,
+  MessageSquare,
+  ChevronDown,
+  Copy,
+  Check,
+  Building,
+  Sparkles,
+  ExternalLink
+} from "lucide-react";
 
 export default function LeadsPage() {
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [selectedLeadForTemplates, setSelectedLeadForTemplates] = useState<any | null>(null);
 
   const authHeaders = () => ({
     'Authorization': `Bearer ${parentAgent?.token || ''}`
@@ -32,12 +40,10 @@ export default function LeadsPage() {
       })
       .catch(() => {
         setLoading(false);
-        message.error('Could not load leads. Please refresh to try again.');
       });
   }, [parentAgent]);
 
   const updateLeadStatus = async (leadId: string, status: string) => {
-    // Optimistic: apply immediately, remember previous so we can revert on failure.
     const previous = leads.find(l => l.id === leadId)?.status;
     setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l));
     try {
@@ -47,11 +53,8 @@ export default function LeadsPage() {
         body: JSON.stringify({ status })
       });
       if (!res.ok) throw new Error('Request failed');
-      message.success(`Lead moved to ${status}`);
     } catch {
-      // Revert
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: previous } : l));
-      message.error('Failed to update lead status');
     }
   };
 
@@ -63,28 +66,16 @@ export default function LeadsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `leads-${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `torra-clients-${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      message.success('Leads exported successfully!');
     } catch {
-      message.error('Failed to export leads');
+      console.error('Failed to export leads');
     }
   };
 
-  const filteredLeads = leads.filter(l => {
-    if (filterStatus && l.status !== filterStatus) return false;
-    if (searchText && !l.name.toLowerCase().includes(searchText.toLowerCase())) return false;
-    return true;
-  });
-
-  const STATUS_COLORS: Record<string, string> = {
-    New: 'error', Contacted: 'processing', Qualified: 'warning', Closed: 'success', Lost: 'default'
-  };
-
-  // Lead scoring based on status and recency.
   const computeLeadScore = (lead: any) => {
     let score = 0;
     if (lead.status === 'Qualified') score += 40;
@@ -93,251 +84,309 @@ export default function LeadsPage() {
     else if (lead.status === 'Closed') score += 50;
     if (lead.property) score += 20;
     if (lead.phone) score += 10;
-    const daysSince = Math.floor((Date.now() - new Date(lead.date || lead.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+    const daysSince = Math.floor((Date.now() - new Date(lead.date || lead.createdAt || Date.now()).getTime()) / (1000 * 60 * 60 * 24));
     if (daysSince <= 3) score += 20;
     else if (daysSince <= 7) score += 10;
-    return Math.min(100, score);
+    return Math.min(100, Math.max(10, score));
   };
 
-  // Precompute scores once per leads change instead of on every render/row/sort.
-  const leadScores = useMemo(() => {
-    const m = new Map<string, number>();
-    leads.forEach(l => m.set(l.id, computeLeadScore(l)));
-    return m;
-  }, [leads]);
-  const getLeadScore = (lead: any) => leadScores.get(lead.id) ?? computeLeadScore(lead);
-
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return '#10b981';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
-  };
+  const filteredLeads = useMemo(() => {
+    return leads.filter(l => {
+      if (filterStatus !== 'ALL' && l.status !== filterStatus) return false;
+      if (searchText) {
+        const query = searchText.toLowerCase();
+        const nameMatch = (l.name || '').toLowerCase().includes(query);
+        const emailMatch = (l.email || '').toLowerCase().includes(query);
+        const phoneMatch = (l.phone || '').toLowerCase().includes(query);
+        if (!nameMatch && !emailMatch && !phoneMatch) return false;
+      }
+      return true;
+    });
+  }, [leads, filterStatus, searchText]);
 
   const quickResponses: Record<string, string> = {
-    'welcome': 'Hi {name}! Thank you for your interest. I\'d love to help you find your perfect property. When would be a good time to chat?',
-    'showing': 'Hi {name}! I\'d like to schedule a showing for the property you\'re interested in. Are you available this week?',
-    'followup': 'Hi {name}! Just following up on your recent inquiry. Have you had a chance to review the listings I sent?',
-    'preapproval': 'Hi {name}! Getting pre-approved will help us move quickly when we find the right property. I can connect you with a trusted lender.',
+    welcome: "Hi {name}! Thank you for your inquiry with Torra Private Brokerage. I'd be delighted to assist you with your luxury acquisition. When would be a convenient time for a confidential consultation?",
+    showing: "Hi {name}! I am arranging a private viewing for the residence you noted. Which day and time window works best with your schedule this week?",
+    followup: "Hi {name}! Following up on your real estate search. We have newly curated opportunities that match your portfolio criteria. Would you like me to transmit the briefing?",
+    preapproval: "Hi {name}! To place priority bids with sellers, having verified luxury lending credentials is vital. I can introduce you to our private private-banking lending partner."
   };
 
-  const columns = [
-    {
-      title: 'SCORE', key: 'score', width: 80,
-      sorter: (a: any, b: any) => getLeadScore(a) - getLeadScore(b),
-      render: (record: any) => {
-        const score = getLeadScore(record);
-        return (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ 
-              width: 40, height: 40, borderRadius: '50%', 
-              background: `conic-gradient(${getScoreColor(score)} ${score * 3.6}deg, #e5e7eb 0deg)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto'
-            }}>
-              <div style={{ 
-                width: 32, height: 32, borderRadius: '50%', background: 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 900, color: getScoreColor(score)
-              }}>{score}</div>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      title: 'NAME', dataIndex: 'name', key: 'name',
-      sorter: (a: any, b: any) => a.name.localeCompare(b.name),
-      render: (text: string, record: any) => (
-        <Space size="middle">
-          <Avatar style={{ backgroundColor: '#111827' }}>{text[0]}</Avatar>
-          <div>
-            <div style={{ fontWeight: 'bold', color: '#111827' }}>{text}</div>
-            <div style={{ fontSize: '11px', color: '#8c8c8c' }}>ID: {record.id.substring(0, 8)}</div>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: 'STATUS', dataIndex: 'status', key: 'status',
-      render: (status: string, record: any) => (
-        <AntSelect
-          value={status}
-          size="small"
-          style={{ width: 130 }}
-          onChange={(val: string) => updateLeadStatus(record.id, val)}
-        >
-          {Object.keys(STATUS_COLORS).map(s => (
-            <AntOption key={s} value={s}>
-              <Tag color={STATUS_COLORS[s]} style={{ margin: 0, fontWeight: 'bold' }}>{s.toUpperCase()}</Tag>
-            </AntOption>
-          ))}
-        </AntSelect>
-      ),
-    },
-    {
-      title: 'PROPERTY INTEREST', key: 'property',
-      render: (record: any) => record.property ? (
-        <Link to={`/properties/${record.property.id}`} style={{ color: '#b40101', fontWeight: 'bold' }}>
-          {record.property.address}
-        </Link>
-      ) : <Text type="secondary">General Inquiry</Text>,
-    },
-    {
-      title: 'CONTACT INFO', key: 'contact',
-      render: (record: any) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <MailOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
-            <Text style={{ fontSize: '13px' }}>{record.email}</Text>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PhoneOutlined style={{ fontSize: '12px', color: '#8c8c8c' }} />
-            <Text style={{ fontSize: '13px' }}>{record.phone}</Text>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: 'RECEIVED', dataIndex: 'date', key: 'date',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-    },
-    {
-      title: 'ACTION', key: 'action',
-      render: (_: any, record: any) => (
-        <Space size="small">
-          <a href={`tel:${record.phone}`}><Button type="default" size="small" icon={<PhoneOutlined />}>Call</Button></a>
-          <Button 
-            type="primary" 
-            size="small" 
-            style={{ background: '#b40101' }} 
-            icon={<MailOutlined />}
-            onClick={() => navigate('/command/inbox', { state: { leadId: record.id } })}
-          >
-            Message
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const copyTemplate = (templateKey: string, leadName: string) => {
+    const raw = quickResponses[templateKey];
+    const text = raw.replace('{name}', leadName?.split(' ')[0] || 'there');
+    navigator.clipboard.writeText(text);
+    setCopiedKey(templateKey);
+    setTimeout(() => setCopiedKey(null), 2500);
+  };
 
-  // Expandable row with notes and quick responses
-  const expandedRowRender = (record: any) => (
-    <div style={{ padding: '16px 24px' }}>
-      <div style={{ marginBottom: 16 }}>
-        <Title level={5} style={{ marginBottom: 8 }}>Quick Response Templates</Title>
-        <Space wrap>
-          {Object.entries(quickResponses).map(([key, template]) => (
-            <Button
-              key={key}
-              size="small"
-              icon={<MessageOutlined />}
-              onClick={() => {
-                const msg = template.replace('{name}', record.name.split(' ')[0]);
-                navigator.clipboard.writeText(msg);
-                message.success('Response copied to clipboard!');
-              }}
-            >
-              {key.charAt(0).toUpperCase() + key.slice(1)}
-            </Button>
-          ))}
-        </Space>
-      </div>
-      {record.message && (
+  const statusCategories = ['ALL', 'New', 'Contacted', 'Qualified', 'Closed', 'Lost'];
+
+  return (
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-stone-200">
         <div>
-          <Title level={5} style={{ marginBottom: 8 }}>Original Inquiry</Title>
-          <div style={{ background: '#f8f9fa', padding: '12px 16px', borderRadius: 8, fontSize: 14 }}>
-            {record.message}
+          <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+            Torra Private Client CRM
+          </div>
+          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+            Client Directory & Inquiries
+          </h2>
+          <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+            Manage inquiries, assign status milestones, and initiate showing dialogues.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-stone-700 bg-white border border-stone-300 hover:border-stone-900 rounded transition-colors shadow-xs"
+          >
+            <Download className="w-3.5 h-3.5 text-stone-500" />
+            <span>Export Roster (CSV)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 rounded-lg border border-stone-200/90 shadow-xs">
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {statusCategories.map(cat => {
+            const count = cat === 'ALL' ? leads.length : leads.filter(l => l.status === cat).length;
+            const isSelected = filterStatus === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setFilterStatus(cat)}
+                className={`px-3 py-1.5 rounded text-xs font-medium tracking-wide whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+              >
+                <span>{cat === 'ALL' ? 'All Clients' : cat}</span>
+                <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                  isSelected ? 'bg-stone-700 text-stone-200' : 'bg-stone-200 text-stone-600'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Input */}
+        <div className="relative shrink-0 md:w-72">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search by name, email or phone..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Main Clients Table */}
+      <div className="bg-white rounded-lg border border-stone-200/90 shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-stone-400">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-[#b40101] rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-xs">Loading client directory...</p>
+          </div>
+        ) : filteredLeads.length === 0 ? (
+          <div className="p-16 text-center text-stone-400">
+            <Users className="w-10 h-10 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm font-medium text-stone-700 mb-1">No matching clients found</p>
+            <p className="text-xs text-stone-400 max-w-sm mx-auto">
+              {searchText ? `No contacts matching "${searchText}". Try clearing search filters.` : 'Inquiries submitted across your residences will appear in this registry.'}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-stone-50/80 border-b border-stone-200/80 text-[10px] uppercase tracking-wider text-stone-500 font-semibold">
+                  <th className="py-3 px-4 text-center">Score</th>
+                  <th className="py-3 px-5">Client Name & Details</th>
+                  <th className="py-3 px-4">Milestone Status</th>
+                  <th className="py-3 px-4">Residence Interest</th>
+                  <th className="py-3 px-4">Inquiry / Note</th>
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {filteredLeads.map((lead: any) => {
+                  const score = computeLeadScore(lead);
+                  const scoreColor = score >= 70 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : score >= 40 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-stone-600 bg-stone-100 border-stone-200';
+                  return (
+                    <tr key={lead.id} className="hover:bg-stone-50/70 transition-colors">
+                      {/* Score */}
+                      <td className="py-4 px-4 text-center">
+                        <span className={`inline-block px-2 py-1 rounded font-mono font-bold text-[11px] border ${scoreColor}`}>
+                          {score}
+                        </span>
+                      </td>
+
+                      {/* Client */}
+                      <td className="py-4 px-5">
+                        <div className="font-semibold text-stone-900 text-sm flex items-center gap-2">
+                          <span>{lead.name}</span>
+                        </div>
+                        <div className="text-[11px] text-stone-500 mt-0.5 space-y-0.5">
+                          {lead.email && <div className="flex items-center gap-1.5"><Mail className="w-3 h-3 text-stone-400" /><span>{lead.email}</span></div>}
+                          {lead.phone && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-stone-400" /><span>{lead.phone}</span></div>}
+                        </div>
+                      </td>
+
+                      {/* Status Dropdown */}
+                      <td className="py-4 px-4">
+                        <select
+                          value={lead.status || 'New'}
+                          onChange={(e) => updateLeadStatus(lead.id, e.target.value)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded border border-stone-300 bg-white text-stone-800 focus:outline-none focus:border-stone-900 cursor-pointer shadow-2xs"
+                        >
+                          <option value="New">NEW INQUIRY</option>
+                          <option value="Contacted">CONTACTED</option>
+                          <option value="Qualified">QUALIFIED BUYER</option>
+                          <option value="Closed">CLOSED DEAL</option>
+                          <option value="Lost">ARCHIVED / LOST</option>
+                        </select>
+                      </td>
+
+                      {/* Property */}
+                      <td className="py-4 px-4 max-w-[200px]">
+                        {lead.property ? (
+                          <Link
+                            to={`/properties/${lead.property.id}`}
+                            className="text-[#b40101] hover:underline font-medium flex items-center gap-1.5 truncate"
+                          >
+                            <Building className="w-3.5 h-3.5 shrink-0 text-stone-400" />
+                            <span className="truncate">{lead.property.address || 'View Residence'}</span>
+                          </Link>
+                        ) : (
+                          <span className="text-stone-400 italic">General Brokerage Consultation</span>
+                        )}
+                      </td>
+
+                      {/* Note / Message */}
+                      <td className="py-4 px-4 max-w-[220px]">
+                        <p className="text-stone-600 truncate text-[11px]" title={lead.message}>
+                          {lead.message || 'Client inquired via website.'}
+                        </p>
+                        <button
+                          onClick={() => setSelectedLeadForTemplates(selectedLeadForTemplates?.id === lead.id ? null : lead)}
+                          className="mt-1 text-[10px] text-[#b40101] hover:underline font-semibold flex items-center gap-1"
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          <span>Quick Templates</span>
+                        </button>
+                      </td>
+
+                      {/* Date */}
+                      <td className="py-4 px-4 text-stone-400 font-mono text-[11px] whitespace-nowrap">
+                        {new Date(lead.date || lead.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-2">
+                          {lead.phone && (
+                            <a
+                              href={`tel:${lead.phone}`}
+                              className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+                              title="Direct Phone Call"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => navigate('/command/inbox', { state: { leadId: lead.id } })}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded shadow-2xs transition-colors"
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                            <span>Message</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Response Modal / Drawer */}
+      {selectedLeadForTemplates && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+              <div>
+                <h3 className="font-serif text-lg text-stone-900">
+                  Concierge Response Suite
+                </h3>
+                <p className="text-xs text-stone-500">
+                  Select and copy a customized response for {selectedLeadForTemplates.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedLeadForTemplates(null)}
+                className="text-stone-400 hover:text-stone-700 p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {Object.entries(quickResponses).map(([key, template]) => {
+                const isCopied = copiedKey === key;
+                const formatted = template.replace('{name}', selectedLeadForTemplates.name.split(' ')[0]);
+                const titles: Record<string, string> = {
+                  welcome: 'Immediate Introduction & Welcome',
+                  showing: 'Private Showing Arrangement',
+                  followup: 'Portfolio Follow-up',
+                  preapproval: 'Private Wealth Pre-Approval'
+                };
+                return (
+                  <div key={key} className="p-3.5 bg-stone-50 border border-stone-200 rounded space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-stone-900">{titles[key] || key}</span>
+                      <button
+                        onClick={() => copyTemplate(key, selectedLeadForTemplates.name)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded transition-colors ${
+                          isCopied
+                            ? 'bg-emerald-700 text-white'
+                            : 'bg-stone-200 hover:bg-stone-300 text-stone-800'
+                        }`}
+                      >
+                        {isCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                        <span>{isCopied ? 'Copied to Clipboard' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <p className="text-stone-600 text-xs leading-relaxed italic">
+                      "{formatted}"
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => setSelectedLeadForTemplates(null)}
+                className="px-4 py-2 text-xs font-medium text-stone-600 hover:text-stone-900"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
-  );
-
-  return (
-    <div style={{ padding: isMobile ? '12px' : '16px', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
-      <div style={{ marginBottom: isMobile ? '16px' : '24px' }}>
-        <Breadcrumb items={[{ title: <Link to="/command">Dashboard</Link> }, { title: 'Contacts / Leads' }]} />
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-end', marginTop: '16px', gap: '12px' }}>
-          <div>
-            <Title level={2} style={{ margin: 0, fontSize: isMobile ? '20px' : '24px', fontWeight: 500, color: '#111827' }}>
-              Contact Pipeline
-            </Title>
-            {!isMobile && <Text type="secondary">Manage and track your real estate inquiries. Click status to update pipeline stage.</Text>}
-          </div>
-          <Space wrap style={{ justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-            <Input
-              placeholder="Search leads..."
-              prefix={<SearchOutlined />}
-              style={{ width: isMobile ? '100%' : 300, borderRadius: '8px', transition: 'all 0.2s ease' }}
-              onChange={e => setSearchText(e.target.value)}
-            />
-            <Button icon={<FilterOutlined />} onClick={() => setShowFilterDrawer(true)}>Filters</Button>
-            <Button type="primary" onClick={handleExport} style={{ background: '#b40101', borderColor: '#b40101' }}>Export CSV</Button>
-          </Space>
-        </div>
-      </div>
-
-      <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-        <Table
-          columns={columns}
-          dataSource={filteredLeads}
-          loading={loading}
-          rowKey="id"
-          onRow={() => ({
-            style: { transition: 'background 0.2s ease', cursor: 'pointer' },
-            onMouseEnter: (e) => { e.currentTarget.style.background = '#fef2f2'; },
-            onMouseLeave: (e) => { e.currentTarget.style.background = 'transparent'; }
-          })}
-          expandable={{
-            expandedRowRender,
-            expandIcon: ({ expanded, onExpand, record }) => (
-              <Button 
-                type="text" size="small" 
-                onClick={(e) => onExpand(record, e)}
-                style={{ color: '#b40101' }}
-              >
-                {expanded ? '−' : '+'}
-              </Button>
-            ),
-          }}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${total} leads` }}
-          locale={{ emptyText: <div style={{padding:'40px 0'}}><Empty description={<div><Text strong style={{fontSize:15}}>No leads yet</Text><div style={{marginTop:4,color:'#6b7280',fontSize:13}}>When leads contact you through your listings, they will appear here.</div></div>}><Button type='primary' style={{background:'#b40101',borderColor:'#b40101',marginTop:16}}>View Your Listings</Button></Empty></div> }}
-        />
-      </div>
-
-      <Drawer
-        title="Filter Leads"
-        placement="right"
-        onClose={() => setShowFilterDrawer(false)}
-        open={showFilterDrawer}
-        width={320}
-      >
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <div>
-            <Text strong style={{ display: 'block', marginBottom: 8 }}>Status</Text>
-            <AntSelect
-              placeholder="Filter by status"
-              value={filterStatus}
-              onChange={setFilterStatus}
-              style={{ width: '100%' }}
-              allowClear
-            >
-              <AntOption value="New">New</AntOption>
-              <AntOption value="Contacted">Contacted</AntOption>
-              <AntOption value="Qualified">Qualified</AntOption>
-              <AntOption value="Closed">Closed</AntOption>
-              <AntOption value="Lost">Lost</AntOption>
-            </AntSelect>
-          </div>
-          <Button 
-            block 
-            onClick={() => { setFilterStatus(null); setShowFilterDrawer(false); }}
-          >
-            Clear Filters
-          </Button>
-        </Space>
-      </Drawer>
     </div>
   );
 }

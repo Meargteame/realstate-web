@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Layout, Avatar, Typography, Input, Button, Space, Badge, Empty, Spin, message as antMessage } from "antd";
-import { useOutletContext, useLocation } from "react-router-dom";
-import { SearchOutlined, SendOutlined, UserOutlined, MessageOutlined } from "@ant-design/icons";
-
-const { Sider, Content } = Layout;
-const { Title, Text } = Typography;
-const { TextArea } = Input;
+import { useOutletContext, useLocation, Link } from "react-router-dom";
+import {
+  Search,
+  Send,
+  MessageSquare,
+  Phone,
+  Mail,
+  Home,
+  ChevronLeft,
+  Clock,
+  Sparkles,
+  ExternalLink
+} from "lucide-react";
 
 interface Message {
   id: string;
@@ -15,6 +21,7 @@ interface Message {
   content: string;
   isRead: boolean;
   createdAt: string;
+  pending?: boolean;
 }
 
 interface Conversation {
@@ -39,10 +46,6 @@ export default function Inbox() {
   const { agent } = useOutletContext<{ agent: any }>();
   const location = useLocation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-
-  const authHeaders = () => ({
-    'Authorization': `Bearer ${agent?.token || ''}`
-  });
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -53,22 +56,19 @@ export default function Inbox() {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const MESSAGE_PAGE_SIZE = 30;
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const authHeaders = () => ({
+    'Authorization': `Bearer ${agent?.token || ''}`
+  });
 
   const templates = [
-    { label: 'Greeting', text: 'Hi there! Thanks for reaching out. How can I help you today?' },
-    { label: 'Schedule', text: 'I\'d love to schedule a showing. Are you available this week?' },
-    { label: 'Follow Up', text: 'Just checking in! Any questions about the properties I sent?' },
-    { label: 'Pre-approval', text: 'Getting pre-approved will help us move fast. I can connect you with a lender!' },
+    { label: 'Schedule Showing', text: "I'd be pleased to arrange a private viewing of this residence. What days and times suit your schedule?" },
+    { label: 'Follow Up', text: "Following up on your inquiry. Have you had an opportunity to review the property portfolio I shared?" },
+    { label: 'Lending Introduction', text: "To give our offers priority standing, connecting with our private wealth lending partners is beneficial. Would you like an introduction?" },
+    { label: 'Market Comps', text: "I have prepared a comparative market valuation dossier for this neighborhood. Would you like me to transmit it?" },
   ];
 
-  // Fetch conversations
   useEffect(() => {
     if (!agent) return;
     fetchConversations();
@@ -79,9 +79,7 @@ export default function Inbox() {
       const res = await fetch(`/api/messages/conversations/${agent.id}`, { headers: authHeaders() });
       const data = await res.json();
       
-      // Handle error responses (429, 500, etc.)
       if (!res.ok || !Array.isArray(data)) {
-        console.error('Error fetching conversations:', data);
         setConversations([]);
         setLoading(false);
         return;
@@ -89,7 +87,6 @@ export default function Inbox() {
       
       setConversations(data);
       
-      // Check if we should auto-select a conversation based on leadId from navigation state
       const leadId = (location.state as any)?.leadId;
       if (leadId && data.length > 0) {
         const targetConversation = data.find((c: Conversation) => c.leadId === leadId);
@@ -103,42 +100,38 @@ export default function Inbox() {
       }
       
       setLoading(false);
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
+    } catch {
       setConversations([]);
       setLoading(false);
     }
   };
 
-  // Fetch the most recent page of messages for the selected conversation.
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
+    setMobileThreadOpen(true);
     setHasMoreMessages(false);
     try {
       const res = await fetch(`/api/messages/conversation/${conversation.id}?limit=${MESSAGE_PAGE_SIZE}`, { headers: authHeaders() });
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
       setMessages(list);
-      // A full page back implies there may be older messages to load.
       setHasMoreMessages(list.length === MESSAGE_PAGE_SIZE);
 
-      // Mark as read
       if (conversation.unreadCount > 0) {
         await fetch(`/api/messages/conversation/${conversation.id}/read`, {
           method: 'PATCH',
           headers: authHeaders()
         });
-        // Update local state
         setConversations(prev => prev.map(c =>
           c.id === conversation.id ? { ...c, unreadCount: 0 } : c
         ));
       }
+      setTimeout(scrollToBottom, 100);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
   };
 
-  // Load an older page (messages before the earliest one currently shown).
   const loadOlderMessages = async () => {
     if (!selectedConversation || messages.length === 0) return;
     setLoadingOlder(true);
@@ -159,12 +152,10 @@ export default function Inbox() {
     }
   };
 
-  // Send message (optimistic)
   const handleSendMessage = async () => {
     const content = newMessage.trim();
     if (!content || !selectedConversation) return;
 
-    // Optimistically render the message with a temp id and "sending" flag.
     const tempId = `temp-${Date.now()}`;
     const optimisticMsg: any = {
       id: tempId,
@@ -194,22 +185,19 @@ export default function Inbox() {
 
       if (!res.ok) throw new Error('Failed to send message');
 
-      const message = await res.json();
-      // Replace the temp message with the persisted one.
-      setMessages(prev => prev.map(m => m.id === tempId ? message : m));
+      const msg = await res.json();
+      setMessages(prev => prev.map(m => m.id === tempId ? msg : m));
 
-      // Update conversation list
       setConversations(prev => prev.map(c =>
         c.id === selectedConversation.id
-          ? { ...c, lastMessage: message.content, lastMessageAt: message.createdAt }
+          ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt }
           : c
       ));
+      scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error);
-      // Roll back the optimistic message and restore the draft.
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setNewMessage(content);
-      antMessage.error('Failed to send message');
     } finally {
       setSending(false);
     }
@@ -219,313 +207,263 @@ export default function Inbox() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    // Don't yank the viewport to the bottom when prepending older history.
-    if (!loadingOlder) scrollToBottom();
-  }, [messages, loadingOlder]);
-
-  const filteredConversations = conversations.filter(c =>
-    c.lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.lead.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Inbox-level unread rollup for the header badge.
-  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
-    if (days === 0) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (days === 1) {
-      return 'Yesterday';
-    } else if (days < 7) {
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
+  const filteredConversations = conversations.filter(c => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (c.lead?.name || '').toLowerCase().includes(q) ||
+      (c.lead?.email || '').toLowerCase().includes(q) ||
+      (c.lastMessage || '').toLowerCase().includes(q)
+    );
+  });
 
   return (
-    <Layout style={{ height: 'calc(100vh - 80px)', background: 'white' }}>
-      {/* Conversations List */}
-      <Sider 
-        width={isMobile ? '100%' : 350} 
-        theme="light" 
-        style={{ 
-          borderRight: '1px solid #f0f0f0', 
-          overflowY: 'auto',
-          display: isMobile && selectedConversation ? 'none' : 'block'
-        }}
-      >
-        <div style={{ padding: isMobile ? '16px' : '24px', borderBottom: '1px solid #f0f0f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Title level={4} style={{ margin: 0 }}>Messages</Title>
-            {totalUnread > 0 && (
-              <Badge count={totalUnread} style={{ backgroundColor: '#b40101' }} />
-            )}
+    <div className="h-[calc(100vh-72px)] flex bg-white border-t border-stone-200 overflow-hidden">
+      {/* Left Column: Conversation Directory */}
+      <div className={`w-full md:w-80 lg:w-96 border-r border-stone-200/90 flex flex-col bg-stone-50/50 ${
+        mobileThreadOpen ? 'hidden md:flex' : 'flex'
+      }`}>
+        {/* Header */}
+        <div className="p-4 border-b border-stone-200/90 bg-white">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-serif text-lg text-stone-900 tracking-tight">
+              Client Conversations
+            </h2>
+            <span className="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded">
+              {conversations.length} Active
+            </span>
           </div>
-          <Input
-            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />} 
-            placeholder="Search conversations..." 
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{ marginTop: 16, borderRadius: 8 }}
-          />
+
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search conversations..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs bg-stone-100/70 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+            />
+          </div>
         </div>
-        
-        {loading ? (
-          <div style={{ padding: 40, textAlign: 'center' }}>
-            <Spin size="large" />
-          </div>
-        ) : filteredConversations.length === 0 ? (
-          <Empty 
-            description="No conversations yet" 
-            style={{ marginTop: 60 }}
-          />
-        ) : (
-          <div>
-            {filteredConversations.map((conversation) => (
-              <div 
-                key={conversation.id}
-                onClick={() => selectConversation(conversation)}
-                onKeyDown={(e) => { if (e.key === 'Enter') selectConversation(conversation); }}
-                role="button"
-                tabIndex={0}
-                aria-label={`Conversation with ${conversation.lead.name}`}
-                onFocus={(e) => { e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #b40101'; }}
-                onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
-                style={{ 
-                  padding: '16px 20px', 
-                  cursor: 'pointer', 
-                  borderBottom: '1px solid #f5f5f5',
-                  background: selectedConversation?.id === conversation.id ? '#fff1f0' : 'white',
-                  borderLeft: selectedConversation?.id === conversation.id ? '4px solid #b40101' : '4px solid transparent',
-                  transition: 'all 0.2s',
-                  outline: 'none'
-                }}
-              >
-                <div style={{ display: 'flex', gap: 12 }}>
-                  <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: '#111827', flexShrink: 0 }}>
-                    {conversation.lead.name[0]}
-                  </Avatar>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <Text strong style={{ fontSize: 14 }}>{conversation.lead.name}</Text>
-                      {conversation.lastMessageAt && (
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          {formatTime(conversation.lastMessageAt)}
-                        </Text>
+
+        {/* Conversation List */}
+        <div className="flex-1 overflow-y-auto divide-y divide-stone-100">
+          {loading ? (
+            <div className="p-8 text-center text-stone-400 text-xs">Loading conversations...</div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="p-8 text-center text-stone-400">
+              <MessageSquare className="w-8 h-8 mx-auto mb-2 text-stone-300" />
+              <p className="text-xs">No client conversations registered.</p>
+            </div>
+          ) : (
+            filteredConversations.map((conv) => {
+              const isSelected = selectedConversation?.id === conv.id;
+              return (
+                <button
+                  key={conv.id}
+                  onClick={() => selectConversation(conv)}
+                  className={`w-full text-left p-4 transition-colors flex items-start gap-3 ${
+                    isSelected ? 'bg-white border-l-3 border-[#b40101] shadow-2xs' : 'hover:bg-stone-100/60'
+                  }`}
+                >
+                  <div className="w-9 h-9 rounded-full bg-stone-900 text-white flex items-center justify-center font-serif text-sm shrink-0">
+                    {conv.lead?.name?.[0]?.toUpperCase() || 'C'}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className={`text-xs truncate ${isSelected ? 'font-semibold text-stone-900' : 'font-medium text-stone-800'}`}>
+                        {conv.lead?.name || 'Prospective Client'}
+                      </span>
+                      {conv.lastMessageAt && (
+                        <span className="text-[10px] text-stone-400 font-mono shrink-0 ml-1">
+                          {new Date(conv.lastMessageAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text 
-                        ellipsis 
-                        style={{ 
-                          color: '#8c8c8c', 
-                          fontSize: 13, 
-                          flex: 1,
-                          fontWeight: conversation.unreadCount > 0 ? 600 : 400
-                        }}
-                      >
-                        {conversation.lastMessage || conversation.lead.message}
-                      </Text>
-                      {conversation.unreadCount > 0 && (
-                        <Badge 
-                          count={conversation.unreadCount} 
-                          style={{ backgroundColor: '#b40101', marginLeft: 8 }}
-                        />
-                      )}
-                    </div>
+
+                    <p className="text-[11px] text-stone-500 truncate leading-relaxed">
+                      {conv.lastMessage || conv.lead?.message || 'Started consultation dialogue.'}
+                    </p>
+
+                    {conv.lead?.property && (
+                      <div className="flex items-center gap-1 text-[10px] text-[#b40101] truncate mt-1">
+                        <Home className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{conv.lead.property.address}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {conv.unreadCount > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-[#b40101] shrink-0 mt-1.5" />
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Right Column: Chat Dialogue Thread */}
+      <div className={`flex-1 flex flex-col bg-white ${
+        !mobileThreadOpen ? 'hidden md:flex' : 'flex'
+      }`}>
+        {selectedConversation ? (
+          <>
+            {/* Thread Header */}
+            <div className="p-4 border-b border-stone-200/90 flex items-center justify-between bg-white shadow-2xs">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileThreadOpen(false)}
+                  className="p-1.5 -ml-1 text-stone-600 hover:text-stone-900 md:hidden rounded"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <div className="w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center font-serif text-base shrink-0">
+                  {selectedConversation.lead?.name?.[0]?.toUpperCase() || 'C'}
+                </div>
+
+                <div>
+                  <h3 className="font-serif text-base text-stone-900 leading-tight">
+                    {selectedConversation.lead?.name}
+                  </h3>
+                  <div className="flex items-center gap-3 text-[11px] text-stone-400 mt-0.5">
+                    {selectedConversation.lead?.email && (
+                      <span className="flex items-center gap-1">
+                        <Mail className="w-3 h-3 text-stone-400" />
+                        {selectedConversation.lead.email}
+                      </span>
+                    )}
+                    {selectedConversation.lead?.phone && (
+                      <span className="flex items-center gap-1 hidden sm:flex">
+                        <Phone className="w-3 h-3 text-stone-400" />
+                        {selectedConversation.lead.phone}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </Sider>
 
-      {/* Chat Area */}
-      <Content style={{ 
-        display: 'flex', flexDirection: 'column', background: 'white',
-        ...(isMobile && !selectedConversation ? { display: 'none' } : {})
-      }}>
-        {selectedConversation ? (
-          <>
-            {/* Chat Header */}
-            <div style={{ 
-              padding: isMobile ? '12px 16px' : '20px 32px', 
-              borderBottom: '1px solid #f0f0f0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12
-            }}>
-              {isMobile && (
-                <Button 
-                  type="text" 
-                  onClick={() => setSelectedConversation(null)}
-                  style={{ padding: 4, color: '#111827' }}
+              {selectedConversation.lead?.property && (
+                <Link
+                  to={`/properties/${selectedConversation.lead.property.id}`}
+                  target="_blank"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-stone-700 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
                 >
-                  ← Back
-                </Button>
+                  <Home className="w-3.5 h-3.5 text-[#b40101]" />
+                  <span className="max-w-[160px] truncate">{selectedConversation.lead.property.address}</span>
+                  <ExternalLink className="w-3 h-3 text-stone-400" />
+                </Link>
               )}
-              <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: '#111827' }}>
-                {selectedConversation.lead.name[0]}
-              </Avatar>
-              <div>
-                <Title level={5} style={{ margin: 0 }}>{selectedConversation.lead.name}</Title>
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  {selectedConversation.lead.email} • {selectedConversation.lead.phone}
-                </Text>
-              </div>
             </div>
 
-            {/* Messages */}
-            <div 
-              role="region"
-              aria-live="polite"
-              aria-label="Messages"
-              style={{ 
-              flex: 1, 
-              overflowY: 'auto', 
-              padding: isMobile ? '16px' : '24px 32px',
-              background: '#fafafa'
-            }}>
+            {/* Messages Scroll Area */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-stone-50/40">
               {hasMoreMessages && (
-                <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                  <Button size="small" loading={loadingOlder} onClick={loadOlderMessages}>
-                    Load older messages
-                  </Button>
+                <div className="text-center pb-2">
+                  <button
+                    onClick={loadOlderMessages}
+                    disabled={loadingOlder}
+                    className="text-[11px] text-[#b40101] hover:underline uppercase tracking-wider font-semibold"
+                  >
+                    {loadingOlder ? 'Loading earlier messages...' : 'Load earlier messages'}
+                  </button>
                 </div>
               )}
-              {messages.map((msg, index) => {
+
+              {/* Initial lead inquiry snippet card if available */}
+              {selectedConversation.lead?.message && (
+                <div className="mx-auto max-w-lg p-4 bg-white border border-stone-200 rounded-lg shadow-2xs text-xs space-y-1">
+                  <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-stone-400 font-semibold">
+                    <span>Initial Web Inquiry</span>
+                    <Clock className="w-3 h-3" />
+                  </div>
+                  <p className="text-stone-700 italic">
+                    "{selectedConversation.lead.message}"
+                  </p>
+                </div>
+              )}
+
+              {messages.map((msg) => {
                 const isAgent = msg.senderType === 'agent';
-                const showDate = index === 0 || 
-                  new Date(messages[index - 1].createdAt).toDateString() !== new Date(msg.createdAt).toDateString();
-                
                 return (
-                  <div key={msg.id}>
-                    {showDate && (
-                      <div style={{ textAlign: 'center', margin: '20px 0' }}>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {new Date(msg.createdAt).toLocaleDateString([], { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </Text>
-                      </div>
-                    )}
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: isAgent ? 'flex-end' : 'flex-start',
-                      marginBottom: 12
-                    }}>
-                      <div style={{ 
-                        maxWidth: '70%',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        background: isAgent ? '#b40101' : 'white',
-                        color: isAgent ? 'white' : '#262626',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                      }}>
-                        <div style={{ marginBottom: 4 }}>{msg.content}</div>
-                        <Text style={{
-                          fontSize: 11,
-                          color: isAgent ? 'rgba(255,255,255,0.7)' : '#8c8c8c'
-                        }}>
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                          {isAgent && (
-                            <span style={{ marginLeft: 6 }}>
-                              {msg.pending ? '· Sending…' : msg.readAt ? '· Read ✓✓' : msg.isRead ? '· Read ✓✓' : '· Sent ✓'}
-                            </span>
-                          )}
-                        </Text>
-                      </div>
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${isAgent ? 'items-end' : 'items-start'}`}
+                  >
+                    <div
+                      className={`max-w-[80%] sm:max-w-md px-4 py-2.5 rounded-lg text-xs leading-relaxed shadow-2xs ${
+                        isAgent
+                          ? 'bg-[#0d0f12] text-white rounded-br-none'
+                          : 'bg-white text-stone-800 border border-stone-200/90 rounded-bl-none'
+                      }`}
+                    >
+                      {msg.content}
                     </div>
+                    <span className="text-[10px] font-mono text-stone-400 mt-1 px-1">
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {msg.pending && ' • sending...'}
+                    </span>
                   </div>
                 );
               })}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message Input */}
-            <div style={{ 
-              padding: '12px 32px 4px', 
-              borderTop: '1px solid #f0f0f0',
-              background: 'white'
-            }}>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                <MessageOutlined style={{ color: '#8c8c8c', fontSize: 12, marginTop: 4 }} />
-                {templates.map((t) => (
-                  <Button 
-                    key={t.label}
-                    size="small" 
-                    type="dashed"
-                    onClick={() => setNewMessage(prev => prev + (prev ? '\n' : '') + t.text)}
-                    style={{ fontSize: 11, borderRadius: 12 }}
-                  >
-                    {t.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div style={{ 
-              padding: '0 32px 20px', 
-              background: 'white'
-            }}>
-              <Space.Compact style={{ width: '100%' }}>
-                <TextArea
-                  value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
-                  onPressEnter={(e) => {
-                    if (!e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder="Type your message..."
-                  autoSize={{ minRows: 1, maxRows: 4 }}
-                  style={{ borderRadius: '8px 0 0 8px' }}
-                  aria-label="Message input"
-                />
-                <Button 
-                  type="primary" 
-                  icon={<SendOutlined />}
-                  onClick={handleSendMessage}
-                  loading={sending}
-                  disabled={!newMessage.trim()}
-                  aria-label="Send message"
-                  style={{ 
-                    background: '#b40101', 
-                    borderColor: '#b40101',
-                    height: 'auto',
-                    borderRadius: '0 8px 8px 0'
-                  }}
+            {/* Quick Templates Bar */}
+            <div className="px-4 pt-3 pb-1 border-t border-stone-100 flex items-center gap-2 overflow-x-auto scrollbar-none bg-white">
+              <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold shrink-0 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#b40101]" />
+                Templates:
+              </span>
+              {templates.map((tpl, i) => (
+                <button
+                  key={i}
+                  onClick={() => setNewMessage(tpl.text)}
+                  className="px-2.5 py-1 text-[11px] text-stone-600 bg-stone-100 hover:bg-stone-200 rounded whitespace-nowrap transition-colors"
                 >
-                  Send
-                </Button>
-              </Space.Compact>
+                  {tpl.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Form */}
+            <div className="p-4 bg-white border-t border-stone-200">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Draft your private response..."
+                  className="flex-1 px-4 py-2.5 text-xs bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={sending || !newMessage.trim()}
+                  className="inline-flex items-center justify-center px-4 py-2.5 bg-[#b40101] hover:bg-[#900101] disabled:opacity-50 text-white rounded text-xs font-medium transition-colors shadow-xs"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </form>
             </div>
           </>
         ) : (
-          <div style={{ 
-            height: '100%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center' 
-          }}>
-            <Empty description="Select a conversation to start messaging" />
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-stone-400">
+            <MessageSquare className="w-12 h-12 text-stone-300 mb-3" />
+            <h4 className="font-serif text-lg text-stone-700">Torra Private Concierge Suite</h4>
+            <p className="text-xs text-stone-400 max-w-sm mt-1">
+              Select a client conversation from the left register to review the transcript and dispatch replies.
+            </p>
           </div>
         )}
-      </Content>
-    </Layout>
+      </div>
+    </div>
   );
 }

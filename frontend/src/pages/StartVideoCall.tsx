@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Video, Calendar, User, Mail, Home } from 'lucide-react';
-import { Card } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { useNavigate, useOutletContext, Link } from 'react-router-dom';
+import { Video, Calendar, User, Mail, Home, Sparkles, Monitor, ShieldCheck, ArrowRight } from 'lucide-react';
 
 const StartVideoCall: React.FC = () => {
   const { agent: parentAgent } = useOutletContext<{ agent: any }>();
@@ -23,7 +20,6 @@ const StartVideoCall: React.FC = () => {
     setLoading(true);
 
     try {
-      // Create video call
       const response = await fetch('/api/video/calls', {
         method: 'POST',
         headers: {
@@ -40,15 +36,13 @@ const StartVideoCall: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        
-        // Navigate to video call page
         navigate(`/video-call/${data.id}`);
       } else {
-        alert('Failed to start video call');
+        alert('Failed to initiate virtual showing room.');
       }
     } catch (error) {
       console.error('Error starting video call:', error);
-      alert('Failed to start video call');
+      alert('Failed to initiate virtual showing room.');
     } finally {
       setLoading(false);
     }
@@ -56,7 +50,6 @@ const StartVideoCall: React.FC = () => {
 
   const handleQuickStart = async () => {
     setLoading(true);
-
     try {
       const response = await fetch('/api/video/calls', {
         method: 'POST',
@@ -66,8 +59,8 @@ const StartVideoCall: React.FC = () => {
         },
         body: JSON.stringify({
           agentId,
-          leadName: 'Quick Call',
-          leadEmail: 'quick@call.com'
+          leadName: 'Private Client Session',
+          leadEmail: 'client@private-showing.torra.com'
         })
       });
 
@@ -75,143 +68,169 @@ const StartVideoCall: React.FC = () => {
         const data = await response.json();
         navigate(`/video-call/${data.id}`);
       }
-    } catch (error) {
-      console.error('Error starting quick call:', error);
-      alert('Failed to start video call');
+    } catch {
+      alert('Failed to launch quick showing room.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Video className="w-8 h-8 text-red-600" />
+    <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="pb-6 border-b border-stone-200">
+        <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+          Virtual Showing Protocol
+        </div>
+        <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+          Private Virtual Showing Room
+        </h2>
+        <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+          Conduct confidential remote walkthroughs and architectural consultations in high-definition video.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Instant Session Card */}
+        <div className="bg-white p-6 rounded-lg border border-stone-200/90 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div className="w-10 h-10 rounded-full bg-rose-50 text-[#b40101] flex items-center justify-center mb-3">
+              <Video className="w-5 h-5" />
+            </div>
+            <h3 className="font-serif text-lg text-stone-900">Instant Showing Room</h3>
+            <p className="text-stone-500 text-xs mt-1 leading-relaxed">
+              Instantly activate an encrypted virtual showing room and share the link with prospective buyers.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Start Video Call</h1>
-          <p className="text-gray-600">Connect with clients through video</p>
+          <button
+            onClick={handleQuickStart}
+            disabled={loading}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#b40101] hover:bg-[#900101] text-white text-xs font-medium rounded transition-colors shadow-xs"
+          >
+            <Video className="w-3.5 h-3.5" />
+            <span>Launch Instant Room</span>
+          </button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Quick Start */}
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Quick Start</h2>
-            <p className="text-gray-600 mb-6">
-              Start an instant video call without scheduling
+        {/* Schedule Consultation Card */}
+        <div className="bg-white p-6 rounded-lg border border-stone-200/90 shadow-xs flex flex-col justify-between space-y-4">
+          <div>
+            <div className="w-10 h-10 rounded-full bg-stone-100 text-stone-700 flex items-center justify-center mb-3">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <h3 className="font-serif text-lg text-stone-900">Coordinate on Calendar</h3>
+            <p className="text-stone-500 text-xs mt-1 leading-relaxed">
+              Schedule appointments in advance with automated confirmation notifications and calendar invites.
             </p>
-            <Button
-              onClick={handleQuickStart}
-              disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700"
-            >
-              <Video className="w-4 h-4 mr-2" />
-              Start Instant Call
-            </Button>
-          </Card>
+          </div>
+          <button
+            onClick={() => navigate('/command/calendar')}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium rounded transition-colors shadow-xs"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>Open Showing Schedule</span>
+          </button>
+        </div>
+      </div>
 
-          {/* Schedule Call */}
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Schedule Call</h2>
-            <p className="text-gray-600 mb-6">
-              Schedule a video call for later
-            </p>
-            <Button
-              onClick={() => navigate('/command/calendar')}
-              variant="outline"
-              className="w-full"
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              Go to Calendar
-            </Button>
-          </Card>
+      {/* Direct Invitation Form */}
+      <div className="bg-white p-6 sm:p-8 rounded-lg border border-stone-200/90 shadow-xs space-y-6">
+        <div>
+          <h3 className="font-serif text-lg text-stone-900">Direct Client Showing Invitation</h3>
+          <p className="text-stone-500 text-xs mt-0.5">
+            Create a branded showing session tailored to a registered client.
+          </p>
         </div>
 
-        {/* Scheduled Call Form */}
-        <Card className="p-8 mt-6">
-          <h2 className="text-2xl font-bold mb-6">Start Call with Client</h2>
-          
-          <form onSubmit={handleStartCall} className="space-y-6">
+        <form onSubmit={handleStartCall} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <User className="w-4 h-4 inline mr-1" />
+              <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
                 Client Name *
               </label>
-              <Input
+              <input
                 type="text"
                 required
                 value={formData.leadName}
                 onChange={(e) => setFormData({ ...formData, leadName: e.target.value })}
-                placeholder="John Doe"
+                placeholder="e.g. Eleanor Vance"
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Mail className="w-4 h-4 inline mr-1" />
+              <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
                 Client Email *
               </label>
-              <Input
+              <input
                 type="email"
                 required
                 value={formData.leadEmail}
                 onChange={(e) => setFormData({ ...formData, leadEmail: e.target.value })}
-                placeholder="john@example.com"
+                placeholder="client@domain.com"
+                className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Home className="w-4 h-4 inline mr-1" />
-                Property ID (Optional)
-              </label>
-              <Input
-                type="text"
-                value={formData.propertyId}
-                onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
-                placeholder="Property ID for virtual tour"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Add a property ID to start a virtual property tour
-              </p>
-            </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">
+              Associated Property Residence (Optional)
+            </label>
+            <input
+              type="text"
+              value={formData.propertyId}
+              onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
+              placeholder="e.g. 1200 Barton Springs Penthouse"
+              className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+            />
+            <p className="text-[10px] text-stone-400 mt-1">
+              Linking a residence embeds the property specification sheets directly in the meeting console.
+            </p>
+          </div>
 
-            <Button
+          <div className="pt-2 flex justify-end">
+            <button
               type="submit"
               disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700"
+              className="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] disabled:opacity-50 rounded transition-colors shadow-xs"
             >
-              {loading ? 'Starting Call...' : 'Start Video Call'}
-            </Button>
-          </form>
-        </Card>
+              <span>{loading ? 'Initiating Room...' : 'Start Showing Consultation'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </form>
+      </div>
 
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-6 mt-8">
-          <Card className="p-6 text-center">
-            <Video className="w-8 h-8 text-red-600 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">HD Video</h3>
-            <p className="text-sm text-gray-600">
-              Crystal clear video quality
-            </p>
-          </Card>
+      {/* Protocol Features */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-stone-50/70 p-5 rounded-lg border border-stone-200/60">
+          <Monitor className="w-5 h-5 text-[#b40101] mb-2" />
+          <h4 className="text-xs font-semibold text-stone-900 uppercase tracking-wider">
+            High-Definition Stream
+          </h4>
+          <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+            Uncompressed architectural rendering transmission for floorplans and 4K video walk-throughs.
+          </p>
+        </div>
 
-          <Card className="p-6 text-center">
-            <Calendar className="w-8 h-8 text-red-600 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Screen Sharing</h3>
-            <p className="text-sm text-gray-600">
-              Share property listings and documents
-            </p>
-          </Card>
+        <div className="bg-stone-50/70 p-5 rounded-lg border border-stone-200/60">
+          <Monitor className="w-5 h-5 text-stone-700 mb-2" />
+          <h4 className="text-xs font-semibold text-stone-900 uppercase tracking-wider">
+            Integrated Screen Sharing
+          </h4>
+          <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+            Seamlessly project legal contracts, surveys, and comparative market valuations in real-time.
+          </p>
+        </div>
 
-          <Card className="p-6 text-center">
-            <Home className="w-8 h-8 text-red-600 mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Virtual Tours</h3>
-            <p className="text-sm text-gray-600">
-              Show properties remotely
-            </p>
-          </Card>
+        <div className="bg-stone-50/70 p-5 rounded-lg border border-stone-200/60">
+          <ShieldCheck className="w-5 h-5 text-emerald-700 mb-2" />
+          <h4 className="text-xs font-semibold text-stone-900 uppercase tracking-wider">
+            Confidential & Encrypted
+          </h4>
+          <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">
+            Encrypted WebRTC peer channels protecting high-profile client identities and transaction terms.
+          </p>
         </div>
       </div>
     </div>
