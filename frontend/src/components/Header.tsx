@@ -56,42 +56,8 @@ export default function Header() {
           transition: "box-shadow 0.2s ease",
         }}
       >
-        {/* Top micro-bar */}
-        <div
-          style={{
-            background: "#111",
-            padding: "0 48px",
-            height: 36,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-          className="hidden-mobile"
-        >
-          <span style={{ color: "#999", fontSize: 12, fontWeight: 500 }}>
-            Texas Real Estate Commission #0751886
-          </span>
-          <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
-            {["Commercial", "Open Houses", "Land & Lots"].map((l, i) => (
-              <Link
-                key={i}
-                to={`/properties${i === 0 ? "?type=Commercial" : i === 1 ? "" : "?type=Land"}`}
-                style={{ color: "#888", fontSize: 12, textDecoration: "none", fontWeight: 500 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#888")}
-              >
-                {l}
-              </Link>
-            ))}
-            <span style={{ color: "#555", fontSize: 12 }}>|</span>
-            <a
-              href="tel:4693456868"
-              style={{ color: "#888", fontSize: 12, textDecoration: "none", fontWeight: 500 }}
-            >
-              (469) 345-6868
-            </a>
-          </div>
-        </div>
+
+
 
         {/* Main nav */}
         <div
@@ -353,18 +319,30 @@ export default function Header() {
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <Link
                   to="/login"
+                  className="hidden-mobile"
                   style={{
                     fontSize: 14,
                     fontWeight: 600,
-                    color: "#333",
+                    color: "#111",
                     textDecoration: "none",
-                    padding: "8px 14px",
-                    borderRadius: 8,
-                    transition: "background 0.15s",
+                    padding: "0 18px",
+                    height: 38,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    borderRadius: 6,
+                    border: "1.5px solid #d0d0d0",
+                    transition: "border-color 0.15s, background 0.15s",
+                    background: "#fff",
+                    whiteSpace: "nowrap",
                   }}
-                  className="hidden-mobile"
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#999";
+                    e.currentTarget.style.background = "#fafafa";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#d0d0d0";
+                    e.currentTarget.style.background = "#fff";
+                  }}
                 >
                   Log in
                 </Link>
@@ -375,14 +353,24 @@ export default function Header() {
                     fontWeight: 700,
                     color: "#fff",
                     textDecoration: "none",
-                    padding: "8px 18px",
-                    borderRadius: 8,
+                    padding: "0 18px",
+                    height: 38,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    borderRadius: 6,
+                    border: "1.5px solid #b40101",
                     background: "#b40101",
-                    transition: "background 0.15s",
-                    display: "inline-block",
+                    transition: "background 0.15s, border-color 0.15s",
+                    whiteSpace: "nowrap",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#910101")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#b40101")}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#910101";
+                    e.currentTarget.style.borderColor = "#910101";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#b40101";
+                    e.currentTarget.style.borderColor = "#b40101";
+                  }}
                 >
                   Sign up
                 </Link>

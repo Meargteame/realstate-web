@@ -82,29 +82,21 @@ export default function Hero() {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 8,
-            marginBottom: 20,
+            marginBottom: 24,
+            borderLeft: "3px solid #b40101",
+            paddingLeft: 12,
           }}
         >
           <span
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#b40101",
-              display: "block",
-            }}
-          />
-          <span
-            style={{
-              color: "rgba(255,255,255,0.7)",
+              color: "rgba(255,255,255,0.6)",
               fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: "0.12em",
+              fontWeight: 600,
+              letterSpacing: "0.13em",
               textTransform: "uppercase",
             }}
           >
-            Torra Commercial & Luxury Residential
+            Torra Commercial &amp; Luxury Residential
           </span>
         </div>
 
