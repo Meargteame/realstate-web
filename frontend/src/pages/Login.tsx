@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, X, AlertCircle } from "lucide-react";
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, AlertCircle, X } from "lucide-react";
+import TorraLogo from "@/components/TorraLogo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,196 +9,229 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!email.trim()) {
-      setError("Email is required.");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
-    if (!password) {
-      setError("Password is required.");
-      return;
-    }
+    if (!email.trim()) return setError("Email is required.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("Enter a valid email.");
+    if (!password) return setError("Password is required.");
 
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password })
+        body: JSON.stringify({ email: email.trim(), password }),
       });
-      
-      const data = await res.json().catch(() => ({ error: "Invalid server response" }));
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Invalid credentials");
-      }
-
-      const firstName = data.name ? data.name.split(' ')[0] : 'User';
+      const data = await res.json().catch(() => ({ error: "Invalid response" }));
+      if (!res.ok) throw new Error(data.error || "Invalid credentials");
 
       localStorage.setItem("torra_user", JSON.stringify({
-        id: data.id,
-        agentId: data.agentId,
-        firstName: firstName,
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        token: data.token
+        id: data.id, agentId: data.agentId,
+        firstName: data.name?.split(" ")[0] || "User",
+        name: data.name, email: data.email,
+        role: data.role, token: data.token,
       }));
-      
-      // Redirect based on role
-      if (data.role === 'admin') {
-        navigate("/admin");
-      } else if (data.role === 'agent' || data.agentId) {
-        navigate("/command");
-      } else {
-        // Regular users go to their account page
-        navigate("/account");
-      }
+
+      if (data.role === "admin") navigate("/admin");
+      else if (data.role === "agent" || data.agentId) navigate("/command");
+      else navigate("/account");
     } catch (err: any) {
-      setError(err.message || "Failed to log in. Please try again.");
+      setError(err.message || "Failed to log in.");
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA]">
-      {/* Premium Visual Sidebar */}
-      <div className="hidden md:flex md:w-1/2 bg-[#B40101] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
-        <div aria-hidden="true" className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-30"></div>
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#B40101] via-transparent to-[#B40101]/60 mix-blend-multiply border-r border-[#6B0000]"></div>
-        <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
-          <div className="text-white text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
-          <div className="text-white/80 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>
-          <h2 className="text-white text-[42px] font-bold mb-6 tracking-tight leading-[1.1] drop-shadow-lg">
-            Empowering Agents.<br/>Inspiring Buyers.
-          </h2>
-          <p className="text-white/90 text-xl font-medium leading-relaxed drop-shadow-md">
-            Your premium real estate journey begins here. Connect with elite agents and discover exclusive properties.
-          </p>
+    <div style={{ minHeight: "100vh", display: "flex", background: "#fff" }}>
+      {/* ── Left: editorial photo panel ── */}
+      <div
+        style={{
+          width: "48%",
+          position: "relative",
+          overflow: "hidden",
+          flexShrink: 0,
+          display: "none",
+        }}
+        className="login-panel"
+      >
+        <img
+          src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85"
+          alt=""
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%" }}
+        />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)" }} />
+        
+        {/* Bottom text */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "40px 48px" }}>
+          <blockquote style={{ margin: 0 }}>
+            <p style={{ fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.4, letterSpacing: "-0.02em", marginBottom: 16 }}>
+              "Torra found us our dream home in three weeks. I don't think we could have done it without them."
+            </p>
+            <footer style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>
+              — Sarah & James M., Austin TX
+            </footer>
+          </blockquote>
         </div>
       </div>
 
-      {/* Modern Main Login Area */}
-      <div className="flex-1 flex flex-col relative w-full items-center justify-center bg-white px-6 py-12 md:px-16 lg:px-24">
-        <Link to="/" aria-label="Close login page" onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Space') { e.preventDefault(); navigate("/"); } }} className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
-          <X className="w-6 h-6" aria-hidden="true" />
-        </Link>
+      {/* ── Right: form ── */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "60px clamp(24px, 8vw, 96px)",
+          position: "relative",
+        }}
+      >
+        {/* Close */}
+        <button
+          onClick={() => navigate("/")}
+          aria-label="Close"
+          style={{
+            position: "absolute", top: 24, right: 24,
+            background: "none", border: "none",
+            width: 36, height: 36, borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: "#aaa", transition: "all 0.15s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#f5f5f5"; e.currentTarget.style.color = "#111"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#aaa"; }}
+        >
+          <X size={18} />
+        </button>
 
-        <div className="w-full max-w-[420px]">
-          <div className="text-center mb-10">
-            <h1 className="text-[34px] font-bold tracking-tight text-gray-900 mb-3">Welcome Back</h1>
-            <p className="text-gray-500 text-base font-medium">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-[#B40101] hover:text-[#8A0000] underline underline-offset-4 font-bold transition-colors">Sign Up</Link>
-            </p>
+        <div style={{ maxWidth: 400, width: "100%" }}>
+          {/* Logo */}
+          <div style={{ marginBottom: 48 }}>
+            <TorraLogo size={36} color="#b40101" compact showText />
           </div>
 
-          <form className="space-y-6" onSubmit={handleLogin} noValidate>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-800 uppercase tracking-widest pl-1">Email Address</label>
-              <Input 
-                type="email" 
-                placeholder="name@example.com"
+          {/* Heading */}
+          <h1 style={{ fontSize: 32, fontWeight: 900, color: "#111", letterSpacing: "-0.03em", margin: "0 0 8px" }}>
+            Welcome back.
+          </h1>
+          <p style={{ fontSize: 15, color: "#888", margin: "0 0 40px", fontWeight: 400 }}>
+            Don't have an account?{" "}
+            <Link to="/signup" style={{ color: "#b40101", fontWeight: 700, textDecoration: "none" }}>
+              Sign up
+            </Link>
+          </p>
+
+          <form onSubmit={handleLogin} noValidate style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Email */}
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#333", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                Email
+              </label>
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                aria-label="Email address"
-                aria-describedby={error ? "login-error" : undefined}
-                className="h-14 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
+                placeholder="you@example.com"
+                autoComplete="email"
+                style={{
+                  width: "100%", height: 52,
+                  border: "1.5px solid #e0e0e0",
+                  borderRadius: 8, padding: "0 16px",
+                  fontSize: 15, color: "#111",
+                  background: "#fff", outline: "none",
+                  transition: "border-color 0.15s",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#b40101")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "#e0e0e0")}
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center pl-1">
-                <label className="text-xs font-bold text-gray-800 uppercase tracking-widest">Password</label>
-                <Link to="/forgot-password" className="text-[13px] font-bold text-[#B40101] hover:underline underline-offset-4">Forgot password?</Link>
+            {/* Password */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "#333", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Password
+                </label>
+                <Link to="/forgot-password" style={{ fontSize: 12, color: "#b40101", fontWeight: 600, textDecoration: "none" }}>
+                  Forgot?
+                </Link>
               </div>
-              <div className="relative">
-                <Input 
-                  type={showPassword ? "text" : "password"} 
-                  placeholder="Enter your password"
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPw ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  aria-label="Password"
-                  aria-describedby={error ? "login-error" : undefined}
-                  className="h-14 pr-12 border-gray-200 focus-visible:ring-2 focus-visible:ring-[#B40101] focus-visible:border-transparent rounded-xl text-base px-5 bg-gray-50 hover:bg-white transition-all shadow-sm"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  style={{
+                    width: "100%", height: 52,
+                    border: "1.5px solid #e0e0e0",
+                    borderRadius: 8, padding: "0 48px 0 16px",
+                    fontSize: 15, color: "#111",
+                    background: "#fff", outline: "none",
+                    transition: "border-color 0.15s",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "#b40101")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "#e0e0e0")}
                 />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                <button
+                  type="button"
+                  onClick={() => setShowPw((p) => !p)}
+                  style={{
+                    position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", cursor: "pointer", color: "#aaa", padding: 0,
+                  }}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </Button>
+                  {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
+            {/* Error */}
             {error && (
-              <div id="login-error" role="alert" tabIndex={0} className="flex items-center gap-3 text-[#B40101] bg-red-50 p-4 rounded-xl border border-red-100 shadow-sm animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                <p className="text-sm font-bold">{error}</p>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                background: "#fff5f5", border: "1px solid #fecaca",
+                borderRadius: 8, padding: "12px 16px",
+                color: "#b40101", fontSize: 13, fontWeight: 600,
+              }}>
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                {error}
               </div>
             )}
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="remember-me"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-[#B40101] focus:ring-[#B40101] accent-[#B40101] cursor-pointer"
-              />
-              <label htmlFor="remember-me" className="text-sm font-semibold text-gray-600 cursor-pointer select-none">
-                Remember me for 30 days
-              </label>
-            </div>
-
-            <Button 
-              type="submit" 
-              disabled={loading} 
-              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                height: 52, background: "#b40101",
+                color: "#fff", border: "none",
+                borderRadius: 8, fontSize: 15,
+                fontWeight: 800, cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1,
+                transition: "background 0.15s",
+                letterSpacing: "0.01em",
+              }}
+              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#910101"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#b40101"; }}
             >
-              {loading ? "Authenticating..." : "Log In to Dashboard"}
-            </Button>
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
           </form>
-
-          <div className="relative my-10">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-              <span className="bg-white px-4 text-gray-400">or continue with</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {[
-              { name: 'Google', icon: 'https://www.svgrepo.com/show/475656/google-color.svg' },
-              { name: 'Apple', icon: 'https://www.svgrepo.com/show/475633/apple-color.svg' }
-            ].map((provider) => (
-              <Button key={provider.name} type="button" variant="outline" className="h-14 rounded-xl border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-bold gap-3 w-full flex items-center justify-center text-[15px] transition-all shadow-sm">
-                <img src={provider.icon} alt="" aria-hidden="true" className="w-6 h-6" referrerPolicy="no-referrer" />
-                <span>Continue with {provider.name}</span>
-              </Button>
-            ))}
-          </div>
         </div>
       </div>
+
+      {/* Inline style for responsive panel */}
+      <style>{`
+        @media (min-width: 900px) {
+          .login-panel { display: block !important; }
+        }
+      `}</style>
     </div>
   );
 }

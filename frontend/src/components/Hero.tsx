@@ -113,11 +113,12 @@ export default function Hero() {
           style={{
             color: "#ffffff",
             fontSize: "clamp(38px, 6vw, 76px)",
-            fontWeight: 900,
+            fontWeight: 400,
             lineHeight: 1.06,
             letterSpacing: "-0.03em",
             margin: "0 0 40px",
             maxWidth: 680,
+            fontFamily: '"DM Serif Display", Georgia, serif',
           }}
         >
           Find your
