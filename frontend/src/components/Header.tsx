@@ -1,248 +1,547 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Menu, Button, Space, Drawer, Typography, Dropdown, Avatar, Badge } from "antd";
-import { 
-  MenuOutlined, 
-  UserOutlined, 
-  SearchOutlined, 
-  HeartOutlined, 
-  CalendarOutlined, 
-  LogoutOutlined, 
-  DashboardOutlined,
-  CompassOutlined,
-  PhoneOutlined
-} from "@ant-design/icons";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useIsMobile } from "../hooks/useBreakpoint";
+import { Heart, Search, Menu, X, ChevronDown, LogOut, LayoutDashboard, User, Shield } from "lucide-react";
 import TorraLogo from "./TorraLogo";
 
-const { Header: AntHeader } = Layout;
-const { Text } = Typography;
-
 export default function Header() {
-  const [visible, setVisible] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [savedCount, setSavedCount] = useState<number>(0);
-  const location = useLocation();
+  const [savedCount, setSavedCount] = useState(0);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const location = useLocation();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 15);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem('torra_user');
-    if (stored) {
-      try {
-        setCurrentUser(JSON.parse(stored));
-      } catch { setCurrentUser(null); }
-    }
-
     try {
-      const saved = JSON.parse(localStorage.getItem('torra_saved_properties') || '[]');
+      const u = localStorage.getItem("torra_user");
+      if (u) setCurrentUser(JSON.parse(u));
+      const saved = JSON.parse(localStorage.getItem("torra_saved_properties") || "[]");
       if (Array.isArray(saved)) setSavedCount(saved.length);
     } catch {}
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('torra_user');
+  const logout = () => {
+    localStorage.removeItem("torra_user");
     setCurrentUser(null);
-    navigate('/');
+    setUserMenuOpen(false);
+    navigate("/");
     window.location.reload();
   };
 
-  const getUserMenuItems = () => {
-    const items: any[] = [
-      { key: 'account', icon: <UserOutlined />, label: 'My Account', onClick: () => navigate('/account') },
-      { key: 'saved', icon: <HeartOutlined />, label: 'Saved Homes', onClick: () => navigate('/saved-searches') },
-      { key: 'appointments', icon: <CalendarOutlined />, label: 'Tours & Appointments', onClick: () => navigate('/account') },
-    ];
-    if (currentUser?.role === 'agent' || currentUser?.agentId) {
-      items.push({ key: 'dashboard', icon: <DashboardOutlined />, label: 'Agent Command Center', onClick: () => navigate('/command') });
-    }
-    if (currentUser?.role === 'admin') {
-      items.push({ key: 'admin', icon: <DashboardOutlined />, label: 'Admin Portal', onClick: () => navigate('/admin') });
-    }
-    items.push({ type: 'divider' });
-    items.push({ key: 'logout', icon: <LogoutOutlined />, label: 'Log Out', onClick: handleLogout, danger: true });
-    return items;
-  };
-
-  const navItems = [
-    { key: '/properties', label: <Link to="/properties">Buy</Link> },
-    { key: '/properties?status=For+Rent', label: <Link to="/properties?status=For+Rent">Rent</Link> },
-    { key: '/home-value', label: <Link to="/home-value">Sell / Home Value</Link> },
-    { key: '/mortgage-calculator', label: <Link to="/mortgage-calculator">Mortgage</Link> },
-    { key: '/agents', label: <Link to="/agents">Find an Agent</Link> },
+  const navLinks = [
+    { label: "Buy", href: "/properties" },
+    { label: "Rent", href: "/properties?status=For+Rent" },
+    { label: "Sell", href: "/home-value" },
+    { label: "Agents", href: "/agents" },
+    { label: "Blog", href: "/blog" },
   ];
 
   return (
-    <div style={{ width: '100%', position: 'sticky', top: 0, zIndex: 1000 }}>
-      {/* Top Utility Announcement Bar */}
-      {!isMobile && (
-        <div style={{ 
-          background: '#090d16', 
-          color: '#cbd5e1', 
-          padding: '7px 48px', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          fontSize: '12px', 
-          fontWeight: 600,
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-            <Text style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em' }}>
-              TORRA COMMERCIAL & LUXURY RESIDENTIAL BROKERAGE
-            </Text>
+    <>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1000,
+          background: "#fff",
+          borderBottom: scrolled ? "1px solid #e5e5e5" : "1px solid #e5e5e5",
+          boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.07)" : "none",
+          transition: "box-shadow 0.2s ease",
+        }}
+      >
+        {/* Top micro-bar */}
+        <div
+          style={{
+            background: "#111",
+            padding: "0 48px",
+            height: 36,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+          className="hidden-mobile"
+        >
+          <span style={{ color: "#999", fontSize: 12, fontWeight: 500 }}>
+            Texas Real Estate Commission #0751886
+          </span>
+          <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
+            {["Commercial", "Open Houses", "Land & Lots"].map((l, i) => (
+              <Link
+                key={i}
+                to={`/properties${i === 0 ? "?type=Commercial" : i === 1 ? "" : "?type=Land"}`}
+                style={{ color: "#888", fontSize: 12, textDecoration: "none", fontWeight: 500 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#888")}
+              >
+                {l}
+              </Link>
+            ))}
+            <span style={{ color: "#555", fontSize: 12 }}>|</span>
+            <a
+              href="tel:4693456868"
+              style={{ color: "#888", fontSize: 12, textDecoration: "none", fontWeight: 500 }}
+            >
+              (469) 345-6868
+            </a>
           </div>
-          <Space size="large">
-            <Link to="/properties?type=Commercial" style={{ color: '#cbd5e1', fontSize: '12px', textDecoration: 'none' }}>Commercial</Link>
-            <Link to="/properties?type=Land" style={{ color: '#cbd5e1', fontSize: '12px', textDecoration: 'none' }}>Land & Lots</Link>
-            <Link to="/open-houses" style={{ color: '#cbd5e1', fontSize: '12px', textDecoration: 'none' }}>Open Houses</Link>
-            <span style={{ color: '#ffffff', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <PhoneOutlined style={{ color: '#ef4444' }} /> (469) 345-6868
-            </span>
-          </Space>
         </div>
-      )}
 
-      {/* Main Glassmorphic Header */}
-      <AntHeader style={{ 
-        background: isScrolled ? 'rgba(255, 255, 255, 0.95)' : '#ffffff',
-        backdropFilter: isScrolled ? 'blur(16px)' : 'none',
-        height: isMobile ? '64px' : '76px', 
-        padding: isMobile ? '0 16px' : '0 48px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        boxShadow: isScrolled ? '0 10px 25px -5px rgba(15, 23, 42, 0.08)' : '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
-        borderBottom: isScrolled ? '1px solid rgba(226, 232, 240, 0.8)' : '1px solid #e2e8f0',
-        lineHeight: isMobile ? '64px' : '76px',
-        transition: 'all 0.25s ease'
-      }}>
-        {/* Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <TorraLogo size={isMobile ? 36 : 42} color="#b40101" compact showText />
-        </Link>
+        {/* Main nav */}
+        <div
+          style={{
+            maxWidth: 1320,
+            margin: "0 auto",
+            padding: "0 32px",
+            height: 68,
+            display: "flex",
+            alignItems: "center",
+            gap: 40,
+          }}
+        >
+          {/* Logo */}
+          <Link
+            to="/"
+            style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}
+          >
+            <TorraLogo size={38} color="#b40101" compact showText />
+          </Link>
 
-        {/* Navigation Tabs - Desktop */}
-        {!isMobile && (
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <Menu
-              mode="horizontal"
-              selectedKeys={[location.pathname]}
-              items={navItems}
-              disabledOverflow
-              style={{
-                border: 'none',
-                fontSize: '15px',
-                fontWeight: 700,
-                background: 'transparent',
-                letterSpacing: '0.01em'
-              }}
-            />
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <Space size="middle" align="center">
-          {!isMobile && (
-            <Button 
-              type="text"
-              icon={<SearchOutlined style={{ fontSize: '18px', color: '#334155' }} />}
-              onClick={() => navigate('/properties')}
-              style={{ height: '42px', width: '42px', borderRadius: '50%' }}
-              title="Search Properties"
-            />
-          )}
-
-          {!isMobile && (
-            <Badge count={savedCount} size="small" offset={[-2, 4]} color="#b40101">
-              <Button 
-                type="text"
-                icon={<HeartOutlined style={{ fontSize: '18px', color: '#334155' }} />}
-                onClick={() => navigate('/saved-searches')}
-                style={{ height: '42px', width: '42px', borderRadius: '50%' }}
-                title="Saved Homes"
-              />
-            </Badge>
-          )}
-
-          {currentUser ? (
-            <Dropdown menu={{ items: getUserMenuItems() }} placement="bottomRight" trigger={['click']}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '4px 8px', borderRadius: '24px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <Avatar 
-                  size={isMobile ? 32 : 36}
-                  src={currentUser.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'U')}&background=b40101&color=fff&size=128`}
-                  style={{ backgroundColor: '#b40101', flexShrink: 0 }}
+          {/* Desktop nav */}
+          <nav
+            style={{ display: "flex", gap: 4, flex: 1, alignItems: "center" }}
+            className="hidden-mobile"
+          >
+            {navLinks.map((l) => {
+              const active = location.pathname === l.href || (l.href !== "/" && location.pathname.startsWith(l.href.split("?")[0]));
+              return (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  style={{
+                    fontSize: 15,
+                    fontWeight: active ? 700 : 500,
+                    color: active ? "#111" : "#444",
+                    textDecoration: "none",
+                    padding: "6px 14px",
+                    borderRadius: 6,
+                    transition: "all 0.15s ease",
+                    background: active ? "#f5f5f5" : "transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) e.currentTarget.style.background = "#f5f5f5";
+                    e.currentTarget.style.color = "#111";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.color = "#444";
+                    }
+                  }}
                 >
-                  {(currentUser.name || 'U').charAt(0).toUpperCase()}
-                </Avatar>
-                {!isMobile && (
-                  <div style={{ lineHeight: 1.2, paddingRight: '6px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
-                      {currentUser.name?.split(' ')[0] || 'User'}
+                  {l.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right side actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+            {/* Search icon */}
+            <button
+              onClick={() => navigate("/properties")}
+              className="hidden-mobile"
+              style={{
+                background: "none",
+                border: "none",
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#444",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+              aria-label="Search"
+            >
+              <Search size={18} />
+            </button>
+
+            {/* Saved */}
+            <button
+              onClick={() => navigate("/saved-searches")}
+              className="hidden-mobile"
+              style={{
+                background: "none",
+                border: "none",
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#444",
+                position: "relative",
+                transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+              aria-label="Saved homes"
+            >
+              <Heart size={18} />
+              {savedCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    background: "#b40101",
+                    color: "#fff",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    borderRadius: "50%",
+                    width: 14,
+                    height: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {savedCount}
+                </span>
+              )}
+            </button>
+
+            {/* User */}
+            {currentUser ? (
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => setUserMenuOpen((o) => !o)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "#f5f5f5",
+                    border: "1px solid #e5e5e5",
+                    borderRadius: 8,
+                    padding: "6px 12px 6px 8px",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#111",
+                    transition: "border-color 0.15s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#ccc")}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#e5e5e5")}
+                >
+                  <img
+                    src={
+                      currentUser.imageUrl ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || "U")}&background=b40101&color=fff&size=64`
+                    }
+                    alt=""
+                    style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+                  />
+                  <span className="hidden-mobile">
+                    {currentUser.name?.split(" ")[0] || "Account"}
+                  </span>
+                  <ChevronDown size={14} color="#888" />
+                </button>
+
+                {userMenuOpen && (
+                  <>
+                    <div
+                      style={{ position: "fixed", inset: 0, zIndex: 99 }}
+                      onClick={() => setUserMenuOpen(false)}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "calc(100% + 8px)",
+                        right: 0,
+                        background: "#fff",
+                        border: "1px solid #e5e5e5",
+                        borderRadius: 10,
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                        width: 200,
+                        zIndex: 100,
+                        overflow: "hidden",
+                        padding: "6px 0",
+                      }}
+                    >
+                      <div style={{ padding: "10px 16px 8px", borderBottom: "1px solid #f0f0f0" }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#111" }}>{currentUser.name}</div>
+                        <div style={{ fontSize: 11, color: "#888", marginTop: 1, textTransform: "capitalize" }}>
+                          {currentUser.role}
+                        </div>
+                      </div>
+                      {[
+                        { label: "My Account", icon: <User size={14} />, href: "/account" },
+                        ...(currentUser.role === "agent" || currentUser.agentId
+                          ? [{ label: "Command Center", icon: <LayoutDashboard size={14} />, href: "/command" }]
+                          : []),
+                        ...(currentUser.role === "admin"
+                          ? [{ label: "Admin Portal", icon: <Shield size={14} />, href: "/admin" }]
+                          : []),
+                      ].map((item) => (
+                        <button
+                          key={item.href}
+                          onClick={() => { navigate(item.href); setUserMenuOpen(false); }}
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: "9px 16px",
+                            background: "none",
+                            border: "none",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: "#333",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "background 0.12s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#f9f9f9")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                        >
+                          <span style={{ color: "#888" }}>{item.icon}</span>
+                          {item.label}
+                        </button>
+                      ))}
+                      <div style={{ borderTop: "1px solid #f0f0f0", marginTop: 4 }}>
+                        <button
+                          onClick={logout}
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: "9px 16px",
+                            background: "none",
+                            border: "none",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: "#b40101",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "background 0.12s",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fff5f5")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                        >
+                          <LogOut size={14} />
+                          Sign Out
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'capitalize', fontWeight: 600 }}>
-                      {currentUser.role === 'agent' ? 'Realtor' : currentUser.role === 'admin' ? 'Admin' : 'Account'}
-                    </div>
-                  </div>
+                  </>
                 )}
               </div>
-            </Dropdown>
-          ) : (
-            <Button 
-              type="primary" 
-              onClick={() => navigate('/login')}
-              style={{ 
-                background: '#b40101', 
-                borderColor: '#b40101', 
-                fontWeight: 700,
-                height: isMobile ? '38px' : '44px',
-                padding: isMobile ? '0 18px' : '0 24px',
-                borderRadius: '10px',
-                fontSize: '14px',
-                letterSpacing: '0.02em',
-                boxShadow: '0 4px 12px rgba(180,1,1,0.25)'
+            ) : (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <Link
+                  to="/login"
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#333",
+                    textDecoration: "none",
+                    padding: "8px 14px",
+                    borderRadius: 8,
+                    transition: "background 0.15s",
+                  }}
+                  className="hidden-mobile"
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  Log in
+                </Link>
+                <Link
+                  to="/signup"
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#fff",
+                    textDecoration: "none",
+                    padding: "8px 18px",
+                    borderRadius: 8,
+                    background: "#b40101",
+                    transition: "background 0.15s",
+                    display: "inline-block",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#910101")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#b40101")}
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="visible-mobile"
+              style={{
+                background: "none",
+                border: "none",
+                width: 40,
+                height: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#333",
+                marginLeft: 4,
+              }}
+              aria-label="Open menu"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile drawer */}
+      {menuOpen && (
+        <>
+          <div
+            onClick={() => setMenuOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.4)",
+              zIndex: 2000,
+              backdropFilter: "blur(2px)",
+            }}
+          />
+          <nav
+            style={{
+              position: "fixed",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 280,
+              background: "#fff",
+              zIndex: 2001,
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
+              overflowY: "auto",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid #f0f0f0",
               }}
             >
-              Sign In
-            </Button>
-          )}
-
-          {isMobile && (
-            <Button 
-              type="text" 
-              icon={<MenuOutlined style={{ fontSize: '20px' }} />} 
-              onClick={() => setVisible(true)}
-              style={{ height: '44px', width: '44px' }}
-            />
-          )}
-        </Space>
-
-        <Drawer
-          title={<TorraLogo size={32} color="#b40101" compact showText />}
-          placement="right"
-          onClose={() => setVisible(false)}
-          open={visible}
-          width={300}
-        >
-          <Menu 
-            mode="vertical" 
-            selectedKeys={[location.pathname]} 
-            items={[...navItems, { key: '/saved-searches', label: <Link to="/saved-searches">Saved Homes ({savedCount})</Link> }, { key: '/login', label: <Link to="/login">Sign In / Register</Link> }]}
-            style={{ border: 'none', fontSize: '16px', fontWeight: 600 }}
-            onClick={() => setVisible(false)}
-          />
-        </Drawer>
-      </AntHeader>
-    </div>
+              <TorraLogo size={32} color="#b40101" compact showText />
+              <button
+                onClick={() => setMenuOpen(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#555" }}
+              >
+                <X size={22} />
+              </button>
+            </div>
+            <div style={{ padding: "16px 12px", flex: 1 }}>
+              {navLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: "block",
+                    padding: "12px 12px",
+                    fontSize: 16,
+                    fontWeight: 600,
+                    color: "#111",
+                    textDecoration: "none",
+                    borderRadius: 8,
+                    marginBottom: 2,
+                    transition: "background 0.12s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+            <div style={{ padding: "16px 12px 32px", borderTop: "1px solid #f0f0f0", display: "flex", flexDirection: "column", gap: 8 }}>
+              {currentUser ? (
+                <button
+                  onClick={logout}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    background: "none",
+                    border: "1px solid #e5e5e5",
+                    borderRadius: 8,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "#b40101",
+                    cursor: "pointer",
+                  }}
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      textAlign: "center",
+                      padding: "12px",
+                      border: "1px solid #e5e5e5",
+                      borderRadius: 8,
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: "#333",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: "block",
+                      textAlign: "center",
+                      padding: "12px",
+                      background: "#b40101",
+                      borderRadius: 8,
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Sign up
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
+        </>
+      )}
+    </>
   );
 }

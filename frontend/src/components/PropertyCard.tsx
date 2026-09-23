@@ -1,33 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Space, message } from "antd";
-import { 
-  HeartOutlined, 
-  HeartFilled, 
-  ArrowRightOutlined, 
-  EnvironmentOutlined,
-  EyeOutlined,
-  CompassOutlined
-} from "@ant-design/icons";
+import { message } from "antd";
+import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Text } = Typography;
 
 interface PropertyCardProps {
   property: any;
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
-  const isMobile = useIsMobile();
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('torra_saved_properties') || '[]');
-      if (Array.isArray(saved) && saved.includes(property.id)) {
-        setIsSaved(true);
-      }
+      const saved = JSON.parse(localStorage.getItem("torra_saved_properties") || "[]");
+      if (Array.isArray(saved) && saved.includes(property.id)) setIsSaved(true);
     } catch {}
   }, [property.id]);
 
@@ -35,222 +22,260 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     e.preventDefault();
     e.stopPropagation();
     try {
-      let saved = JSON.parse(localStorage.getItem('torra_saved_properties') || '[]');
+      let saved = JSON.parse(localStorage.getItem("torra_saved_properties") || "[]");
       if (!Array.isArray(saved)) saved = [];
-      
       if (isSaved) {
-        saved = saved.filter((id: any) => id !== property.id);
-        setIsSaved(false);
-        message.info("Property removed from saved homes");
+        saved = saved.filter((id: string) => id !== property.id);
+        message.info("Removed from saved homes");
       } else {
         saved.push(property.id);
-        setIsSaved(true);
-        message.success("Property saved to your wishlist!");
+        message.success("Saved to your homes");
       }
-      localStorage.setItem('torra_saved_properties', JSON.stringify(saved));
-    } catch {
+      localStorage.setItem("torra_saved_properties", JSON.stringify(saved));
       setIsSaved(!isSaved);
+    } catch {
+      setIsSaved((s) => !s);
     }
   };
 
-  const formatCurrency = (val: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);
+  const price = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(property.price || 0);
 
-  const isLuxury = (property.price || 0) >= 1500000;
-  const isRent = property.status === 'For Rent';
+  const isRent = property.status === "For Rent";
+  const isNew = property.daysOnMarket != null && property.daysOnMarket <= 7;
+
+  const imgSrc =
+    !imgErr && property.imageUrl
+      ? property.imageUrl
+      : "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=80";
 
   return (
-    <Link to={`/properties/${property.id}`} style={{ display: 'block', textDecoration: 'none', height: '100%' }}>
-      <div 
-        style={{ 
-          background: '#ffffff',
-          borderRadius: '16px',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden',
-          boxShadow: '0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05)',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          position: 'relative'
+    <Link
+      to={`/properties/${property.id}`}
+      className="property-card"
+      style={{ display: "block", textDecoration: "none", height: "100%" }}
+    >
+      <article
+        style={{
+          background: "#fff",
+          borderRadius: "4px",
+          overflow: "hidden",
+          border: "1px solid #e8e8e8",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          transition: "box-shadow 0.22s ease, transform 0.22s ease",
+          cursor: "pointer",
         }}
         onMouseEnter={(e) => {
-          if (isMobile) return;
-          e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.04)';
-          e.currentTarget.style.borderColor = '#cbd5e1';
-          const img = e.currentTarget.querySelector('img');
-          if (img) img.style.transform = 'scale(1.06)';
+          e.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.12)";
+          e.currentTarget.style.transform = "translateY(-3px)";
+          const img = e.currentTarget.querySelector<HTMLImageElement>(".pc-img");
+          if (img) img.style.transform = "scale(1.04)";
         }}
         onMouseLeave={(e) => {
-          if (isMobile) return;
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05)';
-          e.currentTarget.style.borderColor = '#e2e8f0';
-          const img = e.currentTarget.querySelector('img');
-          if (img) img.style.transform = 'scale(1.0)';
+          e.currentTarget.style.boxShadow = "none";
+          e.currentTarget.style.transform = "translateY(0)";
+          const img = e.currentTarget.querySelector<HTMLImageElement>(".pc-img");
+          if (img) img.style.transform = "scale(1)";
         }}
       >
-        {/* Photo Container */}
-        <div style={{ position: 'relative', height: '240px', width: '100%', background: '#0f172a', overflow: 'hidden' }}>
+        {/* ── Image ── */}
+        <div
+          style={{
+            position: "relative",
+            aspectRatio: "4/3",
+            overflow: "hidden",
+            background: "#f0f0f0",
+            flexShrink: 0,
+          }}
+        >
           <img
-            alt={property.address || "Real Estate Listing"}
-            src={property.imageUrl || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=900&q=80"}
+            className="pc-img"
+            src={imgSrc}
+            alt={property.address || "Property"}
             loading="lazy"
-            onLoad={() => setImageLoaded(true)}
+            onError={() => setImgErr(true)}
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: imageLoaded ? 1 : 0.4,
-              transition: 'opacity 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              transition: "transform 0.4s ease",
             }}
           />
 
-          {/* Top Status & Feature Badges */}
-          <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ 
-              background: isRent ? '#1d4ed8' : '#b40101', 
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: '11px',
-              padding: '4px 10px',
-              borderRadius: '6px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
-            }}>
-              {property.status || 'FOR SALE'}
-            </span>
+          {/* Status pill — top left */}
+          <span
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              background: isRent ? "#1a1a1a" : "#b40101",
+              color: "#fff",
+              fontSize: "11px",
+              fontWeight: 700,
+              letterSpacing: "0.07em",
+              textTransform: "uppercase",
+              padding: "4px 10px",
+              borderRadius: "2px",
+            }}
+          >
+            {isRent ? "For Rent" : isNew ? "Just Listed" : "For Sale"}
+          </span>
 
-            {isLuxury && (
-              <span style={{ 
-                background: '#0f172a', 
-                color: '#fbbf24',
-                fontWeight: 800,
-                fontSize: '11px',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                letterSpacing: '0.05em',
-                border: '1px solid rgba(251, 191, 36, 0.4)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-              }}>
-                ★ LUXURY
+          {/* Save button — top right */}
+          <button
+            onClick={toggleSave}
+            aria-label={isSaved ? "Remove from saved" : "Save property"}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              background: "rgba(255,255,255,0.92)",
+              border: "none",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.12)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            <Heart
+              size={16}
+              strokeWidth={2}
+              color={isSaved ? "#b40101" : "#666"}
+              fill={isSaved ? "#b40101" : "none"}
+            />
+          </button>
+
+          {/* Days on market — bottom right */}
+          {property.daysOnMarket != null && (
+            <span
+              style={{
+                position: "absolute",
+                bottom: 10,
+                right: 12,
+                color: "rgba(255,255,255,0.85)",
+                fontSize: "11px",
+                fontWeight: 600,
+              }}
+            >
+              {property.daysOnMarket === 0
+                ? "Listed today"
+                : `${property.daysOnMarket}d on market`}
+            </span>
+          )}
+        </div>
+
+        {/* ── Info ── */}
+        <div
+          style={{
+            padding: "16px 18px 18px",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          {/* Price */}
+          <div
+            style={{
+              fontSize: "22px",
+              fontWeight: 800,
+              color: "#111",
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+            }}
+          >
+            {price}
+            {isRent && (
+              <span style={{ fontSize: "13px", fontWeight: 500, color: "#777" }}>
+                {" "}
+                /mo
               </span>
             )}
           </div>
 
-          {/* Property Type Badge */}
-          {property.propertyType && (
-            <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-              <span style={{ 
-                background: 'rgba(15, 23, 42, 0.85)', 
-                backdropFilter: 'blur(8px)',
-                color: '#ffffff',
-                fontWeight: 600,
-                fontSize: '11px',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.15)'
-              }}>
-                {property.propertyType}
+          {/* Beds / Baths / Sqft */}
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#333",
+              fontWeight: 500,
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+            }}
+          >
+            {property.beds != null && (
+              <span>
+                <strong>{property.beds}</strong>{" "}
+                <span style={{ color: "#888" }}>bd</span>
               </span>
+            )}
+            {property.baths != null && (
+              <>
+                <span style={{ color: "#ddd" }}>|</span>
+                <span>
+                  <strong>{property.baths}</strong>{" "}
+                  <span style={{ color: "#888" }}>ba</span>
+                </span>
+              </>
+            )}
+            {property.sqft > 0 && (
+              <>
+                <span style={{ color: "#ddd" }}>|</span>
+                <span>
+                  <strong>{(property.sqft || 0).toLocaleString()}</strong>{" "}
+                  <span style={{ color: "#888" }}>sqft</span>
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Address */}
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#555",
+              fontWeight: 400,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              marginTop: 2,
+            }}
+          >
+            {[property.address, property.city, property.state]
+              .filter(Boolean)
+              .join(", ")}
+          </div>
+
+          {/* Agent name — bottom */}
+          {property.agent?.name && (
+            <div
+              style={{
+                marginTop: "auto",
+                paddingTop: 12,
+                borderTop: "1px solid #f0f0f0",
+                fontSize: "12px",
+                color: "#999",
+                fontWeight: 500,
+              }}
+            >
+              {property.agent.name}
             </div>
           )}
-
-          {/* 360 Virtual Tour Pill */}
-          <div style={{ position: 'absolute', bottom: 12, right: 12 }}>
-            <span style={{ 
-              background: 'rgba(255, 255, 255, 0.92)', 
-              backdropFilter: 'blur(8px)',
-              color: '#0f172a',
-              fontWeight: 700,
-              fontSize: '11px',
-              padding: '3px 8px',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              <EyeOutlined style={{ fontSize: '12px', color: '#b40101' }} />
-              360° Tour
-            </span>
-          </div>
-
-          {/* Save Wishlist Heart Button */}
-          <button 
-            style={{ 
-              position: 'absolute', 
-              top: 12, 
-              right: 12,
-              background: 'rgba(255, 255, 255, 0.92)',
-              backdropFilter: 'blur(8px)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '38px',
-              height: '38px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s ease, background 0.2s ease'
-            }}
-            onClick={toggleSave}
-            title={isSaved ? "Remove from wishlist" : "Save property"}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-          >
-            {isSaved ? (
-              <HeartFilled style={{ fontSize: '18px', color: '#b40101' }} />
-            ) : (
-              <HeartOutlined style={{ fontSize: '18px', color: '#475569' }} />
-            )}
-          </button>
         </div>
-
-        {/* Content Body */}
-        <div style={{ padding: '20px 22px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            {/* Price Row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
-              <div style={{ fontSize: '26px', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                {formatCurrency(property.price)}
-                {isRent && <span style={{ fontSize: '14px', fontWeight: 600, color: '#64748b' }}>/mo</span>}
-              </div>
-            </div>
-
-            {/* Core Specs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 600, color: '#334155', marginBottom: '10px' }}>
-              <span><strong>{property.beds || 0}</strong> <span style={{ color: '#64748b', fontWeight: 500 }}>beds</span></span>
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <span><strong>{property.baths || 0}</strong> <span style={{ color: '#64748b', fontWeight: 500 }}>baths</span></span>
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <span><strong>{(property.sqft || 0).toLocaleString()}</strong> <span style={{ color: '#64748b', fontWeight: 500 }}>sqft</span></span>
-            </div>
-
-            {/* Address */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', color: '#64748b', fontSize: '14px', fontWeight: 500, lineHeight: 1.4 }}>
-              <EnvironmentOutlined style={{ color: '#94a3b8', marginTop: '3px', flexShrink: 0 }} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {property.address}, {property.city}, {property.state} {property.zip}
-              </span>
-            </div>
-          </div>
-
-          {/* Footer Card Ribbon */}
-          <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
-              {property.agent?.name || 'TORRA Premier Group'}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#b40101', fontSize: '13px', fontWeight: 700 }}>
-              <span>Explore</span>
-              <ArrowRightOutlined style={{ fontSize: '12px' }} />
-            </div>
-          </div>
-        </div>
-      </div>
+      </article>
     </Link>
   );
 }

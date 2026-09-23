@@ -1,387 +1,265 @@
 import React, { useState } from "react";
-import { Input, Button, Typography, Space, Select } from "antd";
-import { 
-  SearchOutlined, 
-  EnvironmentOutlined, 
-  HomeOutlined, 
-  BankOutlined, 
-  ShopOutlined, 
-  CheckCircleFilled 
-} from "@ant-design/icons";
+import { Search, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "../hooks/useBreakpoint";
 
-const { Title, Text } = Typography;
+const TABS = [
+  { key: "buy", label: "Buy" },
+  { key: "rent", label: "Rent" },
+  { key: "sold", label: "Recently Sold" },
+  { key: "commercial", label: "Commercial" },
+];
+
+const CITIES = ["Austin", "Dallas", "Houston", "Miami", "Denver", "Charlotte"];
 
 export default function Hero() {
-  const [searchValue, setSearchValue] = useState("");
-  const [activeTab, setActiveTab] = useState("buy");
-  const [propertyType, setPropertyType] = useState<string>("all");
-  const [priceTier, setPriceTier] = useState<string>("all");
+  const [tab, setTab] = useState("buy");
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
-  const handleSearch = () => {
-    const query = searchValue.trim();
-    let url = `/properties?status=${activeTab === 'rent' ? 'For Rent' : activeTab === 'sold' ? 'Sold' : 'Active'}`;
-    
-    if (activeTab === 'commercial') {
-      url += '&propertyType=Commercial';
-    } else if (propertyType && propertyType !== 'all') {
-      url += `&propertyType=${encodeURIComponent(propertyType)}`;
-    }
-
-    if (priceTier === 'under500k') {
-      url += '&maxPrice=500000';
-    } else if (priceTier === '500k-1m') {
-      url += '&minPrice=500000&maxPrice=1000000';
-    } else if (priceTier === '1m-2m') {
-      url += '&minPrice=1000000&maxPrice=2000000';
-    } else if (priceTier === 'luxury2m') {
-      url += '&minPrice=2000000';
-    }
-
-    if (query) {
-      url += `&q=${encodeURIComponent(query)}`;
-    }
+  const search = () => {
+    let url = `/properties`;
+    if (tab === "rent") url += "?status=For+Rent";
+    else if (tab === "sold") url += "?status=Sold";
+    else if (tab === "commercial") url += "?propertyType=Commercial";
+    else url += "?status=Active";
+    if (query.trim()) url += `${url.includes("?") ? "&" : "?"}q=${encodeURIComponent(query.trim())}`;
     navigate(url);
   };
 
-  const tabs = [
-    { key: "buy", label: "Buy", icon: <HomeOutlined /> },
-    { key: "rent", label: "Rent", icon: <BankOutlined /> },
-    { key: "commercial", label: "Commercial", icon: <ShopOutlined /> },
-    { key: "sold", label: "Recently Sold", icon: <CheckCircleFilled /> },
-  ];
-
-  const popularCities = [
-    { name: "Austin, TX", query: "Austin" },
-    { name: "Miami, FL", query: "Miami" },
-    { name: "Dallas, TX", query: "Dallas" },
-    { name: "Charlotte, NC", query: "Charlotte" },
-    { name: "Denver, CO", query: "Denver" },
-    { name: "Houston, TX", query: "Houston" },
-  ];
-
   return (
-    <section 
-      style={{ 
-        position: 'relative', 
-        minHeight: isMobile ? '640px' : '720px',
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        background: '#090d16',
-        padding: isMobile ? '60px 16px 40px' : '80px 24px 60px'
+    <section
+      style={{
+        position: "relative",
+        minHeight: "88vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        overflow: "hidden",
+        background: "#0a0a0a",
       }}
     >
-      {/* High-Resolution Luxury Architectural Photography Background */}
-      <div 
-        style={{ 
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2400&q=90")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 45%',
-          opacity: 0.45,
-          transform: 'scale(1.02)'
-        }} 
-      />
-      
-      {/* Modern Radial & Gradient Scrim */}
-      <div 
+      {/* Full-bleed background photo */}
+      <img
+        src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=2400&q=85"
+        alt=""
+        aria-hidden
         style={{
-          position: 'absolute',
+          position: "absolute",
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(9, 13, 22, 0.75) 0%, rgba(15, 23, 42, 0.5) 45%, rgba(9, 13, 22, 0.95) 100%)'
-        }} 
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center 40%",
+          opacity: 0.55,
+        }}
       />
 
-      {/* Hero Content Area */}
-      <div 
-        style={{ 
-          position: 'relative', 
-          zIndex: 10, 
-          maxWidth: '1100px', 
-          width: '100%', 
-          margin: '0 auto',
-          textAlign: 'center'
+      {/* Bottom scrim only — lets the photo breathe at top */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "75%",
+          background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 50%, transparent 100%)",
+        }}
+      />
+
+      {/* Content */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          maxWidth: 1080,
+          margin: "0 auto",
+          padding: "0 32px 72px",
+          width: "100%",
         }}
       >
-        {/* Luxury Brand Pill Badge */}
-        <div style={{ marginBottom: '18px', display: 'inline-flex' }}>
-          <div 
-            style={{ 
-              background: 'rgba(255, 255, 255, 0.12)', 
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.25)', 
-              padding: '6px 18px', 
-              borderRadius: '999px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+        {/* Eyebrow */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 20,
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#b40101",
+              display: "block",
+            }}
+          />
+          <span
+            style={{
+              color: "rgba(255,255,255,0.7)",
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
             }}
           >
-            <span style={{ 
-              width: '8px', 
-              height: '8px', 
-              borderRadius: '50%', 
-              backgroundColor: '#ef4444', 
-              boxShadow: '0 0 10px #ef4444' 
-            }} />
-            <Text style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              TORRA Commercial & Luxury Residential Group
-            </Text>
-          </div>
+            Torra Commercial & Luxury Residential
+          </span>
         </div>
 
-        {/* Main Headline */}
-        <Title 
-          style={{ 
-            color: '#ffffff', 
-            fontSize: isMobile ? '34px' : '62px', 
-            fontWeight: 900, 
-            marginBottom: '16px', 
-            letterSpacing: '-0.03em',
-            lineHeight: 1.12,
-            textShadow: '0 4px 20px rgba(0,0,0,0.6)'
+        {/* Headline — no gradient text, just white */}
+        <h1
+          style={{
+            color: "#ffffff",
+            fontSize: "clamp(38px, 6vw, 76px)",
+            fontWeight: 900,
+            lineHeight: 1.06,
+            letterSpacing: "-0.03em",
+            margin: "0 0 40px",
+            maxWidth: 680,
           }}
         >
-          Find Your Next Masterpiece
-        </Title>
-        
-        {/* Subheadline */}
-        <Text 
-          style={{ 
-            color: 'rgba(241, 245, 249, 0.92)', 
-            fontSize: isMobile ? '16px' : '20px', 
-            display: 'block', 
-            fontWeight: 400,
-            lineHeight: 1.6,
-            maxWidth: '680px',
-            margin: '0 auto 36px',
-            textShadow: '0 2px 8px rgba(0,0,0,0.6)'
-          }}
-        >
-          Search verified MLS listings, curated luxury estates, and prime commercial investments across North America.
-        </Text>
+          Find your
+          <br />
+          next home.
+        </h1>
 
-        {/* Glassmorphic Search Container */}
-        <div 
-          style={{ 
-            maxWidth: '920px',
-            margin: '0 auto',
-            background: 'rgba(255, 255, 255, 0.96)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '20px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-            padding: isMobile ? '14px' : '20px 24px',
-            textAlign: 'left'
-          }}
-        >
-          {/* Tab Switcher */}
-          <div 
-            style={{ 
-              marginBottom: '16px', 
-              display: 'flex', 
-              gap: '6px', 
-              borderBottom: '1px solid #e2e8f0', 
-              paddingBottom: '12px',
-              overflowX: 'auto'
-            }}
-          >
-            {tabs.map((t) => {
-              const isActive = activeTab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '8px 18px',
-                    borderRadius: '10px',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: isActive ? '#b40101' : 'transparent',
-                    color: isActive ? '#ffffff' : '#64748b',
-                    boxShadow: isActive ? '0 4px 12px rgba(180, 1, 1, 0.3)' : 'none',
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {t.icon}
-                  <span>{t.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Input Bar & Quick Filters */}
-          <div 
-            style={{ 
-              display: 'grid', 
-              gridTemplateColumns: isMobile ? '1fr' : '1fr auto auto auto', 
-              gap: '10px',
-              alignItems: 'center'
-            }}
-          >
-            {/* Location / Keyword Input */}
-            <Input 
-              size="large"
-              placeholder="City, Neighborhood, Address, or ZIP" 
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onPressEnter={handleSearch}
-              prefix={<EnvironmentOutlined style={{ color: '#b40101', fontSize: '18px', marginRight: '6px' }} />}
-              style={{ 
-                height: '54px', 
-                borderRadius: '12px',
-                fontSize: '15px',
-                border: '1.5px solid #cbd5e1',
-                fontWeight: 500,
-                background: '#ffffff'
-              }} 
-            />
-
-            {/* Property Type Selector */}
-            {!isMobile && activeTab !== 'commercial' && (
-              <Select
-                value={propertyType}
-                onChange={setPropertyType}
-                style={{ width: '160px', height: '54px' }}
-                options={[
-                  { value: 'all', label: 'All Property Types' },
-                  { value: 'Single Family', label: 'Single Family' },
-                  { value: 'Condo', label: 'Luxury Condo' },
-                  { value: 'Townhouse', label: 'Townhouse' },
-                  { value: 'Land', label: 'Land & Lots' },
-                ]}
-              />
-            )}
-
-            {/* Price Tier Selector */}
-            {!isMobile && (
-              <Select
-                value={priceTier}
-                onChange={setPriceTier}
-                style={{ width: '150px', height: '54px' }}
-                options={[
-                  { value: 'all', label: 'Any Price' },
-                  { value: 'under500k', label: 'Under $500k' },
-                  { value: '500k-1m', label: '$500k – $1M' },
-                  { value: '1m-2m', label: '$1M – $2M' },
-                  { value: 'luxury2m', label: '$2M+ Luxury' },
-                ]}
-              />
-            )}
-
-            {/* Search CTA Button */}
-            <Button 
-              type="primary" 
-              size="large" 
-              onClick={handleSearch}
-              icon={<SearchOutlined />}
-              style={{ 
-                height: '54px', 
-                padding: '0 32px',
-                borderRadius: '12px',
-                background: '#b40101',
-                borderColor: '#b40101',
-                fontWeight: 800,
-                fontSize: '15px',
-                letterSpacing: '0.02em',
-                boxShadow: '0 4px 14px rgba(180, 1, 1, 0.4)',
-                width: isMobile ? '100%' : 'auto'
-              }}
-            >
-              Search
-            </Button>
-          </div>
-        </div>
-
-        {/* Live Market Trust Stats Counter Bar */}
-        <div 
-          style={{ 
-            marginTop: '36px',
-            display: 'grid',
-            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-            gap: isMobile ? '12px' : '16px',
-            maxWidth: '860px',
-            margin: '36px auto 0'
-          }}
-        >
-          {[
-            { value: "1,450+", label: "Verified MLS Listings" },
-            { value: "$480M+", label: "Total Real Estate Volume" },
-            { value: "14 Days", label: "Average Time on Market" },
-            { value: "99.4%", label: "List-to-Sale Ratio" },
-          ].map((stat, idx) => (
-            <div 
-              key={idx}
-              style={{
-                background: 'rgba(15, 23, 42, 0.65)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '14px',
-                padding: '12px 14px',
-                textAlign: 'center'
-              }}
-            >
-              <div style={{ color: '#ffffff', fontSize: isMobile ? '18px' : '22px', fontWeight: 900, letterSpacing: '-0.02em' }}>
-                {stat.value}
-              </div>
-              <div style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: '2px' }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Trending Market Location Chips */}
-        <div style={{ marginTop: '28px' }}>
-          <Space size="small" wrap justify="center">
-            <Text style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '13px' }}>
-              🔥 Trending Metro Markets:
-            </Text>
-            {popularCities.map(city => (
-              <span 
-                key={city.name}
-                style={{ 
-                  color: '#ffffff', 
-                  cursor: 'pointer',
-                  fontSize: '13px',
+        {/* Search widget — clean, no glassmorphism */}
+        <div style={{ maxWidth: 680 }}>
+          {/* Tab switcher */}
+          <div style={{ display: "flex", gap: 0, marginBottom: 0 }}>
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: 14,
                   fontWeight: 600,
-                  padding: '5px 14px',
-                  borderRadius: '20px',
-                  background: 'rgba(255,255,255,0.12)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  transition: 'all 0.2s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
+                  border: "none",
+                  cursor: "pointer",
+                  background: tab === t.key ? "#fff" : "rgba(255,255,255,0.12)",
+                  color: tab === t.key ? "#111" : "rgba(255,255,255,0.75)",
+                  borderRadius: "6px 6px 0 0",
+                  transition: "all 0.15s ease",
+                  marginRight: 2,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search bar */}
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "0 8px 8px 8px",
+              display: "flex",
+              alignItems: "center",
+              overflow: "hidden",
+              height: 60,
+            }}
+          >
+            <MapPin
+              size={18}
+              color="#b40101"
+              style={{ flexShrink: 0, marginLeft: 20 }}
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && search()}
+              placeholder="City, neighborhood, address, or ZIP"
+              style={{
+                flex: 1,
+                border: "none",
+                outline: "none",
+                fontSize: 16,
+                fontWeight: 400,
+                color: "#111",
+                padding: "0 16px",
+                background: "transparent",
+                height: "100%",
+              }}
+            />
+            <button
+              onClick={search}
+              style={{
+                background: "#b40101",
+                border: "none",
+                color: "#fff",
+                height: "100%",
+                padding: "0 28px",
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                transition: "background 0.15s",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#910101")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#b40101")}
+            >
+              <Search size={16} />
+              Search
+            </button>
+          </div>
+
+          {/* Quick city links */}
+          <div
+            style={{
+              marginTop: 20,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              alignItems: "center",
+            }}
+          >
+            <span
+              style={{
+                color: "rgba(255,255,255,0.45)",
+                fontSize: 12,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                marginRight: 4,
+              }}
+            >
+              Popular:
+            </span>
+            {CITIES.map((city) => (
+              <button
+                key={city}
+                onClick={() => navigate(`/properties?q=${encodeURIComponent(city)}`)}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 20,
+                  padding: "5px 14px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "rgba(255,255,255,0.8)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(180, 1, 1, 0.8)';
-                  e.currentTarget.style.borderColor = '#b40101';
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)";
+                  e.currentTarget.style.color = "#fff";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.12)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.8)";
                 }}
-                onClick={() => navigate(`/properties?q=${encodeURIComponent(city.query)}`)}
               >
-                {city.name}
-              </span>
+                {city}
+              </button>
             ))}
-          </Space>
+          </div>
         </div>
       </div>
     </section>
