@@ -1,103 +1,56 @@
 import React from "react";
-import { Button, Typography } from "antd";
 import { Link } from "react-router-dom";
-import { HomeOutlined, SearchOutlined } from "@ant-design/icons";
-import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Paragraph } = Typography;
+import { Home, Search, Compass, ArrowRight } from "lucide-react";
 
 export default function NotFound() {
-  const isMobile = useIsMobile();
   return (
-    <div style={{ 
-      minHeight: 'calc(100vh - 80px)', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      background: '#f8f9fa',
-      padding: isMobile ? '24px 16px' : '40px'
-    }}>
-      <div style={{ textAlign: 'center', maxWidth: '600px' }}>
-        <div style={{
-          width: isMobile ? '48px' : '64px', height: isMobile ? '48px' : '64px', background: '#b40101',
-          borderRadius: '14px', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', color: 'white', fontSize: isMobile ? '22px' : '28px',
-          fontWeight: 900, letterSpacing: '-0.5px', margin: '0 auto 16px'
-        }}>TR</div>
-        <div style={{ 
-          fontSize: isMobile ? '96px' : '180px', 
-          fontWeight: 900, 
-          color: '#b40101', 
-          lineHeight: 1,
-          marginBottom: isMobile ? '12px' : '24px',
-          textShadow: '4px 4px 0 rgba(0,0,0,0.05)'
-        }}>
-          404
+    <div className="min-h-[80vh] flex items-center justify-center bg-stone-50 px-4 py-16">
+      <div className="text-center max-w-xl mx-auto space-y-8">
+        <div className="space-y-2">
+          <div className="w-12 h-12 bg-[#b40101] text-white flex items-center justify-center font-serif text-2xl mx-auto rounded-sm shadow-sm">
+            T
+          </div>
+          <div className="font-serif text-8xl sm:text-9xl text-stone-900 tracking-tighter font-normal select-none">
+            404
+          </div>
+          <div className="text-xs uppercase tracking-[0.25em] text-[#b40101] font-semibold">
+            Residence Not Located
+          </div>
+          <h1 className="font-serif text-2xl sm:text-3xl text-stone-900">
+            This Address Is Not in Our Registry
+          </h1>
+          <p className="text-stone-500 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+            The page or private residence you are searching for has been moved, acquired, or is currently off-market.
+          </p>
         </div>
-        
-        <Title level={1} style={{ 
-          fontWeight: 900, 
-          textTransform: 'uppercase', 
-          marginBottom: isMobile ? '12px' : '16px',
-          fontSize: isMobile ? '28px' : '48px'
-        }}>
-          Page Not Found
-        </Title>
-        
-        <Paragraph style={{ 
-          fontSize: isMobile ? '15px' : '18px', 
-          color: '#666', 
-          marginBottom: isMobile ? '24px' : '40px',
-          lineHeight: 1.6
-        }}>
-          Sorry, the page you're looking for doesn't exist or has been moved. 
-          Let's get you back on track.
-        </Paragraph>
 
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/">
-            <Button 
-              type="primary" 
-              size={isMobile ? "middle" : "large"} 
-              icon={<HomeOutlined />}
-              style={{ 
-                background: '#b40101', 
-                borderColor: '#b40101',
-                height: isMobile ? '44px' : '56px',
-                padding: isMobile ? '0 24px' : '0 32px',
-                fontWeight: 'bold',
-                borderRadius: isMobile ? '22px' : '28px',
-                fontSize: isMobile ? '13px' : '15px'
-              }}
-            >
-              Go Home
-            </Button>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded transition-colors shadow-xs"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>Return to Flagship</span>
           </Link>
-          
-          <Link to="/properties">
-            <Button 
-              size={isMobile ? "middle" : "large"} 
-              icon={<SearchOutlined />}
-              style={{ 
-                height: isMobile ? '44px' : '56px',
-                padding: isMobile ? '0 24px' : '0 32px',
-                fontWeight: 'bold',
-                borderRadius: isMobile ? '22px' : '28px',
-                fontSize: isMobile ? '13px' : '15px'
-              }}
-            >
-              Browse Properties
-            </Button>
+          <Link
+            to="/properties"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-medium text-stone-800 bg-white border border-stone-300 hover:border-stone-900 rounded transition-colors shadow-xs"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Explore Properties</span>
           </Link>
         </div>
 
-        <div style={{ marginTop: '64px', padding: '32px', background: 'white', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-          <Title level={4} style={{ marginBottom: '16px' }}>Popular Pages</Title>
-          <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/properties" style={{ color: '#b40101', fontWeight: 'bold' }}>Properties</Link>
-            <Link to="/agents" style={{ color: '#b40101', fontWeight: 'bold' }}>Find an Agent</Link>
-            <Link to="/mortgage-calculator" style={{ color: '#b40101', fontWeight: 'bold' }}>Mortgage Calculator</Link>
-            <Link to="/home-value" style={{ color: '#b40101', fontWeight: 'bold' }}>Home Value</Link>
+        <div className="pt-8 border-t border-stone-200">
+          <p className="text-[11px] uppercase tracking-wider text-stone-400 font-semibold mb-3">
+            Recommended Portals
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-stone-600">
+            <Link to="/properties" className="hover:text-[#b40101] transition-colors">Exclusive Residences</Link>
+            <Link to="/agents" className="hover:text-[#b40101] transition-colors">Licensed Advisors</Link>
+            <Link to="/mortgage-calculator" className="hover:text-[#b40101] transition-colors">Financing Advisory</Link>
+            <Link to="/home-value" className="hover:text-[#b40101] transition-colors">Property Valuation</Link>
+            <Link to="/blog" className="hover:text-[#b40101] transition-colors">The Torra Journal</Link>
           </div>
         </div>
       </div>
