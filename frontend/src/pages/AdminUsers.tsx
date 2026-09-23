@@ -1,497 +1,380 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Modal, Form, Select, message as antMessage, Popconfirm, Avatar, Tabs, Drawer, Timeline, Empty } from "antd";
-import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, HistoryOutlined, TeamOutlined, SafetyOutlined, CrownOutlined } from "@ant-design/icons";
-import { useIsMobile } from "../hooks/useBreakpoint";
+import {
+  Users,
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  Shield,
+  User,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  Mail,
+  X
+} from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 
-const { Title } = Typography;
-const AntSelect = Select as any;
-const AntOption = (Select as any).Option;
-
 export default function AdminUsers() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const debouncedSearch = useDebounce(searchText, 350);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const debouncedSearch = useDebounce(searchText, 300);
+  const [activeRole, setActiveRole] = useState("all");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [form] = Form.useForm();
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [bulkRole, setBulkRole] = useState<string>('');
-  const [showActivity, setShowActivity] = useState(false);
-  const [activityLog, setActivityLog] = useState<any[]>([]);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const PAGE_SIZE = 12;
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "user"
   });
-  const isMobile = useIsMobile();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.current, pagination.pageSize, debouncedSearch, activeTab]);
+  }, [page, debouncedSearch, activeRole]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
-
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const params = new URLSearchParams({
-        page: pagination.current.toString(),
-        limit: pagination.pageSize.toString(),
+        page: page.toString(),
+        limit: PAGE_SIZE.toString(),
         search: debouncedSearch,
-        ...(activeTab !== 'all' ? { role: activeTab } : {})
+        ...(activeRole !== 'all' ? { role: activeRole } : {})
       });
 
       const res = await fetch(`/api/admin/users?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users || []);
-        setPagination(prev => ({
-          ...prev,
-          total: data.pagination?.total || 0
-        }));
+        setTotal(data.pagination?.total || 0);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
-      antMessage.error('Failed to fetch users');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTableChange = (newPagination: any) => {
-    setPagination({
-      current: newPagination.current,
-      pageSize: newPagination.pageSize,
-      total: pagination.total
-    });
-  };
-
-  const handleAddUser = () => {
+  const handleOpenAdd = () => {
     setEditingUser(null);
-    form.resetFields();
-    setIsModalVisible(true);
+    setFormData({ name: "", email: "", role: "user" });
+    setIsModalOpen(true);
   };
 
-  const handleEditUser = (user: any) => {
+  const handleOpenEdit = (user: any) => {
     setEditingUser(user);
-    form.setFieldsValue({
-      name: user.name,
-      email: user.email,
-      role: user.role
+    setFormData({
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "user"
     });
-    setIsModalVisible(true);
+    setIsModalOpen(true);
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
+
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
+      if (editingUser) {
+        const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(formData)
+        });
+        if (!res.ok) throw new Error('Update failed');
+      } else {
+        const res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(formData)
+        });
+        if (!res.ok) throw new Error('Create failed');
+      }
+      setIsModalOpen(false);
+      fetchUsers();
+    } catch {
+      alert('Failed to save user account.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-      const user = JSON.parse(userData);
-      const token = user.token;
-
+  const handleDelete = async (userId: string) => {
+    try {
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (res.ok) {
-        antMessage.success('User deleted successfully');
-        fetchUsers();
-      } else {
-        const data = await res.json();
-        antMessage.error(data.error || 'Failed to delete user');
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        setDeleteCandidate(null);
       }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      antMessage.error('Failed to delete user');
+    } catch {
+      alert('Failed to delete user.');
     }
   };
 
-  const handleModalOk = async () => {
-    try {
-      const values = await form.validateFields();
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
 
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      const url = editingUser 
-        ? `/api/admin/users/${editingUser.id}`
-        : '/api/admin/users';
-      
-      const method = editingUser ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(values)
-      });
-
-      if (res.ok) {
-        antMessage.success(`User ${editingUser ? 'updated' : 'created'} successfully`);
-        setIsModalVisible(false);
-        form.resetFields();
-        fetchUsers();
-      } else {
-        const data = await res.json();
-        antMessage.error(data.error || `Failed to ${editingUser ? 'update' : 'create'} user`);
-      }
-    } catch (error) {
-      console.error('Error saving user:', error);
-    }
+  const roleBadges: Record<string, string> = {
+    admin: 'bg-rose-50 text-[#b40101] border-rose-200',
+    agent: 'bg-stone-900 text-white border-stone-800',
+    user: 'bg-stone-100 text-stone-700 border-stone-200'
   };
-
-  const handleBulkDelete = async () => {
-    const userData = localStorage.getItem('torra_user');
-    if (!userData) return;
-    const token = JSON.parse(userData).token;
-    try {
-      await Promise.all(selectedRows.map((u: any) =>
-        fetch(`/api/admin/users/${u.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
-      ));
-      antMessage.success(`${selectedRows.length} users deleted`);
-      setSelectedRowKeys([]);
-      setSelectedRows([]);
-      fetchUsers();
-    } catch { antMessage.error('Failed to delete some users'); }
-  };
-
-  const handleBulkRoleChange = async () => {
-    if (!bulkRole) return;
-    const userData = localStorage.getItem('torra_user');
-    if (!userData) return;
-    const token = JSON.parse(userData).token;
-    try {
-      await Promise.all(selectedRows.map((u: any) =>
-        fetch(`/api/admin/users/${u.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ role: bulkRole })
-        })
-      ));
-      antMessage.success(`${selectedRows.length} users updated to ${bulkRole}`);
-      setSelectedRowKeys([]);
-      setSelectedRows([]);
-      setBulkRole('');
-      fetchUsers();
-    } catch { antMessage.error('Failed to update some users'); }
-  };
-
-  const fetchActivityLog = async () => {
-    setShowActivity(true);
-    // Mock activity log (replace with API when available)
-    setActivityLog([
-      { time: '2 min ago', user: 'John Doe', action: 'Logged in', type: 'auth' },
-      { time: '15 min ago', user: 'Sarah Smith', action: 'Updated profile', type: 'profile' },
-      { time: '1 hour ago', user: 'Mike Johnson', action: 'Created new listing', type: 'listing' },
-      { time: '2 hours ago', user: 'Admin', action: 'Approved agent: Lisa Ray', type: 'admin' },
-      { time: '3 hours ago', user: 'Emily Chen', action: 'Changed password', type: 'auth' },
-      { time: '5 hours ago', user: 'Admin', action: 'Deleted user: spam_account', type: 'admin' },
-    ]);
-  };
-
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string) => (
-        <div style={{ fontWeight: 600 }}>{name}</div>
-      )
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: 'Role',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role: string) => (
-        <Tag color={role === 'admin' ? 'red' : role === 'agent' ? 'blue' : 'default'}>
-          {role?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Joined',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: any) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<EditOutlined />} 
-            size="small"
-            onClick={() => handleEditUser(record)}
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this user?"
-            onConfirm={() => handleDeleteUser(record.id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small">
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
 
   return (
-    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '24px' : '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
-          Users Management
-        </Title>
-        <Space>
-          <Button icon={<HistoryOutlined />} onClick={fetchActivityLog}>Activity Log</Button>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={handleAddUser}
-            style={{ background: '#b40101', borderColor: '#b40101', height: '40px', fontWeight: 600 }}
-          >
-            {isMobile ? "Add" : "Add User"}
-          </Button>
-        </Space>
-      </div>
-
-      {/* Role Filter Tabs */}
-      <Tabs
-        activeKey={activeTab}
-        onChange={(key) => { setActiveTab(key); setPagination(prev => ({ ...prev, current: 1 })); }}
-        style={{ marginBottom: 16 }}
-        items={[
-          { key: 'all', label: <span><TeamOutlined /> All Users</span> },
-          { key: 'user', label: <span><UserOutlined /> Users</span> },
-          { key: 'agent', label: <span><TeamOutlined /> Agents</span> },
-          { key: 'admin', label: <span><CrownOutlined /> Admins</span> },
-        ]}
-      />
-
-      {/* Bulk Actions Toolbar */}
-      {selectedRowKeys.length > 0 && (
-        <Card size="small" style={{ marginBottom: 16, background: '#fff7ed', borderColor: '#f59e0b', borderRadius: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Text strong>{selectedRowKeys.length} selected</Text>
-            <AntSelect value={bulkRole || undefined} onChange={(v: string) => setBulkRole(v)} placeholder="Change role to..." style={{ width: 160 }} allowClear>
-              <AntOption value="user">User</AntOption>
-              <AntOption value="agent">Agent</AntOption>
-              <AntOption value="admin">Admin</AntOption>
-            </AntSelect>
-            <Button size="small" type="primary" onClick={handleBulkRoleChange} disabled={!bulkRole}>Apply Role</Button>
-            <Popconfirm title={`Delete ${selectedRowKeys.length} users?`} onConfirm={handleBulkDelete} okText="Yes" cancelText="No" okButtonProps={{ danger: true }}>
-              <Button size="small" danger icon={<DeleteOutlined />}>Delete Selected</Button>
-            </Popconfirm>
-            <Button size="small" onClick={() => { setSelectedRowKeys([]); setSelectedRows([]); }}>Clear</Button>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-stone-200">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+            Client Authentication Ledger
           </div>
-        </Card>
-      )}
-
-      <Card 
-        variant="borderless"
-        style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-          <Input
-            placeholder="Search users by name or email..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
-          />
-          {!loading && (
-            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-              {pagination.total} {pagination.total === 1 ? 'user' : 'users'} found
-            </Typography.Text>
-          )}
+          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+            User Accounts & Permissions
+          </h2>
+          <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+            Audit registered luxury buyers, licensed advisors, and governance administrators.
+          </p>
         </div>
 
-        {isMobile ? (
-          // Mobile Card View
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {users.map((user: any) => (
-              <Card 
-                key={user.id}
-                size="small"
-                style={{ borderRadius: 8 }}
+        <button
+          onClick={handleOpenAdd}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded transition-colors shadow-xs"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Register User</span>
+        </button>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 rounded-lg border border-stone-200/90 shadow-xs">
+        {/* Role Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {[
+            { key: "all", label: "All Accounts" },
+            { key: "user", label: "Private Clients" },
+            { key: "agent", label: "Brokers" },
+            { key: "admin", label: "Administrators" }
+          ].map(r => {
+            const isSelected = activeRole === r.key;
+            return (
+              <button
+                key={r.key}
+                onClick={() => { setActiveRole(r.key); setPage(1); }}
+                className={`px-3 py-1.5 rounded text-xs font-medium tracking-wide whitespace-nowrap transition-colors ${
+                  isSelected
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <Avatar size={48} icon={<UserOutlined />} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>{user.name}</div>
-                    <div style={{ fontSize: '13px', color: '#8c8c8c', marginBottom: '8px' }}>{user.email}</div>
-                    <Space size="small" wrap>
-                      <Tag color={user.role === 'admin' ? 'red' : user.role === 'agent' ? 'blue' : 'default'}>
-                        {user.role?.toUpperCase()}
-                      </Tag>
-                    </Space>
-                    <div style={{ marginTop: '12px' }}>
-                      <Space size="small">
-                        <Button 
-                          type="link" 
-                          icon={<EditOutlined />} 
-                          size="small"
-                          onClick={() => handleEditUser(user)}
-                          style={{ padding: 0 }}
-                        >
-                          Edit
-                        </Button>
-                        <Popconfirm
-                          title="Delete this user?"
-                          onConfirm={() => handleDeleteUser(user.id)}
-                          okText="Yes"
-                          cancelText="No"
-                          okButtonProps={{ danger: true }}
-                        >
-                          <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: 0 }}>
-                            Delete
-                          </Button>
-                        </Popconfirm>
-                      </Space>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search */}
+        <div className="relative shrink-0 md:w-72">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => { setSearchText(e.target.value); setPage(1); }}
+            placeholder="Search name or email..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-lg border border-stone-200/90 shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-stone-400 text-xs">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-[#b40101] rounded-full animate-spin mx-auto mb-3" />
+            Loading accounts ledger...
+          </div>
+        ) : users.length === 0 ? (
+          <div className="p-16 text-center text-stone-400">
+            <Users className="w-10 h-10 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm font-medium text-stone-700 mb-1">No user accounts found</p>
+            <p className="text-xs text-stone-400">Try adjusting search filters.</p>
           </div>
         ) : (
-          // Desktop Table View
-          <Table
-            dataSource={users}
-            columns={columns}
-            rowKey="id"
-            loading={loading}
-            pagination={pagination}
-            onChange={handleTableChange}
-            locale={{
-              emptyText: (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={searchText ? `No users match "${searchText}"` : 'No users yet'}
-                >
-                  {!searchText && (
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAddUser} style={{ background: '#b40101', borderColor: '#b40101' }}>
-                      Add First User
-                    </Button>
-                  )}
-                </Empty>
-              )
-            }}
-            rowSelection={{
-              selectedRowKeys,
-              onChange: (keys: React.Key[], rows: any[]) => { setSelectedRowKeys(keys); setSelectedRows(rows); },
-            }}
-          />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-stone-50/80 border-b border-stone-200/80 text-[10px] uppercase tracking-wider text-stone-500 font-semibold">
+                  <th className="py-3 px-5">Account Name</th>
+                  <th className="py-3 px-4">Contact Email</th>
+                  <th className="py-3 px-4">Security Role</th>
+                  <th className="py-3 px-4">Registration Date</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {users.map((user) => (
+                  <tr key={user.id} className="hover:bg-stone-50/70 transition-colors">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-stone-900 text-white flex items-center justify-center font-serif text-xs shrink-0">
+                          {user.name?.[0]?.toUpperCase() || 'U'}
+                        </div>
+                        <span className="font-semibold text-stone-900 text-sm">{user.name}</span>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-stone-600 font-mono text-[11px]">
+                      {user.email}
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${roleBadges[user.role] || roleBadges.user}`}>
+                        {user.role === 'admin' ? 'Administrator' : user.role === 'agent' ? 'Licensed Broker' : 'Client Account'}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-stone-400 font-mono text-[11px] whitespace-nowrap">
+                      {new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+
+                    <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEdit(user)}
+                          className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+                          title="Edit Permissions"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteCandidate(user.id)}
+                          className="p-1.5 text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                          title="Delete Account"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </Card>
 
-      <Modal
-        title={editingUser ? 'Edit User' : 'Add New User'}
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={() => {
-          setIsModalVisible(false);
-          form.resetFields();
-        }}
-        okText={editingUser ? 'Update' : 'Create'}
-        okButtonProps={{ style: { background: '#b40101', borderColor: '#b40101' } }}
-        width={isMobile ? '100%' : 520}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="name"
-            label="Name"
-            rules={[{ required: true, message: 'Please enter name' }]}
-          >
-            <Input placeholder="Enter user name" />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Please enter email' },
-              { type: 'email', message: 'Please enter valid email' }
-            ]}
-          >
-            <Input placeholder="Enter email address" disabled={!!editingUser} />
-          </Form.Item>
-          {!editingUser && (
-            <Form.Item
-              name="password"
-              label="Password"
-              rules={[{ required: true, message: 'Please enter password' }]}
-            >
-              <Input.Password placeholder="Enter password" />
-            </Form.Item>
-          )}
-          <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: true, message: 'Please select role' }]}
-          >
-            <AntSelect placeholder="Select role">
-              <AntOption value="user">User</AntOption>
-              <AntOption value="agent">Agent</AntOption>
-              <AntOption value="admin">Admin</AntOption>
-            </AntSelect>
-          </Form.Item>
-        </Form>
-      </Modal>
+        {total > PAGE_SIZE && (
+          <div className="p-4 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
+            <span>Page {page} of {totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-1.5 rounded border border-stone-200 hover:bg-stone-100 disabled:opacity-40"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-1.5 rounded border border-stone-200 hover:bg-stone-100 disabled:opacity-40"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* Activity Log Drawer */}
-      <Drawer title="Recent User Activity" placement="right" width={isMobile ? '100%' : 420} onClose={() => setShowActivity(false)} open={showActivity}>
-        <Timeline
-          items={activityLog.map((a: any) => ({
-            color: a.type === 'auth' ? '#b40101' : a.type === 'admin' ? '#373a4b' : a.type === 'listing' ? '#10b981' : '#6b7280',
-            children: (
+      {/* Delete Modal */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <h3 className="font-serif text-lg text-stone-900">Delete Account</h3>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              Are you sure you wish to delete this user profile? All saved searches and appointments will be revoked.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button onClick={() => setDeleteCandidate(null)} className="px-3.5 py-1.5 text-xs text-stone-600 hover:text-stone-900">Cancel</button>
+              <button onClick={() => handleDelete(deleteCandidate)} className="px-4 py-2 text-xs font-medium text-white bg-rose-700 hover:bg-rose-800 rounded">Confirm Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create / Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+              <h3 className="font-serif text-lg text-stone-900">
+                {editingUser ? "Edit User Permissions" : "Register User Profile"}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-700"><X className="w-5 h-5" /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
               <div>
-                <div style={{ fontWeight: 600 }}>{a.user}</div>
-                <div style={{ fontSize: 13 }}>{a.action}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af' }}>{a.time}</div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Full Legal Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g. Alistair Drake"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                />
               </div>
-            )
-          }))}
-        />
-      </Drawer>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Direct Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="client@austin.com"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Security Role</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                >
+                  <option value="user">Private Client (User)</option>
+                  <option value="agent">Licensed Broker (Agent)</option>
+                  <option value="admin">System Administrator (Admin)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-200">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs text-stone-600 hover:text-stone-900">Cancel</button>
+                <button type="submit" disabled={submitting} className="px-5 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded shadow-xs">
+                  {submitting ? 'Saving...' : editingUser ? 'Update Account' : 'Register Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,446 +1,421 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic, Badge, Empty } from "antd";
-import { SearchOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, HomeOutlined, TeamOutlined, TrophyOutlined, CheckCircleOutlined, CloseCircleOutlined, CrownOutlined, RiseOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "../hooks/useBreakpoint";
+import { Link } from "react-router-dom";
+import {
+  Award,
+  Search,
+  Plus,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Mail,
+  Phone,
+  Building,
+  UserCheck,
+  Shield,
+  X
+} from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
-
-const { Title, Text } = Typography;
-const AntSelect = Select as any;
-const AntOption = (Select as any).Option;
-const AntCard = Card as any;
 
 export default function AdminAgents() {
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const debouncedSearch = useDebounce(searchText, 350);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0
-  });
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const debouncedSearch = useDebounce(searchText, 300);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const PAGE_SIZE = 10;
 
-  const pendingAgents = agents.filter((a: any) => a.status === 'pending');
-  const activeAgents = agents.filter((a: any) => a.status === 'active');
-  const totalListings = agents.reduce((sum: number, a: any) => sum + (a.stats?.totalListings || 0), 0);
-  const totalLeads = agents.reduce((sum: number, a: any) => sum + (a.stats?.totalLeads || 0), 0);
-  const leaderboard = [...agents].sort((a: any, b: any) => (b.stats?.totalListings || 0) + (b.stats?.totalLeads || 0) - (a.stats?.totalListings || 0) - (a.stats?.totalLeads || 0)).slice(0, 5);
+  // New Agent Form
+  const [newAgent, setNewAgent] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    license: "",
+    brokerage: "TORRA Private Client Group",
+    specialties: "Waterfront Estates, Architectural Penthouses"
+  });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchAgents();
-  }, [pagination.current, pagination.pageSize, debouncedSearch]);
+  }, [page, debouncedSearch]);
 
   const fetchAgents = async () => {
     setLoading(true);
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
-
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const params = new URLSearchParams({
-        page: pagination.current.toString(),
-        limit: pagination.pageSize.toString(),
+        page: page.toString(),
+        limit: PAGE_SIZE.toString(),
         search: debouncedSearch
       });
 
       const res = await fetch(`/api/admin/agents?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {
         const data = await res.json();
         setAgents(data.agents || []);
-        setPagination(prev => ({
-          ...prev,
-          total: data.pagination?.total || 0
-        }));
+        setTotal(data.pagination?.total || 0);
       }
     } catch (error) {
       console.error('Error fetching agents:', error);
-      antMessage.error('Failed to fetch agents');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTableChange = (newPagination: any) => {
-    setPagination({
-      current: newPagination.current,
-      pageSize: newPagination.pageSize,
-      total: pagination.total
-    });
-  };
-
   const handleStatusChange = async (agentId: string, newStatus: string) => {
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const res = await fetch(`/api/admin/agents/${agentId}/status`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus })
       });
-
       if (res.ok) {
-        antMessage.success('Agent status updated successfully');
-        fetchAgents();
-      } else {
-        const data = await res.json();
-        antMessage.error(data.error || 'Failed to update agent status');
+        setAgents(prev => prev.map(a => a.id === agentId ? { ...a, status: newStatus } : a));
       }
-    } catch (error) {
-      console.error('Error updating agent status:', error);
-      antMessage.error('Failed to update agent status');
+    } catch {
+      alert('Failed to update status');
     }
   };
 
-  const handleDeleteAgent = async (agentId: string) => {
+  const handleDelete = async (agentId: string) => {
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const res = await fetch(`/api/admin/agents/${agentId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (res.ok) {
-        antMessage.success('Agent deleted successfully');
-        fetchAgents();
-      } else {
-        const data = await res.json();
-        antMessage.error(data.error || 'Failed to delete agent');
+        setAgents(prev => prev.filter(a => a.id !== agentId));
+        setDeleteCandidate(null);
       }
-    } catch (error) {
-      console.error('Error deleting agent:', error);
-      antMessage.error('Failed to delete agent');
+    } catch {
+      alert('Failed to delete agent');
     }
   };
 
-  const columns = [
-    {
-      title: 'Agent',
-      key: 'agent',
-      render: (_: any, record: any) => (
-        <Space>
-          <Avatar src={record.imageUrl} size={40} style={{ backgroundColor: '#b40101' }}>
-            {record.name?.charAt(0)}
-          </Avatar>
-          <div>
-            <div style={{ fontWeight: 600 }}>{record.name}</div>
-            <div style={{ fontSize: 12, color: '#6b7280' }}>{record.email}</div>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: 'Listings',
-      key: 'listings',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <span style={{ fontWeight: 600 }}>{record.stats?.totalListings || 0}</span>
-          <span style={{ fontSize: 11, color: '#10b981' }}>
-            {record.stats?.activeListings || 0} active
-          </span>
-        </Space>
-      ),
-      sorter: (a: any, b: any) => (a.stats?.totalListings || 0) - (b.stats?.totalListings || 0),
-    },
-    {
-      title: 'Leads',
-      key: 'leads',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <span style={{ fontWeight: 600 }}>{record.stats?.totalLeads || 0}</span>
-          <span style={{ fontSize: 11, color: '#3b82f6' }}>
-            {record.stats?.activeLeads || 0} active
-          </span>
-        </Space>
-      ),
-      sorter: (a: any, b: any) => (a.stats?.totalLeads || 0) - (b.stats?.totalLeads || 0),
-    },
-    {
-      title: 'Opportunities',
-      key: 'opportunities',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <span style={{ fontWeight: 600 }}>{record.stats?.totalOpportunities || 0}</span>
-          <span style={{ fontSize: 11, color: '#6b7280' }}>
-            ${((record.stats?.totalValue || 0) / 1000).toFixed(0)}K value
-          </span>
-        </Space>
-      ),
-      sorter: (a: any, b: any) => (a.stats?.totalValue || 0) - (b.stats?.totalValue || 0),
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (_: any, record: any) => (
-        <Select
-          value={record.status || 'active'}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          style={{ width: 120 }}
-          size="small"
-        >
-          <AntOption value="active">
-            <Tag color="green">ACTIVE</Tag>
-          </AntOption>
-          <AntOption value="inactive">
-            <Tag color="red">INACTIVE</Tag>
-          </AntOption>
-          <AntOption value="pending">
-            <Tag color="orange">PENDING</Tag>
-          </AntOption>
-        </Select>
-      ),
-    },
-    {
-      title: 'Joined',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a: any, b: any) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: any) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />} 
-            size="small"
-            onClick={() => navigate(`/agents/${record.id}`)}
-          >
-            View
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this agent?"
-            description="This will also delete all associated data."
-            onConfirm={() => handleDeleteAgent(record.id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small">
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const handleCreateAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
+      const res = await fetch('/api/admin/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          ...newAgent,
+          languages: ['English'],
+          specialties: newAgent.specialties.split(',').map(s => s.trim())
+        })
+      });
+      if (!res.ok) throw new Error('Create failed');
+      setIsModalOpen(false);
+      setNewAgent({ name: "", email: "", phone: "", license: "", brokerage: "TORRA Private Client Group", specialties: "" });
+      fetchAgents();
+    } catch {
+      alert('Failed to add agent.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const activeCount = agents.filter(a => a.status === 'active').length;
+  const pendingCount = agents.filter(a => a.status === 'pending').length;
 
   return (
-    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
-          Agents Management
-        </Title>
-      </div>
-
-      {/* Performance Metrics */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Agents</Text>} value={agents.length} prefix={<TeamOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-          </AntCard>
-        </Col>
-        <Col xs={12} sm={6}>
-          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Active</Text>} value={activeAgents.length} prefix={<CheckCircleOutlined style={{ color: '#10b981' }} />} valueStyle={{ color: '#10b981', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-          </AntCard>
-        </Col>
-        <Col xs={12} sm={6}>
-          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Listings</Text>} value={totalListings} prefix={<HomeOutlined style={{ color: '#373a4b' }} />} valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-          </AntCard>
-        </Col>
-        <Col xs={12} sm={6}>
-          <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Leads</Text>} value={totalLeads} prefix={<RiseOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-          </AntCard>
-        </Col>
-      </Row>
-
-      {/* Pending Approvals Banner */}
-      {pendingAgents.length > 0 && (
-        <AntCard size="small" style={{ marginBottom: 24, background: 'linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%)', borderColor: '#f59e0b', borderRadius: 12 }}>
-          <div style={{ marginBottom: 12 }}>
-            <Badge count={pendingAgents.length} style={{ backgroundColor: '#f59e0b' }}>
-              <Text strong style={{ fontSize: 16 }}> Pending Approvals</Text>
-            </Badge>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-stone-200">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+            Broker Accreditation Registry
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pendingAgents.map((agent: any) => (
-              <div key={agent.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: 'white', borderRadius: 8 }}>
-                <Avatar src={agent.imageUrl} size={40} style={{ backgroundColor: '#b40101' }}>{agent.name?.charAt(0)}</Avatar>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600 }}>{agent.name}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>{agent.email}</div>
-                </div>
-                <Button type="primary" size="small" icon={<CheckCircleOutlined />} onClick={() => handleStatusChange(agent.id, 'active')} style={{ background: '#10b981', borderColor: '#10b981' }}>Approve</Button>
-                <Button danger size="small" icon={<CloseCircleOutlined />} onClick={() => handleStatusChange(agent.id, 'inactive')}>Reject</Button>
-              </div>
-            ))}
-          </div>
-        </AntCard>
-      )}
-
-      {/* Leaderboard */}
-      {leaderboard.length > 0 && (
-        <AntCard title={<span><TrophyOutlined style={{ color: '#f59e0b', marginRight: 8 }} />Top Performers</span>} variant="borderless" style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
-            {leaderboard.map((agent: any, idx: number) => (
-              <div key={agent.id} style={{ minWidth: 180, padding: 16, background: idx === 0 ? 'linear-gradient(135deg, #fffbeb, #fef3c7)' : '#fafafa', borderRadius: 10, textAlign: 'center', border: idx === 0 ? '2px solid #f59e0b' : '1px solid #e5e7eb', cursor: 'pointer' }} onClick={() => navigate(`/agents/${agent.id}`)}>
-                <div style={{ fontSize: 20, marginBottom: 4 }}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}</div>
-                <Avatar src={agent.imageUrl} size={48} style={{ backgroundColor: '#b40101', marginBottom: 8 }}>{agent.name?.charAt(0)}</Avatar>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{agent.name}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{agent.stats?.totalListings || 0} listings</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{agent.stats?.totalLeads || 0} leads</div>
-              </div>
-            ))}
-          </div>
-        </AntCard>
-      )}
-
-      <Card 
-        variant="borderless"
-        style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-          <Input
-            placeholder="Search agents by name or email..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
-          />
-          {!loading && (
-            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-              {pagination.total} {pagination.total === 1 ? 'agent' : 'agents'} found
-            </Typography.Text>
-          )}
+          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+            Licensed Advisors & Partners
+          </h2>
+          <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+            Audit licensing credentials, approve advisor registrations, and review production volumes.
+          </p>
         </div>
 
-        {isMobile ? (
-          // Mobile Card View
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {agents.map((agent: any) => (
-              <Card 
-                key={agent.id}
-                size="small"
-                style={{ borderRadius: 8 }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                  <Avatar src={agent.imageUrl} size={56} style={{ backgroundColor: '#b40101' }}>
-                    {agent.name?.charAt(0)}
-                  </Avatar>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, marginBottom: '4px' }}>{agent.name}</div>
-                    <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: '8px' }}>{agent.email}</div>
-                    
-                    <Space size="small" wrap style={{ marginBottom: '8px' }}>
-                      <Tag color={agent.status === 'active' ? 'green' : agent.status === 'inactive' ? 'red' : 'orange'}>
-                        {(agent.status || 'active').toUpperCase()}
-                      </Tag>
-                    </Space>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-                      <div style={{ textAlign: 'center', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#b40101' }}>
-                          {agent.stats?.totalListings || 0}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Listings</div>
-                      </div>
-                      <div style={{ textAlign: 'center', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#3b82f6' }}>
-                          {agent.stats?.totalLeads || 0}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Leads</div>
-                      </div>
-                      <div style={{ textAlign: 'center', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#10b981' }}>
-                          {agent.stats?.totalOpportunities || 0}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#6b7280' }}>Opps</div>
-                      </div>
-                    </div>
-                    
-                    <div style={{ marginTop: '12px' }}>
-                      <Space size="small">
-                        <Button 
-                          type="link" 
-                          icon={<EyeOutlined />} 
-                          size="small"
-                          onClick={() => navigate(`/agents/${agent.id}`)}
-                          style={{ padding: 0 }}
-                        >
-                          View
-                        </Button>
-                        <Popconfirm
-                          title="Delete this agent?"
-                          description="This will also delete all associated data."
-                          onConfirm={() => handleDeleteAgent(agent.id)}
-                          okText="Yes"
-                          cancelText="No"
-                          okButtonProps={{ danger: true }}
-                        >
-                          <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: 0 }}>
-                            Delete
-                          </Button>
-                        </Popconfirm>
-                      </Space>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded transition-colors shadow-xs"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Accredit New Advisor</span>
+        </button>
+      </div>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="bg-white p-5 rounded-lg border border-stone-200/90 shadow-xs">
+          <div className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold mb-1">
+            Active Verified Advisors
+          </div>
+          <div className="font-serif text-2xl text-stone-900 font-normal">
+            {activeCount || total}
+          </div>
+          <div className="text-[11px] text-stone-500 mt-1">Authorized listing representatives</div>
+        </div>
+
+        <div className="bg-white p-5 rounded-lg border border-stone-200/90 shadow-xs">
+          <div className="text-[10px] uppercase tracking-wider text-[#b40101] font-semibold mb-1">
+            Pending Licensure Review
+          </div>
+          <div className="font-serif text-2xl text-[#b40101] font-normal">
+            {pendingCount}
+          </div>
+          <div className="text-[11px] text-stone-500 mt-1">Awaiting compliance sign-off</div>
+        </div>
+
+        <div className="bg-white p-5 rounded-lg border border-stone-200/90 shadow-xs">
+          <div className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold mb-1">
+            Total Advisor Network
+          </div>
+          <div className="font-serif text-2xl text-stone-900 font-normal">
+            {total}
+          </div>
+          <div className="text-[11px] text-stone-500 mt-1">Statewide brokerage footprint</div>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="flex items-center justify-between gap-4 bg-white p-4 rounded-lg border border-stone-200/90 shadow-xs">
+        <div className="relative w-full max-w-sm">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => { setSearchText(e.target.value); setPage(1); }}
+            placeholder="Search advisor by name, email, or license..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Agents Table */}
+      <div className="bg-white rounded-lg border border-stone-200/90 shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-stone-400 text-xs">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-[#b40101] rounded-full animate-spin mx-auto mb-3" />
+            Loading broker register...
+          </div>
+        ) : agents.length === 0 ? (
+          <div className="p-16 text-center text-stone-400">
+            <Award className="w-10 h-10 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm font-medium text-stone-700 mb-1">No advisors found</p>
+            <p className="text-xs text-stone-400">Try adjusting search parameters.</p>
           </div>
         ) : (
-          // Desktop Table View
-          <Table
-            dataSource={agents}
-            columns={columns}
-            rowKey="id"
-            loading={loading}
-            pagination={pagination}
-            onChange={handleTableChange}
-            locale={{
-              emptyText: (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={searchText ? `No agents match "${searchText}"` : 'No agents yet'}
-                />
-              )
-            }}
-          />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-stone-50/80 border-b border-stone-200/80 text-[10px] uppercase tracking-wider text-stone-500 font-semibold">
+                  <th className="py-3 px-5">Advisor</th>
+                  <th className="py-3 px-4">Contact</th>
+                  <th className="py-3 px-4">License & Brokerage</th>
+                  <th className="py-3 px-4">Portfolio Units</th>
+                  <th className="py-3 px-4">Accreditation</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {agents.map((ag) => (
+                  <tr key={ag.id} className="hover:bg-stone-50/70 transition-colors">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={ag.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(ag.name)}&background=0f172a&color=fff&size=80`}
+                          alt={ag.name}
+                          className="w-10 h-10 rounded-full object-cover border border-stone-200 shrink-0"
+                        />
+                        <div>
+                          <div className="font-semibold text-stone-900 text-sm">{ag.name}</div>
+                          <div className="text-[11px] text-stone-400">Joined {new Date(ag.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 space-y-0.5 text-[11px] text-stone-600">
+                      <div className="flex items-center gap-1.5"><Mail className="w-3 h-3 text-stone-400" /><span>{ag.email}</span></div>
+                      {ag.phone && <div className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-stone-400" /><span>{ag.phone}</span></div>}
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="font-medium text-stone-900">{ag.brokerage || 'Torra Private Brokerage'}</div>
+                      <div className="text-[11px] text-stone-400 font-mono">Lic #{ag.license || 'TREC-Pending'}</div>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-mono text-stone-700">
+                      {ag.stats?.totalListings || ag.properties?.length || 0} active
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <select
+                        value={ag.status || 'active'}
+                        onChange={(e) => handleStatusChange(ag.id, e.target.value)}
+                        className="px-2 py-1 text-xs font-semibold rounded border border-stone-300 bg-white text-stone-800 focus:outline-none focus:border-stone-900 cursor-pointer shadow-2xs"
+                      >
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </td>
+
+                    <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
+                        <Link
+                          to={`/agents/${ag.id}`}
+                          target="_blank"
+                          className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+                          title="View Public Bio"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
+                        <button
+                          onClick={() => setDeleteCandidate(ag.id)}
+                          className="p-1.5 text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                          title="Revoke Credentials"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </Card>
+
+        {total > PAGE_SIZE && (
+          <div className="p-4 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
+            <span>Page {page} of {totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-1.5 rounded border border-stone-200 hover:bg-stone-100 disabled:opacity-40"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-1.5 rounded border border-stone-200 hover:bg-stone-100 disabled:opacity-40"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Modal */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <h3 className="font-serif text-lg text-stone-900">Revoke Advisor Accreditation</h3>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              Are you sure you wish to revoke this advisor's brokerage credentials? Their public representations and client links will be archived.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button onClick={() => setDeleteCandidate(null)} className="px-3.5 py-1.5 text-xs text-stone-600 hover:text-stone-900">Cancel</button>
+              <button onClick={() => handleDelete(deleteCandidate)} className="px-4 py-2 text-xs font-medium text-white bg-rose-700 hover:bg-rose-800 rounded">Confirm Revoke</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Agent Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+              <h3 className="font-serif text-lg text-stone-900">Accredit New Advisor</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-700"><X className="w-5 h-5" /></button>
+            </div>
+
+            <form onSubmit={handleCreateAgent} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Full Legal Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newAgent.name}
+                  onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
+                  placeholder="e.g. Harrison Sterling"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Direct Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={newAgent.email}
+                  onChange={(e) => setNewAgent({ ...newAgent, email: e.target.value })}
+                  placeholder="advisor@torra.com"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={newAgent.phone}
+                    onChange={(e) => setNewAgent({ ...newAgent, phone: e.target.value })}
+                    placeholder="+1 (512) 555-0144"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">License #</label>
+                  <input
+                    type="text"
+                    value={newAgent.license}
+                    onChange={(e) => setNewAgent({ ...newAgent, license: e.target.value })}
+                    placeholder="TREC-784930"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-stone-700 uppercase tracking-wider mb-1">Specialties</label>
+                <input
+                  type="text"
+                  value={newAgent.specialties}
+                  onChange={(e) => setNewAgent({ ...newAgent, specialties: e.target.value })}
+                  placeholder="Waterfront Estates, Hill Country Compounds"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-200">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs text-stone-600 hover:text-stone-900">Cancel</button>
+                <button type="submit" disabled={creating} className="px-5 py-2 text-xs font-medium text-white bg-[#b40101] hover:bg-[#900101] rounded shadow-xs">
+                  {creating ? 'Saving...' : 'Add Advisor'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

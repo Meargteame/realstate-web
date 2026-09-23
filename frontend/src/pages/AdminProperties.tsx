@@ -1,579 +1,427 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Tag, Button, Input, Space, Typography, Avatar, message as antMessage, Popconfirm, Select, Row, Col, Statistic, Empty } from "antd";
-import { SearchOutlined, EyeOutlined, DeleteOutlined, HomeOutlined, StarFilled, StarOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "../hooks/useBreakpoint";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Home,
+  Search,
+  Star,
+  Trash2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  CheckCircle,
+  Clock,
+  ShieldCheck,
+  Building
+} from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-
-const { Title, Text } = Typography;
-const AntSelect = Select as any;
-const AntOption = (Select as any).Option;
-const AntCard = Card as any;
 
 export default function AdminProperties() {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const debouncedSearch = useDebounce(searchText, 350);
+  const debouncedSearch = useDebounce(searchText, 300);
   const [statusFilter, setStatusFilter] = useState("");
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [bulkStatus, setBulkStatus] = useState<string>('');
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-    total: 0
-  });
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-
-  // Status distribution data
-  const statusDistribution = [
-    { name: 'Active', value: properties.filter((p: any) => p.status === 'Active').length, color: '#10b981' },
-    { name: 'Pending', value: properties.filter((p: any) => p.status === 'Pending').length, color: '#f59e0b' },
-    { name: 'Sold', value: properties.filter((p: any) => p.status === 'Sold').length, color: '#3b82f6' },
-    { name: 'Inactive', value: properties.filter((p: any) => p.status === 'Inactive').length, color: '#ef4444' },
-  ].filter(s => s.value > 0);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkStatus, setBulkStatus] = useState("");
+  const [deleteCandidate, setDeleteCandidate] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     fetchProperties();
-  }, [pagination.current, pagination.pageSize, debouncedSearch, statusFilter]);
+  }, [page, debouncedSearch, statusFilter]);
 
   const fetchProperties = async () => {
     setLoading(true);
     try {
       const userData = localStorage.getItem('torra_user');
       if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
+      const token = JSON.parse(userData).token;
 
       const params = new URLSearchParams({
-        page: pagination.current.toString(),
-        limit: pagination.pageSize.toString(),
+        page: page.toString(),
+        limit: PAGE_SIZE.toString(),
         search: debouncedSearch,
         status: statusFilter
       });
 
       const res = await fetch(`/api/admin/properties?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {
         const data = await res.json();
         setProperties(data.properties || []);
-        setPagination(prev => ({
-          ...prev,
-          total: data.pagination?.total || 0
-        }));
+        setTotal(data.pagination?.total || 0);
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
-      antMessage.error('Failed to fetch properties');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTableChange = (newPagination: any) => {
-    setPagination({
-      current: newPagination.current,
-      pageSize: newPagination.pageSize,
-      total: pagination.total
-    });
-  };
-
   const handleStatusChange = async (propertyId: string, newStatus: string) => {
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const res = await fetch(`/api/admin/properties/${propertyId}/status`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus })
       });
-
       if (res.ok) {
-        antMessage.success('Property status updated successfully');
-        fetchProperties();
-      } else {
-        const data = await res.json();
-        antMessage.error(data.error || 'Failed to update property status');
+        setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, status: newStatus } : p));
       }
-    } catch (error) {
-      console.error('Error updating property status:', error);
-      antMessage.error('Failed to update property status');
-    }
-  };
-
-  const handleDeleteProperty = async (propertyId: string) => {
-    try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      const res = await fetch(`/api/admin/properties/${propertyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (res.ok) {
-        antMessage.success('Property deleted successfully');
-        fetchProperties();
-      } else {
-        const data = await res.json();
-        antMessage.error(data.error || 'Failed to delete property');
-      }
-    } catch (error) {
-      console.error('Error deleting property:', error);
-      antMessage.error('Failed to delete property');
+    } catch {
+      console.error('Failed to update status');
     }
   };
 
   const handleToggleFeatured = async (propertyId: string, featured: boolean) => {
     try {
-      const userData = localStorage.getItem('torra_user');
-      if (!userData) return;
-      const token = JSON.parse(userData).token;
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
       const res = await fetch(`/api/admin/properties/${propertyId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ featured: !featured })
       });
       if (res.ok) {
-        antMessage.success(featured ? 'Removed from featured' : 'Marked as featured');
-        fetchProperties();
+        setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, featured: !featured } : p));
       }
-    } catch { antMessage.error('Failed to update featured status'); }
+    } catch {
+      console.error('Failed to toggle featured');
+    }
   };
 
-  const handleBulkStatusChange = async () => {
-    if (!bulkStatus) return;
-    const userData = localStorage.getItem('torra_user');
-    if (!userData) return;
-    const token = JSON.parse(userData).token;
+  const handleDelete = async (propertyId: string) => {
     try {
-      await Promise.all(selectedRows.map((p: any) =>
-        fetch(`/api/admin/properties/${p.id}/status`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ status: bulkStatus })
-        })
-      ));
-      antMessage.success(`${selectedRows.length} properties updated to ${bulkStatus}`);
-      setSelectedRowKeys([]);
-      setSelectedRows([]);
-      setBulkStatus('');
-      fetchProperties();
-    } catch { antMessage.error('Failed to update some properties'); }
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
+      const res = await fetch(`/api/admin/properties/${propertyId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setProperties(prev => prev.filter(p => p.id !== propertyId));
+        setDeleteCandidate(null);
+      }
+    } catch {
+      alert('Failed to delete property');
+    }
   };
 
-  const columns = [
-    {
-      title: 'Property',
-      key: 'property',
-      render: (_: any, record: any) => (
-        <Space>
-          <div style={{ 
-            width: 60, 
-            height: 60, 
-            borderRadius: 8, 
-            overflow: 'hidden',
-            background: '#f0f0f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {record.images?.[0] ? (
-              <img 
-                src={record.images[0]} 
-                alt={record.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <HomeOutlined style={{ fontSize: 24, color: '#bfbfbf' }} />
-            )}
-          </div>
-          <div>
-            <div style={{ fontWeight: 600, marginBottom: 2 }}>{record.title}</div>
-            <div style={{ fontSize: 12, color: '#6b7280' }}>
-              {record.address}, {record.city}
-            </div>
-          </div>
-        </Space>
-      ),
-    },
-    {
-      title: 'Agent',
-      key: 'agent',
-      render: (_: any, record: any) => (
-        <Space>
-          <Avatar src={record.agent?.imageUrl} size={32} style={{ backgroundColor: '#b40101' }}>
-            {record.agent?.name?.charAt(0)}
-          </Avatar>
-          <span style={{ fontSize: 13 }}>{record.agent?.name || 'N/A'}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
-      render: (price: number) => (
-        <span style={{ fontWeight: 600 }}>
-          ${price?.toLocaleString() || 0}
-        </span>
-      ),
-      sorter: (a: any, b: any) => (a.price || 0) - (b.price || 0),
-    },
-    {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-      render: (type: string) => (
-        <Tag>{type}</Tag>
-      ),
-    },
-    {
-      title: 'Details',
-      key: 'details',
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <span style={{ fontSize: 12 }}>
-            {record.bedrooms} bed • {record.bathrooms} bath
-          </span>
-          <span style={{ fontSize: 12, color: '#6b7280' }}>
-            {record.sqft?.toLocaleString()} sqft
-          </span>
-        </Space>
-      ),
-    },
-    {
-      title: 'Featured',
-      key: 'featured',
-      width: 80,
-      render: (_: any, record: any) => (
-        <span
-          style={{ cursor: 'pointer', fontSize: 18, color: record.featured ? '#f59e0b' : '#d1d5db' }}
-          onClick={() => handleToggleFeatured(record.id, record.featured)}
-        >
-          {record.featured ? <StarFilled /> : <StarOutlined />}
-        </span>
-      ),
-    },
-    {
-      title: 'Status',
-      key: 'status',
-      render: (_: any, record: any) => (
-        <Select
-          value={record.status || 'Active'}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          style={{ width: 120 }}
-          size="small"
-        >
-          <AntOption value="Active">
-            <Tag color="green">ACTIVE</Tag>
-          </AntOption>
-          <AntOption value="Pending">
-            <Tag color="orange">PENDING</Tag>
-          </AntOption>
-          <AntOption value="Sold">
-            <Tag color="blue">SOLD</Tag>
-          </AntOption>
-          <AntOption value="Inactive">
-            <Tag color="red">INACTIVE</Tag>
-          </AntOption>
-        </Select>
-      ),
-    },
-    {
-      title: 'Listed',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a: any, b: any) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: any, record: any) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />} 
-            size="small"
-            onClick={() => navigate(`/properties/${record.id}`)}
-          >
-            View
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this property?"
-            onConfirm={() => handleDeleteProperty(record.id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small">
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const handleBulkStatusApply = async () => {
+    if (!bulkStatus || selectedIds.length === 0) return;
+    try {
+      const token = JSON.parse(localStorage.getItem('torra_user') || '{}').token;
+      await Promise.all(
+        selectedIds.map(id =>
+          fetch(`/api/admin/properties/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ status: bulkStatus })
+          })
+        )
+      );
+      setSelectedIds([]);
+      setBulkStatus("");
+      fetchProperties();
+    } catch {
+      alert('Failed to update bulk status');
+    }
+  };
+
+  const formatCurrency = (val: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val || 0);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
 
   return (
-    <div style={{ padding: isMobile ? '24px 16px' : '40px 48px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '24px' : '32px' }}>
-        <Title level={2} style={{ margin: 0, fontWeight: 900, fontSize: isMobile ? '24px' : '32px' }}>
-          Properties Management
-        </Title>
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-stone-200">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.25em] text-[#b40101] font-semibold mb-1">
+            Global Asset Repository
+          </div>
+          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 tracking-tight">
+            Residences Governance
+          </h2>
+          <p className="text-stone-500 text-xs sm:text-sm mt-0.5">
+            Audit public listings, toggle featured placement, and verify broker representations.
+          </p>
+        </div>
+
+        <div className="font-mono text-xs text-stone-500 bg-stone-100 px-3 py-1.5 rounded">
+          Total Inventory: <span className="font-semibold text-stone-900">{total} Residences</span>
+        </div>
       </div>
 
-      {/* Status Distribution */}
-      {statusDistribution.length > 0 && (
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}>
-            <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', textAlign: 'center' }}>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie data={statusDistribution} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={4} dataKey="value">
-                    {statusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
-                {statusDistribution.map((s) => (
-                  <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
-                    <span>{s.name}: <strong>{s.value}</strong></span>
-                  </div>
-                ))}
-              </div>
-            </AntCard>
-          </Col>
-          <Col xs={24} sm={16}>
-            <Row gutter={[12, 12]}>
-              <Col xs={24} sm={12}>
-                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Total Properties</Text>} value={properties.length} prefix={<HomeOutlined style={{ color: '#b40101' }} />} valueStyle={{ color: '#b40101', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-                </AntCard>
-              </Col>
-              <Col xs={24} sm={12}>
-                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Featured</Text>} value={properties.filter((p: any) => p.featured).length} prefix={<StarFilled style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-                </AntCard>
-              </Col>
-              <Col xs={24} sm={12}>
-                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Avg Price</Text>} value={properties.length ? Math.round(properties.reduce((s: number, p: any) => s + (p.price || 0), 0) / properties.length) : 0} prefix="$" valueStyle={{ color: '#373a4b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} precision={0} />
-                </AntCard>
-              </Col>
-              <Col xs={24} sm={12}>
-                <AntCard variant="borderless" style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                  <Statistic title={<Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Pending Review</Text>} value={properties.filter((p: any) => p.status === 'Pending').length} prefix={<CheckCircleOutlined style={{ color: '#f59e0b' }} />} valueStyle={{ color: '#f59e0b', fontWeight: 900, fontSize: isMobile ? 22 : 28 }} />
-                </AntCard>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-      )}
-
-      {/* Bulk Actions Toolbar */}
-      {selectedRowKeys.length > 0 && (
-        <AntCard size="small" style={{ marginBottom: 16, background: '#fff7ed', borderColor: '#f59e0b', borderRadius: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <Text strong>{selectedRowKeys.length} selected</Text>
-            <AntSelect value={bulkStatus || undefined} onChange={(v: string) => setBulkStatus(v)} placeholder="Set status to..." style={{ width: 160 }} allowClear>
-              <AntOption value="Active">Active</AntOption>
-              <AntOption value="Pending">Pending</AntOption>
-              <AntOption value="Sold">Sold</AntOption>
-              <AntOption value="Inactive">Inactive</AntOption>
-            </AntSelect>
-            <Button size="small" type="primary" onClick={handleBulkStatusChange} disabled={!bulkStatus} style={bulkStatus ? { background: '#b40101', borderColor: '#b40101' } : {}}>Apply</Button>
-            <Popconfirm title={`Delete ${selectedRowKeys.length} properties?`} onConfirm={async () => {
-              const userData = localStorage.getItem('torra_user');
-              if (!userData) return;
-              const token = JSON.parse(userData).token;
-              await Promise.all(selectedRows.map((p: any) => fetch(`/api/admin/properties/${p.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })));
-              antMessage.success('Properties deleted');
-              setSelectedRowKeys([]); setSelectedRows([]); fetchProperties();
-            }} okText="Yes" cancelText="No" okButtonProps={{ danger: true }}>
-              <Button size="small" danger icon={<DeleteOutlined />}>Delete</Button>
-            </Popconfirm>
-            <Button size="small" onClick={() => { setSelectedRowKeys([]); setSelectedRows([]); }}>Clear</Button>
-          </div>
-        </AntCard>
-      )}
-
-      <Card 
-        variant="borderless"
-        style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-      >
-        <Space style={{ marginBottom: 16, width: '100%' }} direction={isMobile ? 'vertical' : 'horizontal'}>
-          <Input
-            placeholder="Search properties..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: isMobile ? '100%' : 300, borderRadius: 8 }}
-          />
-          <Select
-            placeholder="Filter by status"
-            value={statusFilter || undefined}
-            onChange={setStatusFilter}
-            style={{ width: isMobile ? '100%' : 150 }}
-            allowClear
-          >
-            <AntOption value="Active">Active</AntOption>
-            <AntOption value="Pending">Pending</AntOption>
-            <AntOption value="Sold">Sold</AntOption>
-            <AntOption value="Inactive">Inactive</AntOption>
-          </Select>
-          {!loading && (
-            <Typography.Text type="secondary" style={{ fontSize: 13, whiteSpace: 'nowrap' }}>
-              {pagination.total} {pagination.total === 1 ? 'property' : 'properties'} found
-            </Typography.Text>
-          )}
-        </Space>
-
-        {isMobile ? (
-          // Mobile Card View
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {properties.map((property: any) => (
-              <Card 
-                key={property.id}
-                size="small"
-                style={{ borderRadius: 8 }}
-                cover={
-                  property.images?.[0] ? (
-                    <img 
-                      src={property.images[0]} 
-                      alt={property.title}
-                      style={{ height: 180, objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div style={{ 
-                      height: 180, 
-                      background: '#f0f0f0', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center' 
-                    }}>
-                      <HomeOutlined style={{ fontSize: 48, color: '#bfbfbf' }} />
-                    </div>
-                  )
-                }
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white p-4 rounded-lg border border-stone-200/90 shadow-xs">
+        {/* Status Filters */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {[
+            { key: "", label: "All Residences" },
+            { key: "Active", label: "Active" },
+            { key: "Pending", label: "Pending" },
+            { key: "Sold", label: "Sold" },
+            { key: "Inactive", label: "Inactive" }
+          ].map(st => {
+            const isSelected = statusFilter === st.key;
+            return (
+              <button
+                key={st.key}
+                onClick={() => { setStatusFilter(st.key); setPage(1); }}
+                className={`px-3 py-1.5 rounded text-xs font-medium tracking-wide whitespace-nowrap transition-colors ${
+                  isSelected
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
               >
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: '16px' }}>
-                    ${property.price?.toLocaleString() || 0}
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '4px' }}>
-                    {property.title}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#8c8c8c', marginBottom: '8px' }}>
-                    {property.address}, {property.city}
-                  </div>
-                  
-                  <Space size="small" wrap style={{ marginBottom: '8px' }}>
-                    <Tag>{property.type}</Tag>
-                    <Tag color={
-                      property.status === 'Active' ? 'green' : 
-                      property.status === 'Pending' ? 'orange' : 
-                      property.status === 'Sold' ? 'blue' : 'red'
-                    }>
-                      {property.status || 'ACTIVE'}
-                    </Tag>
-                  </Space>
-                  
-                  <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
-                    {property.bedrooms} bed • {property.bathrooms} bath • {property.sqft?.toLocaleString()} sqft
-                  </div>
-                  
-                  {property.agent && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px', background: '#f8f9fa', borderRadius: 6 }}>
-                      <Avatar src={property.agent.imageUrl} size={32} style={{ backgroundColor: '#b40101' }}>
-                        {property.agent.name?.charAt(0)}
-                      </Avatar>
-                      <span style={{ fontSize: '13px' }}>{property.agent.name}</span>
-                    </div>
-                  )}
-                  
-                  <div style={{ marginTop: '12px' }}>
-                    <Space size="small">
-                      <Button 
-                        type="link" 
-                        icon={<EyeOutlined />} 
-                        size="small"
-                        onClick={() => navigate(`/properties/${property.id}`)}
-                        style={{ padding: 0 }}
-                      >
-                        View
-                      </Button>
-                      <Popconfirm
-                        title="Delete this property?"
-                        onConfirm={() => handleDeleteProperty(property.id)}
-                        okText="Yes"
-                        cancelText="No"
-                        okButtonProps={{ danger: true }}
-                      >
-                        <Button type="link" danger icon={<DeleteOutlined />} size="small" style={{ padding: 0 }}>
-                          Delete
-                        </Button>
-                      </Popconfirm>
-                    </Space>
-                  </div>
-                </div>
-              </Card>
-            ))}
+                {st.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search */}
+        <div className="relative shrink-0 md:w-72">
+          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => { setSearchText(e.target.value); setPage(1); }}
+            placeholder="Search address, city, or title..."
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded focus:outline-none focus:border-stone-900 focus:bg-white transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="bg-stone-900 text-white p-3 px-5 rounded-lg flex items-center justify-between shadow-md">
+          <span className="text-xs font-medium">
+            {selectedIds.length} residences selected
+          </span>
+          <div className="flex items-center gap-2">
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value)}
+              className="bg-stone-800 text-white text-xs px-3 py-1.5 rounded border border-stone-700 focus:outline-none"
+            >
+              <option value="">Apply Status Change...</option>
+              <option value="Active">Mark Active</option>
+              <option value="Pending">Mark Pending</option>
+              <option value="Sold">Mark Sold</option>
+              <option value="Inactive">Mark Inactive</option>
+            </select>
+            <button
+              onClick={handleBulkStatusApply}
+              disabled={!bulkStatus}
+              className="px-3 py-1.5 text-xs bg-[#b40101] hover:bg-[#900101] disabled:opacity-50 text-white rounded font-medium"
+            >
+              Execute
+            </button>
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-xs text-stone-400 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Properties Table */}
+      <div className="bg-white rounded-lg border border-stone-200/90 shadow-xs overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-stone-400 text-xs">
+            <div className="w-8 h-8 border-2 border-stone-300 border-t-[#b40101] rounded-full animate-spin mx-auto mb-3" />
+            Auditing property repository...
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="p-16 text-center text-stone-400">
+            <Home className="w-10 h-10 mx-auto mb-3 text-stone-300" />
+            <p className="text-sm font-medium text-stone-700 mb-1">No residences matching query</p>
+            <p className="text-xs text-stone-400">Try adjusting status or search parameters.</p>
           </div>
         ) : (
-          // Desktop Table View
-          <Table
-            dataSource={properties}
-            columns={columns}
-            rowKey="id"
-            loading={loading}
-            pagination={pagination}
-            onChange={handleTableChange}
-            locale={{
-              emptyText: (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={searchText || statusFilter ? 'No properties match your filters' : 'No properties yet'}
-                />
-              )
-            }}
-            rowSelection={{
-              selectedRowKeys,
-              onChange: (keys: React.Key[], rows: any[]) => { setSelectedRowKeys(keys); setSelectedRows(rows); },
-            }}
-          />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-stone-50/80 border-b border-stone-200/80 text-[10px] uppercase tracking-wider text-stone-500 font-semibold">
+                  <th className="py-3 px-4 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length === properties.length && properties.length > 0}
+                      onChange={(e) => setSelectedIds(e.target.checked ? properties.map(p => p.id) : [])}
+                      className="rounded text-[#b40101] focus:ring-[#b40101]"
+                    />
+                  </th>
+                  <th className="py-3 px-4">Residence</th>
+                  <th className="py-3 px-4">Licensed Broker</th>
+                  <th className="py-3 px-4">Valuation</th>
+                  <th className="py-3 px-4">Governance Status</th>
+                  <th className="py-3 px-4 text-center">Curated Feature</th>
+                  <th className="py-3 px-5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {properties.map((prop) => {
+                  const isSelected = selectedIds.includes(prop.id);
+                  return (
+                    <tr key={prop.id} className={`hover:bg-stone-50/70 transition-colors ${isSelected ? 'bg-rose-50/20' : ''}`}>
+                      <td className="py-3.5 px-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            setSelectedIds(prev =>
+                              e.target.checked ? [...prev, prop.id] : prev.filter(id => id !== prop.id)
+                            );
+                          }}
+                          className="rounded text-[#b40101] focus:ring-[#b40101]"
+                        />
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={prop.images?.[0] || prop.imageUrl || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=300&q=80'}
+                            alt={prop.address}
+                            className="w-12 h-10 object-cover rounded border border-stone-200 shrink-0"
+                          />
+                          <div>
+                            <div className="font-semibold text-stone-900 text-sm truncate max-w-xs">
+                              {prop.title || prop.address}
+                            </div>
+                            <div className="text-[11px] text-stone-400 truncate">
+                              {prop.address}, {prop.city}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={prop.agent?.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(prop.agent?.name || 'A')}&background=111827&color=fff&size=64`}
+                            alt={prop.agent?.name}
+                            className="w-6 h-6 rounded-full object-cover shrink-0"
+                          />
+                          <span className="text-stone-700 font-medium">{prop.agent?.name || 'Unassigned'}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4 font-serif text-sm font-normal text-stone-900 whitespace-nowrap">
+                        {formatCurrency(prop.price)}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <select
+                          value={prop.status || 'Active'}
+                          onChange={(e) => handleStatusChange(prop.id, e.target.value)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded border border-stone-300 bg-white text-stone-800 focus:outline-none focus:border-stone-900 cursor-pointer shadow-2xs"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Sold">Sold</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-center">
+                        <button
+                          onClick={() => handleToggleFeatured(prop.id, prop.featured)}
+                          className={`p-1 rounded transition-colors ${
+                            prop.featured ? 'text-amber-500' : 'text-stone-300 hover:text-stone-600'
+                          }`}
+                          title={prop.featured ? 'Featured on Homepage' : 'Standard Listing'}
+                        >
+                          <Star className={`w-4 h-4 ${prop.featured ? 'fill-amber-400' : ''}`} />
+                        </button>
+                      </td>
+
+                      <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            to={`/properties/${prop.id}`}
+                            target="_blank"
+                            className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+                            title="View Presentation"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => setDeleteCandidate(prop.id)}
+                            className="p-1.5 text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 rounded transition-colors"
+                            title="Delete Residence"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </Card>
+
+        {/* Pagination */}
+        {total > PAGE_SIZE && (
+          <div className="p-4 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
+            <span>
+              Showing page {page} of {totalPages} ({total} total)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="p-1.5 rounded border border-stone-200 hover:bg-stone-100 disabled:opacity-40"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="p-1.5 rounded border border-stone-200 hover:bg-stone-100 disabled:opacity-40"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg border border-stone-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <h3 className="font-serif text-lg text-stone-900">Purge Residence Mandate</h3>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              Are you certain you wish to purge this property from the Torra database? All public inquiries and associated analytics will be unlinked.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteCandidate(null)}
+                className="px-3.5 py-1.5 text-xs text-stone-600 hover:text-stone-900 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteCandidate)}
+                className="px-4 py-2 text-xs font-medium text-white bg-rose-700 hover:bg-rose-800 rounded transition-colors"
+              >
+                Confirm Purge
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

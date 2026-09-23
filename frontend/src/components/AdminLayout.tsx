@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Outlet, useLocation } from "react-router-dom";
-import { Layout, Menu, Avatar, Input, Badge, Space, Spin, Button } from "antd";
+import { useNavigate, Outlet, useLocation, Link } from "react-router-dom";
 import {
-  DashboardOutlined,
-  TeamOutlined,
-  HomeOutlined,
-  UserOutlined,
-  BarChartOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  SearchOutlined,
-  BellOutlined,
-  FileTextOutlined,
-  FolderOutlined,
-  MenuOutlined,
-  CloseOutlined
-} from "@ant-design/icons";
+  LayoutDashboard,
+  Users,
+  Award,
+  Home,
+  FileText,
+  FolderLock,
+  BarChart3,
+  Settings,
+  LogOut,
+  Search,
+  Bell,
+  Menu,
+  X,
+  ShieldCheck,
+  ChevronRight,
+  ExternalLink
+} from "lucide-react";
 import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Header, Sider, Content } = Layout;
 
 export default function AdminLayout() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -30,13 +30,27 @@ export default function AdminLayout() {
   const location = useLocation();
 
   useEffect(() => {
+    if (!isMobile) setMobileMenuOpen(false);
+  }, [isMobile]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
     const storedUser = localStorage.getItem("torra_user");
     if (!storedUser) {
       navigate("/login");
       return;
     }
 
-    const parsed = JSON.parse(storedUser);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(storedUser);
+    } catch {
+      navigate("/login");
+      return;
+    }
     
     // Check if user is admin
     if (parsed.role !== 'admin') {
@@ -62,253 +76,217 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Spin size="large" />
+      <div className="min-h-screen bg-[#0a0c0e] flex flex-col items-center justify-center p-6 text-white">
+        <div className="w-10 h-10 border-2 border-stone-800 border-t-[#b40101] rounded-full animate-spin mb-4" />
+        <span className="font-serif tracking-widest text-xs uppercase text-stone-400">Authenticating Executive Governance Suite...</span>
       </div>
     );
   }
 
   const menuItems = [
-    { key: '/admin', icon: <DashboardOutlined />, label: 'Dashboard' },
-    { key: '/admin/users', icon: <UserOutlined />, label: 'Users Management' },
-    { key: '/admin/agents', icon: <TeamOutlined />, label: 'Agents Management' },
-    { key: '/admin/properties', icon: <HomeOutlined />, label: 'Properties Management' },
-    { key: '/admin/blog', icon: <FileTextOutlined />, label: 'Blog Management' },
-    { key: '/admin/documents', icon: <FolderOutlined />, label: 'Document Management' },
-    { key: '/admin/analytics', icon: <BarChartOutlined />, label: 'Platform Analytics' },
+    { path: '/admin', icon: LayoutDashboard, label: 'Platform Executive' },
+    { path: '/admin/properties', icon: Home, label: 'Global Residences' },
+    { path: '/admin/agents', icon: Award, label: 'Broker Roster' },
+    { path: '/admin/users', icon: Users, label: 'Client Accounts' },
+    { path: '/admin/blog', icon: FileText, label: 'Journal Publishing' },
+    { path: '/admin/documents', icon: FolderLock, label: 'Institutional Archive' },
+    { path: '/admin/analytics', icon: BarChart3, label: 'Platform Telemetry' },
   ];
 
-  const bottomMenuItems = [
-    { key: '/admin/settings', icon: <SettingOutlined />, label: 'Settings' },
-    { key: 'logout', icon: <LogoutOutlined />, label: 'Logout' },
-  ];
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-[#0a0c0e] text-stone-200 border-r border-stone-800/80">
+      {/* Brand Header */}
+      <div className="h-20 px-6 flex items-center justify-between border-b border-stone-800/70">
+        <Link to="/admin" className="flex items-center gap-3 group">
+          <div className="w-9 h-9 bg-[#b40101] text-white flex items-center justify-center font-serif text-lg tracking-tight rounded-sm shadow-sm group-hover:bg-[#900101] transition-colors">
+            T
+          </div>
+          <div>
+            <div className="font-serif text-lg tracking-tight text-white flex items-center gap-1.5 leading-none">
+              Torra<span className="text-[#b40101]">.</span>
+              <span className="text-[10px] font-sans uppercase tracking-[0.2em] px-1.5 py-0.5 rounded bg-rose-950/70 text-rose-300 font-semibold border border-rose-900/60">Admin</span>
+            </div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium mt-1">
+              Governance Desk
+            </div>
+          </div>
+        </Link>
+        {isMobile && (
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 text-stone-400 hover:text-white rounded-md hover:bg-stone-800/60"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Main Nav Links */}
+      <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <div className="px-3 pb-2 text-[10px] uppercase tracking-[0.22em] text-stone-400 font-semibold">
+          Platform Governance
+        </div>
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path || 
+            (item.path !== '/admin' && location.pathname.startsWith(item.path));
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded text-xs font-medium tracking-wide transition-all group ${
+                isActive
+                  ? 'bg-stone-800 text-white font-semibold shadow-sm border-l-2 border-[#b40101]'
+                  : 'text-stone-400 hover:text-stone-100 hover:bg-stone-800/40'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-[#b40101]' : 'text-stone-400 group-hover:text-stone-200'}`} />
+                <span>{item.label}</span>
+              </div>
+            </Link>
+          );
+        })}
+
+        <div className="pt-6 px-3 pb-2 text-[10px] uppercase tracking-[0.22em] text-stone-400 font-semibold">
+          Quick Switches
+        </div>
+        <Link
+          to="/command"
+          className="flex items-center justify-between px-3.5 py-2 rounded text-xs text-stone-400 hover:text-stone-200 hover:bg-stone-800/40 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <LayoutDashboard className="w-4 h-4 text-stone-400" />
+            <span>Broker Command Suite</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+        </Link>
+        <Link
+          to="/"
+          target="_blank"
+          className="flex items-center justify-between px-3.5 py-2 rounded text-xs text-stone-400 hover:text-stone-200 hover:bg-stone-800/40 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <ExternalLink className="w-4 h-4 text-stone-400" />
+            <span>Public Flagship Site</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
+        </Link>
+      </div>
+
+      {/* User Footer Profile & Settings */}
+      <div className="p-3 border-t border-stone-800/80 bg-[#08090b]">
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-stone-900/60 border border-stone-800/60 mb-2">
+          <img
+            src={currentUser?.imageUrl}
+            alt={currentUser?.name}
+            className="w-10 h-10 rounded-full object-cover ring-1 ring-stone-700 shrink-0"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-medium text-white truncate">
+              {currentUser?.name || 'Administrator'}
+            </div>
+            <div className="text-[11px] text-emerald-400 truncate capitalize font-mono flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              <span>Super Administrator</span>
+            </div>
+          </div>
+          <Link
+            to="/admin/settings"
+            className="p-1.5 text-stone-400 hover:text-white rounded hover:bg-stone-800 transition-colors"
+            title="Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs text-stone-400 hover:text-rose-400 hover:bg-rose-950/20 rounded transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Exit Administrative Suite</span>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      {isMobile && mobileMenuOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
-          zIndex: 999,
-        }} onClick={() => setMobileMenuOpen(false)} />
+    <div className="min-h-screen bg-[#f8fafc] text-stone-900 flex font-sans antialiased">
+      {/* Desktop Sider */}
+      {!isMobile && (
+        <aside className="w-64 fixed inset-y-0 left-0 z-40">
+          {sidebarContent}
+        </aside>
       )}
-      <Sider 
-        width={isMobile ? 280 : 260} 
-        theme="light" 
-        style={{ 
-          position: 'fixed', 
-          left: 0, 
-          top: 0, 
-          bottom: 0, 
-          zIndex: 1000, 
-          background: '#ffffff',
-          borderRight: '1px solid #e5e7eb',
-          boxShadow: isMobile && mobileMenuOpen ? '0 0 20px rgba(0,0,0,0.15)' : 'none',
-          transform: isMobile ? (mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-        }}
-      >
-        {/* Logo Section */}
-        <div style={{ 
-          padding: '20px 20px 16px', 
-          borderBottom: '1px solid #e5e7eb',
-          height: '72px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ 
-              width: '36px',
-              height: '36px',
-              background: '#b40101',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '16px',
-              fontWeight: 900,
-              letterSpacing: '-0.5px'
-            }}>
-              TR
-            </div>
-            <div>
-              <div style={{ 
-                fontSize: '18px', 
-                fontWeight: 900, 
-                color: '#b40101',
-                letterSpacing: '-0.5px',
-                lineHeight: 1
-              }}>
-                TORRA
-              </div>
-              <div style={{ 
-                fontSize: '10px', 
-                color: '#6b7280',
-                fontWeight: 600,
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase'
-              }}>
-                Admin Panel
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Navigation Menu */}
-        <div style={{ 
-          padding: '16px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          height: 'calc(100vh - 72px)',
-          justifyContent: 'space-between'
-        }}>
-          <Menu 
-            mode="inline" 
-            selectedKeys={[location.pathname]} 
-            items={menuItems} 
-            onClick={({ key }) => {
-              if (key.startsWith('/')) {
-                navigate(key);
-              }
-            }}
-            style={{ 
-              background: 'transparent', 
-              border: 'none',
-              fontSize: '14px'
-            }}
-            className="clean-sidebar-menu"
-          />
-          
-          {/* Bottom Section - Account + Actions */}
-          <div>
-            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginBottom: '12px' }}>
-              <Menu 
-                mode="inline" 
-                selectedKeys={[location.pathname]} 
-                items={bottomMenuItems} 
-                onClick={({ key }) => {
-                  if (key === 'logout') {
-                    handleLogout();
-                  } else if (key.startsWith('/')) {
-                    navigate(key);
-                  }
-                }}
-                style={{ 
-                  background: 'transparent', 
-                  border: 'none',
-                  fontSize: '14px'
-                }}
-                className="clean-sidebar-menu"
-              />
-            </div>
-            
-            {/* Admin Profile at Bottom */}
-            <div style={{ 
-              padding: '12px', 
-              borderTop: '1px solid #e5e7eb',
-              background: '#f9fafb',
-              borderRadius: '8px',
-              margin: '0 -4px',
-              cursor: 'pointer',
-              transition: 'background 0.2s ease'
-            }}
-             onMouseEnter={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f3f4f6'; }}
-             onMouseLeave={(e) => { if (isMobile) return; e.currentTarget.style.background = '#f9fafb'; }}
-            onClick={() => navigate('/admin/settings')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Avatar 
-                  src={currentUser?.imageUrl} 
-                  size={40}
-                  style={{ 
-                    backgroundColor: '#b40101',
-                    flexShrink: 0
-                  }}
-                >
-                  {!currentUser?.imageUrl && currentUser?.name?.charAt(0)}
-                </Avatar>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ 
-                    color: '#111827', 
-                    fontSize: '13px', 
-                    fontWeight: 600,
-                    lineHeight: 1.3,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {currentUser?.name}
-                  </div>
-                  <div style={{ 
-                    color: '#b40101', 
-                    fontSize: '11px', 
-                    textTransform: 'uppercase',
-                    fontWeight: 700,
-                    letterSpacing: '0.5px'
-                  }}>
-                    Administrator
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Sider>
+      {/* Mobile Drawer Overlay */}
+      {isMobile && mobileMenuOpen && (
+        <div 
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-stone-950/70 z-50 backdrop-blur-xs transition-opacity"
+        />
+      )}
 
-      <Layout style={{ marginLeft: isMobile ? 0 : 260, background: '#f9fafb' }}>
-        <Header style={{ 
-          background: '#fff', 
-          padding: isMobile ? '0 16px' : '0 32px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          borderBottom: '1px solid #e5e7eb', 
-          position: 'sticky', 
-          top: 0, 
-          zIndex: 10, 
-          height: isMobile ? '56px' : '72px',
-          lineHeight: isMobile ? '56px' : '72px',
-          margin: 0
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '0px' }}>
+      {/* Mobile Drawer Sidebar */}
+      {isMobile && (
+        <aside className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        }`}>
+          {sidebarContent}
+        </aside>
+      )}
+
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col min-w-0 ${!isMobile ? 'ml-64' : ''}`}>
+        {/* Top Executive Header */}
+        <header className="h-18 sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-8 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-4">
             {isMobile && (
-              <Button
-                type="text"
-                icon={mobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                style={{ fontSize: '18px', width: 40, height: 40 }}
-              />
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-2 -ml-2 text-stone-700 hover:text-stone-950 rounded-md hover:bg-stone-100"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
             )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: isMobile ? '16px' : '20px', fontWeight: 400, color: '#111827', lineHeight: 1.2 }}>
-                Welcome back, {currentUser?.name?.split(' ')[0]}
-              </div>
-              {!isMobile && (
-                <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                  Administrator Dashboard
-                </div>
-              )}
+            <div>
+              <h1 className="font-serif text-lg sm:text-xl font-normal text-stone-900 tracking-tight leading-tight">
+                Torra Executive Governance Console
+              </h1>
+              <p className="text-[11px] text-stone-400 uppercase tracking-widest hidden sm:block">
+                Institutional Administration & Audit Suite
+              </p>
             </div>
           </div>
-          <Space size={isMobile ? 'small' : 'middle'}>
-            {!isMobile && (
-              <Input 
-                prefix={<SearchOutlined style={{ color: '#9ca3af' }} />} 
-                placeholder="Search users, agents, properties..." 
-                style={{ borderRadius: '8px', width: 280, height: '40px' }}
-              />
-            )}
-            <Badge count={0}>
-               <BellOutlined style={{ fontSize: isMobile ? '18px' : '20px', cursor: 'pointer', color: '#6b7280' }} />
-            </Badge>
-          </Space>
-        </Header>
 
-        <Content style={{ background: '#f9fafb', minHeight: 'calc(100vh - 72px)', padding: 0 }}>
-            <Outlet context={{ user: currentUser }} />
-        </Content>
-      </Layout>
-    </Layout>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/admin/analytics"
+              className="relative p-2 text-stone-500 hover:text-stone-900 rounded-full hover:bg-stone-100 transition-colors"
+              title="Telemetry Alerts"
+            >
+              <Bell className="w-4 h-4" />
+            </Link>
+
+            <Link
+              to="/properties"
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
+            >
+              <span>Live Site</span>
+              <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
+            </Link>
+          </div>
+        </header>
+
+        {/* Child Page Content */}
+        <main className="flex-1 bg-[#f8fafc]">
+          <Outlet context={{ user: currentUser }} />
+        </main>
+      </div>
+    </div>
   );
 }
