@@ -110,32 +110,53 @@ export default function SignUp() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#FAFAFA]">
-      {/* Premium Visual Sidebar */}
-      <div className="hidden md:flex md:w-1/2 bg-[#B40101] flex-col items-center justify-center p-12 relative overflow-hidden shadow-2xl z-10">
-        <div aria-hidden="true" className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay opacity-40"></div>
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#B40101] via-transparent to-[#B40101]/80 mix-blend-multiply border-r border-[#1F2937]"></div>
-        <div className="relative z-10 text-center flex flex-col items-center max-w-lg mx-auto">
-          <div className="text-[#B40101] text-[80px] font-serif font-black tracking-tighter mb-2 leading-none drop-shadow-2xl">TR</div>
-          <div className="text-white/60 text-lg font-black tracking-[0.4em] mb-6 uppercase">TORRA</div>
-          <h2 className="text-white text-[42px] font-bold mb-6 tracking-tight leading-[1.1] drop-shadow-lg">
+    <div style={{ height: "100vh", display: "flex", background: "#fff", overflow: "hidden" }}>
+      {/* ── Left: editorial photo panel ── */}
+      <div
+        style={{
+          width: "48%",
+          position: "relative",
+          overflow: "hidden",
+          flexShrink: 0,
+          display: "none",
+        }}
+        className="signup-panel"
+      >
+        <img
+          src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85"
+          alt=""
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+        />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%)" }} />
+        
+        {/* Bottom text */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "40px 48px" }}>
+          <h2 style={{ fontSize: 44, fontFamily: '"DM Serif Display", serif', fontWeight: 400, color: "#fff", lineHeight: 1.1, marginBottom: 16, letterSpacing: "-0.02em" }}>
             Join the largest<br/>real estate network.
           </h2>
-          <p className="text-white/90 text-xl font-medium leading-relaxed drop-shadow-md">
-            Create your free TORRA account to unlock premium searches and expert matchmaking.
+          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.8)", fontWeight: 500, margin: 0, lineHeight: 1.5 }}>
+            Create your free Torra account to unlock premium searches and expert matchmaking.
           </p>
         </div>
       </div>
 
-      {/* Main SignUp Area */}
-      <div className="flex-1 flex flex-col relative w-full items-center justify-center bg-white px-6 py-12 md:px-16 lg:px-24">
-        <Link to="/" aria-label="Close sign up page" onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Space') { e.preventDefault(); navigate("/"); } }} className="absolute top-6 right-6 md:top-8 md:right-8 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
-          <X className="w-6 h-6" aria-hidden="true" />
-        </Link>
+      {/* ── Right: form ── */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          position: "relative",
+          overflowY: "auto",
+        }}
+      >
+        <div style={{ margin: "auto", width: "100%", maxWidth: 520, padding: "60px 40px", position: "relative" }}>
+          <Link to="/" aria-label="Close sign up page" onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Space') { e.preventDefault(); navigate("/"); } }} className="absolute top-6 right-6 z-50 p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-all">
+            <X className="w-6 h-6" aria-hidden="true" />
+          </Link>
 
-        <div className="w-full max-w-[460px]">
           <div className="text-center mb-10">
-            <h1 className="text-[34px] font-bold tracking-tight text-gray-900 mb-3">Create an Account</h1>
+            <h1 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 36, fontWeight: 400, color: "#111", marginBottom: 12, letterSpacing: "-0.02em" }}>Create an Account</h1>
             <p className="text-gray-500 text-base font-medium">
               Already have an account?{" "}
               <Link to="/login" className="text-[#B40101] hover:text-[#8A0000] underline underline-offset-4 font-bold transition-colors">Log In</Link>
@@ -245,7 +266,7 @@ export default function SignUp() {
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-[#B40101] hover:bg-[#8A0000] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.3)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.4)] transition-all disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              className="w-full bg-[#b40101] hover:bg-[#910101] text-white h-14 rounded-xl font-bold text-sm uppercase tracking-widest mt-4 shadow-[0_8px_16px_rgba(180,1,1,0.2)] hover:shadow-[0_12px_24px_rgba(180,1,1,0.3)] transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
@@ -277,6 +298,11 @@ export default function SignUp() {
           </div>
         </div>
       </div>
+      <style>{`
+        @media (min-width: 900px) {
+          .signup-panel { display: block !important; }
+        }
+      `}</style>
     </div>
   );
 }
