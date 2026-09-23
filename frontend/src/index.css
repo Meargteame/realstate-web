@@ -187,9 +187,9 @@
   box-sizing: border-box;
 }
 
-/* Prevent horizontal scroll */
+/* Prevent horizontal scroll without breaking position:sticky */
 html, body {
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 
