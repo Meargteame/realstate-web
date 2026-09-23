@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Typography, Avatar, Space, Tag, Divider, Card, Row, Col, Button, Skeleton } from "antd";
-import { ClockCircleOutlined, EyeOutlined, ArrowLeftOutlined, UserOutlined, ShareAltOutlined } from "@ant-design/icons";
+import { ArrowLeft, Clock, Calendar, Share2, User, BookOpen, ArrowRight } from "lucide-react";
 import SocialShare from "@/components/SocialShare";
 import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Text, Paragraph } = Typography;
 
 export default function BlogPost() {
   const isMobile = useIsMobile();
@@ -19,55 +16,17 @@ export default function BlogPost() {
   }, [slug]);
 
   useEffect(() => {
-    // Update page title and meta tags for SEO
     if (post) {
-      document.title = `${post.title} | TORRA Real Estate Blog`;
-      
-      // Update meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', post.excerpt || post.content.substring(0, 160));
-      }
-      
-      // Update Open Graph tags for social sharing
-      updateMetaTag('og:title', post.title);
-      updateMetaTag('og:description', post.excerpt || post.content.substring(0, 160));
-      updateMetaTag('og:image', post.coverImage || '');
-      updateMetaTag('og:url', window.location.href);
-      updateMetaTag('og:type', 'article');
-      
-      // Update Twitter Card tags
-      updateMetaTag('twitter:card', 'summary_large_image');
-      updateMetaTag('twitter:title', post.title);
-      updateMetaTag('twitter:description', post.excerpt || post.content.substring(0, 160));
-      updateMetaTag('twitter:image', post.coverImage || '');
+      document.title = `${post.title} | Torra Estate Journal`;
     }
   }, [post]);
-
-  const updateMetaTag = (property: string, content: string) => {
-    let element = document.querySelector(`meta[property="${property}"]`) || 
-                  document.querySelector(`meta[name="${property}"]`);
-    
-    if (!element) {
-      element = document.createElement('meta');
-      if (property.startsWith('og:') || property.startsWith('twitter:')) {
-        element.setAttribute('property', property);
-      } else {
-        element.setAttribute('name', property);
-      }
-      document.head.appendChild(element);
-    }
-    
-    element.setAttribute('content', content);
-  };
 
   const fetchPost = async () => {
     try {
       const response = await fetch(`/api/blog/${slug}`);
       const data = await response.json();
       setPost(data);
-      
-      // Fetch related posts
+
       if (data.categories?.length > 0) {
         try {
           const catSlug = data.categories[0].slug;
@@ -77,193 +36,264 @@ export default function BlogPost() {
         } catch {}
       }
     } catch (error) {
-      console.error('Error fetching blog post:', error);
+      console.error("Error fetching blog post:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   if (loading) {
     return (
-      <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}>
-        <Skeleton active avatar paragraph={{ rows: 6 }} />
+      <div style={{ maxWidth: 840, margin: "80px auto", padding: "0 24px" }}>
+        <div style={{ height: 40, width: "70%", background: "#f0f0f0", borderRadius: 8, marginBottom: 20 }} />
+        <div style={{ height: 380, background: "#f0f0f0", borderRadius: 12, marginBottom: 32 }} />
       </div>
     );
   }
 
   if (!post) {
     return (
-      <div style={{ padding: isMobile ? '80px 16px' : '200px', textAlign: 'center' }}>
-        <Title level={2}>Article Not Found</Title>
-        <Link to="/blog">
-          <Button type="primary">Back to Blog</Button>
+      <div style={{ padding: "120px 24px", textAlign: "center", maxWidth: 440, margin: "0 auto" }}>
+        <h2 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 32, marginBottom: 12 }}>Article Not Found</h2>
+        <p style={{ color: "#666", marginBottom: 24 }}>This journal entry may have been moved or archived.</p>
+        <Link
+          to="/blog"
+          style={{
+            padding: "10px 20px",
+            background: "#111",
+            color: "#fff",
+            borderRadius: 8,
+            textDecoration: "none",
+            fontWeight: 700,
+          }}
+        >
+          Return to Journal
         </Link>
       </div>
     );
   }
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh' }}>
-      {/* Header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #e8e8e8', padding: isMobile ? '12px 16px' : '16px 32px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <Link to="/blog">
-            <Button icon={<ArrowLeftOutlined />} type="text">
-              Back to Blog
-            </Button>
+    <div style={{ background: "#ffffff", minHeight: "100vh" }}>
+      {/* ── BREADCRUMB STRIP ── */}
+      <div style={{ borderBottom: "1px solid #ebebeb", background: "#fafafa" }}>
+        <div
+          style={{
+            maxWidth: 1000,
+            margin: "0 auto",
+            padding: isMobile ? "12px 16px" : "14px 32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Link
+            to="/blog"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              color: "#555",
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            <ArrowLeft size={15} />
+            <span>Estate Journal</span>
           </Link>
+
+          {post.categories && post.categories[0] && (
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#b40101" }}>
+              {post.categories[0].name}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Cover Image */}
-      {post.coverImage && (
-        <div style={{
-          height: isMobile ? '250px' : '400px',
-          background: `url(${post.coverImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }} />
-      )}
+      {/* ── ARTICLE HEADER ── */}
+      <article style={{ maxWidth: 840, margin: "0 auto", padding: isMobile ? "32px 16px 80px" : "56px 24px 96px" }}>
+        <h1
+          style={{
+            fontFamily: '"DM Serif Display", Georgia, serif',
+            fontSize: isMobile ? 32 : 52,
+            fontWeight: 400,
+            color: "#111",
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em",
+            margin: "0 0 20px",
+          }}
+        >
+          {post.title}
+        </h1>
 
-      {/* Content */}
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: isMobile ? '24px 16px' : '48px 32px' }}>
-        <Card style={{ borderRadius: '16px' }}>
-          {/* Categories */}
-          <Space wrap size="small" style={{ marginBottom: 16 }}>
-            {post.categories?.map((cat: any) => (
-              <Tag key={cat.id} color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
-                {cat.name}
-              </Tag>
-            ))}
-          </Space>
+        {post.excerpt && (
+          <p
+            style={{
+              fontSize: 18,
+              lineHeight: 1.6,
+              color: "#555",
+              margin: "0 0 28px",
+              fontStyle: "italic",
+            }}
+          >
+            {post.excerpt}
+          </p>
+        )}
 
-          {/* Title */}
-          <Title level={1} style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900, marginBottom: 24 }}>
-            {post.title}
-          </Title>
-
-          {/* Meta Info */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 32,
-            paddingBottom: 24,
-            borderBottom: '2px solid #f0f0f0',
-            flexWrap: 'wrap',
-            gap: 16
-          }}>
-            <Space size={isMobile ? "middle" : "large"}>
-              <Space>
-                <Avatar src={post.author?.imageUrl} icon={<UserOutlined />} size={40} />
-                <div>
-                  <Text strong style={{ display: 'block' }}>{post.authorName}</Text>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {post.author?.brokerage}
-                  </Text>
-                </div>
-              </Space>
-            </Space>
-            <Space size="large">
-              <Space>
-                <ClockCircleOutlined />
-                <Text type="secondary">{formatDate(post.publishedAt)}</Text>
-              </Space>
-              <Space>
-                <EyeOutlined />
-                <Text type="secondary">{post.viewCount} views</Text>
-              </Space>
-              <SocialShare
-                url={window.location.href}
-                title={post.title}
-                description={post.excerpt || ''}
-              />
-            </Space>
+        {/* Byline */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "16px 0",
+            borderTop: "1px solid #eee",
+            borderBottom: "1px solid #eee",
+            marginBottom: 36,
+            fontSize: 13,
+            color: "#666",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: "#f0f0f0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#444",
+                fontWeight: 700,
+              }}
+            >
+              {post.author?.name ? post.author.name[0] : "T"}
+            </div>
+            <div>
+              <span style={{ fontWeight: 700, color: "#111", display: "block" }}>
+                {post.author?.name || "Torra Advisory Group"}
+              </span>
+              <span style={{ fontSize: 11, color: "#888" }}>Managing Research Editor</span>
+            </div>
           </div>
 
-          {/* Content */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <span>{formatDate(post.publishedAt || post.createdAt)}</span>
+            <span>·</span>
+            <span>{post.readTime || "5 min"} read</span>
+          </div>
+        </div>
+
+        {/* Hero Cover Photo */}
+        {post.coverImage && (
           <div
             style={{
-              fontSize: isMobile ? 16 : 18,
-              lineHeight: 1.8,
-              color: '#333'
+              width: "100%",
+              height: isMobile ? 260 : 480,
+              borderRadius: 16,
+              overflow: "hidden",
+              marginBottom: 44,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
             }}
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-
-          {/* Tags */}
-          {post.tags && post.tags.length > 0 && (
-            <>
-              <Divider />
-              <Space wrap size="middle">
-                {post.tags.map((tag: any) => (
-                  <Tag key={tag.id} style={{ fontSize: 14, padding: '6px 14px' }}>
-                    #{tag.name}
-                  </Tag>
-                ))}
-              </Space>
-            </>
-          )}
-
-          {/* Author Bio */}
-          {post.author?.bio && (
-            <>
-              <Divider />
-              <Card style={{ background: '#f8f9fa', border: 'none' }}>
-                <Row gutter={24} align="middle">
-                  <Col>
-                    <Avatar src={post.author.imageUrl} size={80} icon={<UserOutlined />} />
-                  </Col>
-                  <Col flex={1}>
-                    <Title level={4} style={{ margin: 0 }}>About {post.authorName}</Title>
-                    <Paragraph style={{ marginTop: 8, marginBottom: 0 }}>
-                      {post.author.bio}
-                    </Paragraph>
-                  </Col>
-                </Row>
-              </Card>
-            </>
-          )}
-        </Card>
-
-        {/* Related Posts */}
-        {relatedPosts.length > 0 && (
-          <div style={{ marginTop: 48 }}>
-            <Title level={3} style={{ fontWeight: 900, marginBottom: 24 }}>Related Articles</Title>
-            <Row gutter={[24, 24]}>
-              {relatedPosts.map((rp: any) => (
-                <Col xs={24} sm={8} key={rp.id}>
-                  <Link to={`/blog/${rp.slug}`} style={{ textDecoration: 'none' }}>
-                    <Card
-                      hoverable
-                      cover={
-                        <div style={{
-                          height: 160,
-                          background: `url(${rp.coverImage || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800'})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center'
-                        }} />
-                      }
-                      style={{ borderRadius: 12 }}
-                    >
-                      <Title level={5} style={{ margin: 0, minHeight: 48 }}>{rp.title}</Title>
-                      <Text type="secondary" style={{ fontSize: 12 }}>{formatDate(rp.publishedAt)}</Text>
-                    </Card>
-                  </Link>
-                </Col>
-              ))}
-            </Row>
+          >
+            <img src={post.coverImage} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         )}
-      </div>
+
+        {/* Article Body Content */}
+        <div
+          style={{
+            fontSize: 17,
+            lineHeight: 1.85,
+            color: "#222",
+            whiteSpace: "pre-line",
+            fontFamily: '"DM Sans", system-ui, sans-serif',
+          }}
+        >
+          {post.content}
+        </div>
+
+        {/* Social Share Ribbon */}
+        <div style={{ marginTop: 48, paddingTop: 28, borderTop: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#666" }}>
+            Share Perspective
+          </span>
+          <SocialShare url={window.location.href} title={post.title} />
+        </div>
+      </article>
+
+      {/* ── RELATED PERSPECTIVES ── */}
+      {relatedPosts.length > 0 && (
+        <section style={{ borderTop: "1px solid #ebebeb", background: "#fafafa", padding: isMobile ? "48px 16px" : "64px 32px 80px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <h2
+              style={{
+                fontFamily: '"DM Serif Display", Georgia, serif',
+                fontSize: 28,
+                fontWeight: 400,
+                color: "#111",
+                marginBottom: 32,
+              }}
+            >
+              Related Perspectives
+            </h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+                gap: 28,
+              }}
+            >
+              {relatedPosts.map((r) => (
+                <Link
+                  key={r.id}
+                  to={`/blog/${r.slug}`}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    textDecoration: "none",
+                    color: "inherit",
+                    background: "#ffffff",
+                    borderRadius: 12,
+                    border: "1px solid #ebebeb",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{ height: 180, overflow: "hidden" }}>
+                    <img
+                      src={r.coverImage || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80"}
+                      alt={r.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </div>
+                  <div style={{ padding: 18 }}>
+                    <h3 style={{ fontFamily: '"DM Serif Display", serif', fontSize: 18, margin: "0 0 8px", color: "#111" }}>
+                      {r.title}
+                    </h3>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#b40101", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <span>Read Perspective</span>
+                      <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

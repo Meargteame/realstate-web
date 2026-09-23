@@ -1,324 +1,376 @@
 import React, { useState } from "react";
-import { Card, Form, InputNumber, Button, Typography, Row, Col, Divider, Space, Statistic, Input, notification } from "antd";
-import { DollarOutlined, HomeOutlined, CalculatorOutlined, UserOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
+import { notification } from "antd";
+import {
+  Calculator,
+  DollarSign,
+  TrendingUp,
+  ShieldCheck,
+  CheckCircle,
+  ArrowRight,
+  PieChart,
+  Home,
+  Check
+} from "lucide-react";
 import { useIsMobile } from "../hooks/useBreakpoint";
-
-const { Title, Text, Paragraph } = Typography;
-const AntCard = Card as any;
 
 export default function AffordabilityCalculator() {
   const isMobile = useIsMobile();
-  const [form] = Form.useForm();
-  const [leadForm] = Form.useForm();
-  const [result, setResult] = useState<any>(null);
+  const [annualIncome, setAnnualIncome] = useState(140000);
+  const [monthlyDebts, setMonthlyDebts] = useState(750);
+  const [downPayment, setDownPayment] = useState(85000);
+  const [interestRate, setInterestRate] = useState(6.75);
+  const [loanTerm, setLoanTerm] = useState(30);
+
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadPhone, setLeadPhone] = useState("");
+  const [submittingLead, setSubmittingLead] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
 
-  const handleLeadSubmit = async (values: any) => {
+  // Calculation
+  const monthlyIncome = annualIncome / 12;
+  const maxMonthlyHousingFront = monthlyIncome * 0.28; // 28% front-end
+  const maxTotalDebtBack = monthlyIncome * 0.36; // 36% back-end
+  const maxHousingBack = Math.max(0, maxTotalDebtBack - monthlyDebts);
+  const affordableMonthlyPayment = Math.min(maxMonthlyHousingFront, maxHousingBack);
+
+  const monthlyRate = interestRate / 100 / 12;
+  const numPayments = loanTerm * 12;
+  const maxLoanAmount =
+    monthlyRate > 0 && affordableMonthlyPayment > 0
+      ? affordableMonthlyPayment * ((1 - Math.pow(1 + monthlyRate, -numPayments)) / monthlyRate)
+      : 0;
+
+  const maxHomePrice = maxLoanAmount + downPayment;
+  const dtiRatio = monthlyIncome > 0 ? (((affordableMonthlyPayment + monthlyDebts) / monthlyIncome) * 100).toFixed(1) : "0";
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leadName.trim() || !leadEmail.trim()) {
+      notification.error({ message: "Incomplete Details", description: "Name and email are required." });
+      return;
+    }
+
+    setSubmittingLead(true);
     try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: values.name,
-          email: values.email,
-          phone: values.phone || '',
-          message: `Affordability inquiry — Max home price: $${result?.homePrice?.toLocaleString()}, Monthly: $${result?.monthlyPayment?.toLocaleString()}/mo, DTI: ${result?.dtiRatio}%`,
-          type: 'affordability_inquiry',
-          source: 'affordability_calculator'
-        })
+          name: leadName.trim(),
+          email: leadEmail.trim(),
+          phone: leadPhone.trim(),
+          message: `Affordability Inquiry: Annual Income ${fmt(annualIncome)}, Down Payment ${fmt(downPayment)}, Max Home Capacity ${fmt(maxHomePrice)}, DTI ${dtiRatio}%`,
+          type: "affordability_inquiry",
+          source: "affordability_calculator",
+        }),
       });
-      if (!res.ok) throw new Error('failed');
+
+      if (!response.ok) throw new Error("Submission failed");
       setLeadSubmitted(true);
-      leadForm.resetFields();
       notification.success({
-        message: 'Request Sent',
-        description: 'A TORRA agent will reach out to help you find homes in your budget.',
-        duration: 6
+        message: "Match Prepared",
+        description: "A Torra client advisor will send you custom properties matching this purchasing capacity.",
       });
-    } catch {
-      notification.error({ message: 'Submission failed', description: 'Please try again.' });
+    } catch (error) {
+      notification.error({ message: "Submission Error", description: "Could not send inquiry." });
+    } finally {
+      setSubmittingLead(false);
     }
   };
 
-  const calculateAffordability = (values: any) => {
-    const { annualIncome, monthlyDebts, downPayment, interestRate, loanTerm } = values;
-
-    // Calculate monthly income
-    const monthlyIncome = annualIncome / 12;
-
-    // Calculate maximum monthly payment (28% front-end ratio)
-    const maxMonthlyPayment = monthlyIncome * 0.28;
-
-    // Calculate maximum total debt (36% back-end ratio)
-    const maxTotalDebt = monthlyIncome * 0.36;
-    const maxHousingPayment = maxTotalDebt - monthlyDebts;
-
-    // Use the lower of the two
-    const affordableMonthlyPayment = Math.min(maxMonthlyPayment, maxHousingPayment);
-
-    // Calculate loan amount based on monthly payment
-    const monthlyRate = (interestRate / 100) / 12;
-    const numPayments = loanTerm * 12;
-    const loanAmount = affordableMonthlyPayment * ((1 - Math.pow(1 + monthlyRate, -numPayments)) / monthlyRate);
-
-    // Calculate total home price
-    const homePrice = loanAmount + downPayment;
-
-    // Calculate debt-to-income ratio
-    const dtiRatio = ((affordableMonthlyPayment + monthlyDebts) / monthlyIncome) * 100;
-
-    setResult({
-      homePrice: Math.round(homePrice),
-      loanAmount: Math.round(loanAmount),
-      monthlyPayment: Math.round(affordableMonthlyPayment),
-      downPayment,
-      dtiRatio: dtiRatio.toFixed(1),
-      monthlyIncome: Math.round(monthlyIncome)
-    });
-  };
-
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: isMobile ? '32px 16px' : '64px 32px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? 32 : 48 }}>
-          <Title level={1} style={{ fontSize: isMobile ? 28 : 48, fontWeight: 900 }}>
-            <CalculatorOutlined /> AFFORDABILITY CALCULATOR
-          </Title>
-          <Paragraph style={{ fontSize: isMobile ? 15 : 18, color: '#666' }}>
-            Find out how much home you can afford based on your income and debts
-          </Paragraph>
-        </div>
+    <div style={{ background: "#ffffff", minHeight: "100vh" }}>
+      {/* ── EDITORIAL HERO ── */}
+      <section
+        style={{
+          background: "#0f172a",
+          color: "#ffffff",
+          padding: isMobile ? "56px 20px 72px" : "88px 48px 96px",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ maxWidth: 840, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 10 }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginBottom: 16,
+              borderLeft: "3px solid #b40101",
+              paddingLeft: 12,
+            }}
+          >
+            <span
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Purchasing Capacity Engine
+            </span>
+          </div>
 
-        <Row gutter={32}>
-          {/* Calculator Form */}
-          <Col xs={24} lg={12}>
-            <Card style={{ borderRadius: '16px' }}>
-              <Title level={3}>Your Financial Information</Title>
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={calculateAffordability}
-                initialValues={{
-                  annualIncome: 75000,
-                  monthlyDebts: 500,
-                  downPayment: 50000,
-                  interestRate: 6.5,
-                  loanTerm: 30
+          <h1
+            style={{
+              fontFamily: '"DM Serif Display", Georgia, serif',
+              fontSize: isMobile ? 36 : 56,
+              fontWeight: 400,
+              lineHeight: 1.05,
+              letterSpacing: "-0.02em",
+              margin: "0 0 16px",
+            }}
+          >
+            Home Affordability &amp; Budget Modeling
+          </h1>
+
+          <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 17, lineHeight: 1.6, margin: "0 auto", maxWidth: 600 }}>
+            Establish a safe acquisition budget based on debt-to-income benchmarks (28/36 rule) and liquid down payment reserves.
+          </p>
+        </div>
+      </section>
+
+      {/* ── MAIN INTERACTIVE CONTAINER ── */}
+      <div style={{ maxWidth: 1320, margin: "0 auto", padding: isMobile ? "32px 16px 80px" : "56px 32px 112px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.25fr 1fr", gap: 48, alignItems: "start" }}>
+          {/* Inputs Column */}
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 16,
+              border: "1px solid #e5e5e5",
+              padding: isMobile ? "28px 20px" : "36px 36px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+            }}
+          >
+            <h2 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 24px", color: "#111" }}>
+              Financial Profile Inputs
+            </h2>
+
+            {/* Annual Gross Income */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", color: "#555" }}>
+                  Annual Gross Household Income
+                </label>
+                <span style={{ fontFamily: '"DM Serif Display", serif', fontSize: 22, color: "#111" }}>
+                  {fmt(annualIncome)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={50000}
+                max={600000}
+                step={5000}
+                value={annualIncome}
+                onChange={(e) => setAnnualIncome(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "#b40101" }}
+              />
+              <span style={{ fontSize: 12, color: "#777" }}>Monthly gross: {fmt(monthlyIncome)}</span>
+            </div>
+
+            {/* Monthly Liabilities */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", color: "#555" }}>
+                  Monthly Recurring Liabilities
+                </label>
+                <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>
+                  {fmt(monthlyDebts)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={5000}
+                step={50}
+                value={monthlyDebts}
+                onChange={(e) => setMonthlyDebts(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "#b40101" }}
+              />
+              <span style={{ fontSize: 12, color: "#777" }}>Auto loans, student debt, credit card minimums</span>
+            </div>
+
+            {/* Down Payment Reserve */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", color: "#555" }}>
+                  Liquid Down Payment Funds
+                </label>
+                <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>
+                  {fmt(downPayment)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={10000}
+                max={1000000}
+                step={10000}
+                value={downPayment}
+                onChange={(e) => setDownPayment(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "#b40101" }}
+              />
+            </div>
+
+            {/* Mortgage Rate */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", color: "#555" }}>
+                  Estimated Interest Rate
+                </label>
+                <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>
+                  {interestRate.toFixed(2)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min={3.5}
+                max={11.0}
+                step={0.05}
+                value={interestRate}
+                onChange={(e) => setInterestRate(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "#b40101" }}
+              />
+            </div>
+          </div>
+
+          {/* Results & Inventory Search Column */}
+          <div style={{ position: isMobile ? "static" : "sticky", top: 100 }}>
+            {/* Purchasing Power Receipt */}
+            <div
+              style={{
+                background: "#0f172a",
+                color: "#ffffff",
+                borderRadius: 16,
+                padding: "32px 28px",
+                marginBottom: 24,
+                boxShadow: "0 16px 36px rgba(15, 23, 42, 0.2)",
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.6)" }}>
+                Maximum Purchasing Capacity
+              </span>
+              <div
+                style={{
+                  fontFamily: '"DM Serif Display", serif',
+                  fontSize: isMobile ? 42 : 54,
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  margin: "8px 0 16px",
+                  lineHeight: 1,
+                  color: "#ffffff",
                 }}
               >
-                <Form.Item
-                  label="Annual Gross Income"
-                  name="annualIncome"
-                  rules={[{ required: true, message: 'Required' }]}
-                >
-                  <InputNumber
-                    prefix="$"
-                    size="large"
-                    style={{ width: '100%' }}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value!.replace(/\$\s?|(,*)/g, '')}
-                  />
-                </Form.Item>
+                {fmt(maxHomePrice)}
+              </div>
 
-                <Form.Item
-                  label="Monthly Debt Payments"
-                  name="monthlyDebts"
-                  rules={[{ required: true, message: 'Required' }]}
-                  tooltip="Include car loans, credit cards, student loans, etc."
-                >
-                  <InputNumber
-                    prefix="$"
-                    size="large"
-                    style={{ width: '100%' }}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value!.replace(/\$\s?|(,*)/g, '')}
-                  />
-                </Form.Item>
+              {/* Stat breakdown */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid rgba(255,255,255,0.12)", paddingTop: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                  <span style={{ color: "rgba(255,255,255,0.7)" }}>Max Monthly Housing</span>
+                  <span style={{ fontWeight: 700 }}>{fmt(affordableMonthlyPayment)}/mo</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                  <span style={{ color: "rgba(255,255,255,0.7)" }}>Max Loan Financed</span>
+                  <span style={{ fontWeight: 700 }}>{fmt(maxLoanAmount)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                  <span style={{ color: "rgba(255,255,255,0.7)" }}>Debt-to-Income (DTI)</span>
+                  <span style={{ fontWeight: 700, color: Number(dtiRatio) <= 36 ? "#4ade80" : "#fbbf24" }}>
+                    {dtiRatio}% (Target: ≤ 36%)
+                  </span>
+                </div>
+              </div>
 
-                <Form.Item
-                  label="Down Payment"
-                  name="downPayment"
-                  rules={[{ required: true, message: 'Required' }]}
-                >
-                  <InputNumber
-                    prefix="$"
-                    size="large"
-                    style={{ width: '100%' }}
-                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value!.replace(/\$\s?|(,*)/g, '')}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label="Interest Rate (%)"
-                  name="interestRate"
-                  rules={[{ required: true, message: 'Required' }]}
-                >
-                  <InputNumber
-                    suffix="%"
-                    size="large"
-                    style={{ width: '100%' }}
-                    step={0.1}
-                    precision={2}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label="Loan Term (years)"
-                  name="loanTerm"
-                  rules={[{ required: true, message: 'Required' }]}
-                >
-                  <InputNumber
-                    size="large"
-                    style={{ width: '100%' }}
-                    min={10}
-                    max={30}
-                  />
-                </Form.Item>
-
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  size="large"
-                  block
-                  icon={<CalculatorOutlined />}
+              <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+                <Link
+                  to={`/properties?maxPrice=${Math.round(maxHomePrice)}`}
                   style={{
-                    height: isMobile ? 48 : 56,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    background: '#b40101',
-                    borderColor: '#b40101'
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    height: 46,
+                    background: "#b40101",
+                    color: "#ffffff",
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 14,
+                    textDecoration: "none",
                   }}
                 >
-                  Calculate Affordability
-                </Button>
-              </Form>
-            </Card>
-          </Col>
+                  <Home size={16} />
+                  <span>Browse Homes Under {fmt(maxHomePrice)}</span>
+                </Link>
+              </div>
+            </div>
 
-          {/* Results */}
-          <Col xs={24} lg={12}>
-            {result ? (
-              <Card style={{ borderRadius: '16px', background: 'linear-gradient(135deg, #b40101 0%, #8b0000 100%)', border: 'none' }}>
-                <Title level={3} style={{ color: 'white', marginBottom: 32 }}>
-                  You Can Afford
-                </Title>
+            {/* Advisory Request Card */}
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e5e5e5",
+                borderRadius: 16,
+                padding: "24px",
+              }}
+            >
+              <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 6px", color: "#111" }}>
+                Curated Portfolio Match
+              </h3>
+              <p style={{ fontSize: 13, color: "#666", margin: "0 0 16px" }}>
+                Let a Torra specialist assemble a private collection of on-market and off-market residences within this price target.
+              </p>
 
-                <Card style={{ borderRadius: '12px', marginBottom: 16 }}>
-                  <Statistic
-                    title="Maximum Home Price"
-                    value={result.homePrice}
-                    prefix={<HomeOutlined />}
-                    valueStyle={{ color: '#b40101', fontSize: isMobile ? 24 : 36, fontWeight: 900 }}
-                    formatter={(value) => `$${value.toLocaleString()}`}
-                  />
-                </Card>
-
-                <Row gutter={16}>
-                  <Col xs={24} sm={12}>
-                    <Card style={{ borderRadius: '12px' }}>
-                      <Statistic
-                        title="Loan Amount"
-                        value={result.loanAmount}
-                        prefix="$"
-                        valueStyle={{ fontSize: isMobile ? 18 : 24, fontWeight: 700 }}
-                        formatter={(value) => value.toLocaleString()}
-                      />
-                    </Card>
-                  </Col>
-                  <Col xs={24} sm={12}>
-                    <Card style={{ borderRadius: '12px' }}>
-                      <Statistic
-                        title="Down Payment"
-                        value={result.downPayment}
-                        prefix="$"
-                        valueStyle={{ fontSize: isMobile ? 18 : 24, fontWeight: 700 }}
-                        formatter={(value) => value.toLocaleString()}
-                      />
-                    </Card>
-                  </Col>
-                </Row>
-
-                <Divider style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '24px 0' }} />
-
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white' }}>
-                    <Text style={{ color: 'white' }}>Monthly Payment:</Text>
-                    <Text strong style={{ color: 'white', fontSize: 18 }}>
-                      ${result.monthlyPayment.toLocaleString()}/mo
-                    </Text>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white' }}>
-                    <Text style={{ color: 'white' }}>Monthly Income:</Text>
-                    <Text strong style={{ color: 'white', fontSize: 18 }}>
-                      ${result.monthlyIncome.toLocaleString()}/mo
-                    </Text>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'white' }}>
-                    <Text style={{ color: 'white' }}>Debt-to-Income Ratio:</Text>
-                    <Text strong style={{ color: 'white', fontSize: 18 }}>
-                      {result.dtiRatio}%
-                    </Text>
-                  </div>
-                </Space>
-
-                <Card style={{ marginTop: 24, background: 'rgba(255,255,255,0.1)', border: 'none' }}>
-                  <Text style={{ color: 'white', fontSize: 12 }}>
-                    <strong>Note:</strong> This is an estimate based on standard lending guidelines (28/36 rule).
-                    Actual loan approval depends on credit score, employment history, and lender requirements.
-                  </Text>
-                </Card>
-              </Card>
-            ) : null}
-
-            {/* Lead capture — only after results are calculated */}
-            {result && (
-              leadSubmitted ? (
-                <AntCard style={{ borderRadius: 16, marginTop: 16, textAlign: 'center', borderColor: '#b7eb8f', background: '#f6ffed' }}>
-                  <Title level={4} style={{ color: '#389e0d', marginBottom: 4 }}>You're all set! ✅</Title>
-                  <Text type="secondary">A TORRA agent will contact you shortly to find homes in your budget.</Text>
-                </AntCard>
+              {leadSubmitted ? (
+                <div style={{ padding: "14px", background: "#dcfce7", borderRadius: 8, color: "#166534", fontSize: 13, fontWeight: 600, textAlign: "center" }}>
+                  Inquiry logged. An advisor will prepare residences matching your budget.
+                </div>
               ) : (
-                <AntCard style={{ borderRadius: 16, marginTop: 16 }}>
-                  <Title level={4} style={{ marginTop: 0 }}>Ready to find homes in your budget?</Title>
-                  <Paragraph type="secondary" style={{ marginBottom: 16 }}>
-                    Connect with a TORRA agent who can show you properties up to ${result.homePrice.toLocaleString()}.
-                  </Paragraph>
-                  <Form form={leadForm} layout="vertical" onFinish={handleLeadSubmit}>
-                    <Row gutter={12}>
-                      <Col xs={24} sm={12}>
-                        <Form.Item name="name" rules={[{ required: true, message: 'Name required' }]} style={{ marginBottom: 12 }}>
-                          <Input size="large" prefix={<UserOutlined />} placeholder="Full name" />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} sm={12}>
-                        <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Valid email required' }]} style={{ marginBottom: 12 }}>
-                          <Input size="large" prefix={<MailOutlined />} placeholder="Email" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Form.Item name="phone" style={{ marginBottom: 12 }}>
-                      <Input size="large" prefix={<PhoneOutlined />} placeholder="Phone (optional)" />
-                    </Form.Item>
-                    <Button type="primary" htmlType="submit" size="large" block style={{ height: 52, fontWeight: 600, background: '#b40101', borderColor: '#b40101' }}>
-                      Connect with an Agent
-                    </Button>
-                  </Form>
-                </AntCard>
-              )
-            )}
-
-            {!result && (
-              <Card style={{ borderRadius: '16px', textAlign: 'center', padding: isMobile ? '40px 16px' : '80px 20px' }}>
-                <DollarOutlined style={{ fontSize: isMobile ? 40 : 64, color: '#d9d9d9', marginBottom: 16 }} />
-                <Title level={4} type="secondary">
-                  Enter your information to see results
-                </Title>
-              </Card>
-            )}
-          </Col>
-        </Row>
+                <form onSubmit={handleLeadSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your Name"
+                    value={leadName}
+                    onChange={(e) => setLeadName(e.target.value)}
+                    style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 6, border: "1px solid #d5d5d5", fontSize: 13, outline: "none" }}
+                  />
+                  <input
+                    type="email"
+                    required
+                    placeholder="Email Address"
+                    value={leadEmail}
+                    onChange={(e) => setLeadEmail(e.target.value)}
+                    style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 6, border: "1px solid #d5d5d5", fontSize: 13, outline: "none" }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={submittingLead}
+                    style={{
+                      height: 42,
+                      background: "#111",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 6,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: submittingLead ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {submittingLead ? "Transmitting..." : "Send Matching Portfolio"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
